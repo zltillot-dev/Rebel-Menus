@@ -111,7 +111,15 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+    // Explicitly save the session to ensure cookie is set
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).send("Session error");
+      }
+      console.log(`[Login Success] Session ID: ${req.sessionID?.slice(0, 8)}, User: ${(req.user as any)?.email}`);
+      res.status(200).json(req.user);
+    });
   });
 
   app.post("/api/logout", (req, res, next) => {
