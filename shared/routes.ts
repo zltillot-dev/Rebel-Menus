@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { insertUserSchema, insertMenuSchema, insertMenuItemSchema, insertFeedbackSchema, insertRequestSchema, users, menus, menuItems, feedback, requests } from './schema';
+import { 
+  insertUserSchema, insertMenuSchema, insertMenuItemSchema, insertFeedbackSchema, insertRequestSchema, 
+  users, menus, menuItems, feedback, requests,
+  type InsertMenu, type InsertMenuItem, type InsertFeedback, type InsertRequest
+} from './schema';
 
 export * from './schema';
 

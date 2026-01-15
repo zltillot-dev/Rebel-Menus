@@ -114,3 +114,8 @@ export type Menu = typeof menus.$inferSelect;
 export type MenuItem = typeof menuItems.$inferSelect;
 export type Feedback = typeof feedback.$inferSelect;
 export type Request = typeof requests.$inferSelect;
+
+export type InsertMenu = z.infer<typeof insertMenuSchema>;
+export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type InsertRequest = z.infer<typeof insertRequestSchema>;

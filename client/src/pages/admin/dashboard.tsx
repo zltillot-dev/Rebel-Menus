@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,9 +33,6 @@ export default function AdminDashboard() {
   const { mutate: createChef, isPending: isCreatingChef } = useCreateChef();
   const [createChefOpen, setCreateChefOpen] = useState(false);
 
-  const pendingMenus = menus?.filter(m => m.status === 'pending') || [];
-  const activeChefs = chefs || [];
-
   const form = useForm({
     resolver: zodResolver(createChefSchema),
     defaultValues: {
@@ -46,6 +43,9 @@ export default function AdminDashboard() {
       fraternity: "Delta Tau Delta" as const,
     }
   });
+
+  const pendingMenus = menus?.filter(m => m.status === 'pending') || [];
+  const activeChefs = chefs || [];
 
   const handleCreateChef = (data: any) => {
     createChef(data, {

@@ -3,67 +3,49 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth";
 import UserDashboard from "@/pages/user/dashboard";
-import AdminDashboard from "@/pages/admin/dashboard";
 import ChefDashboard from "@/pages/chef/dashboard";
-import { useAuth } from "@/hooks/use-auth";
+import AdminDashboard from "@/pages/admin/dashboard";
 
-function ProtectedRoute({ component: Component, allowedRoles }: { component: any, allowedRoles: string[] }) {
+function Router() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  if (!user) {
-    return <Redirect to="/auth" />;
-  }
-
-  if (!allowedRoles.includes(user.role)) {
-    // Redirect to correct dashboard based on role
-    if (user.role === 'admin') return <Redirect to="/admin" />;
-    if (user.role === 'chef') return <Redirect to="/chef" />;
-    return <Redirect to="/" />;
-  }
-
-  return <Component />;
-}
-
-function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth">
+        {user ? <Redirect to="/" /> : <AuthPage />}
+      </Route>
       
-      {/* User Routes */}
       <Route path="/">
-        <ProtectedRoute component={UserDashboard} allowedRoles={['user']} />
-      </Route>
-      <Route path="/requests">
-        <ProtectedRoute component={UserDashboard} allowedRoles={['user']} />
-      </Route>
-      <Route path="/feedback">
-        <ProtectedRoute component={UserDashboard} allowedRoles={['user']} />
+        {!user ? <Redirect to="/auth" /> : (
+          user.role === 'admin' ? <AdminDashboard /> : 
+          user.role === 'chef' ? <ChefDashboard /> : 
+          <UserDashboard />
+        )}
       </Route>
 
-      {/* Admin Routes */}
       <Route path="/admin">
-        <ProtectedRoute component={AdminDashboard} allowedRoles={['admin']} />
-      </Route>
-      <Route path="/admin/chefs">
-        <ProtectedRoute component={AdminDashboard} allowedRoles={['admin']} />
-      </Route>
-      <Route path="/admin/menus">
-        <ProtectedRoute component={AdminDashboard} allowedRoles={['admin']} />
+        {!user ? <Redirect to="/auth" /> : (user.role === 'admin' ? <AdminDashboard /> : <Redirect to="/" />)}
       </Route>
 
-      {/* Chef Routes */}
       <Route path="/chef">
-        <ProtectedRoute component={ChefDashboard} allowedRoles={['chef']} />
+        {!user ? <Redirect to="/auth" /> : (user.role === 'chef' ? <ChefDashboard /> : <Redirect to="/" />)}
       </Route>
-      <Route path="/chef/menus">
-        <ProtectedRoute component={ChefDashboard} allowedRoles={['chef']} />
+
+      <Route path="/dashboard">
+        {!user ? <Redirect to="/auth" /> : <UserDashboard />}
       </Route>
 
       <Route component={NotFound} />

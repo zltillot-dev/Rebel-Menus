@@ -59,11 +59,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMenus(fraternity?: string, status?: string): Promise<(Menu & { items: MenuItem[] })[]> {
-    let query = db.select().from(menus);
     const conditions = [];
-    if (fraternity) conditions.push(eq(menus.fraternity, fraternity));
-    if (status) conditions.push(eq(menus.status, status));
+    if (fraternity) conditions.push(eq(menus.fraternity, fraternity as any));
+    if (status) conditions.push(eq(menus.status, status as any));
     
+    let query = db.select().from(menus);
     if (conditions.length > 0) {
       // @ts-ignore
       query = query.where(and(...conditions));

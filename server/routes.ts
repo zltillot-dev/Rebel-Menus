@@ -1,13 +1,11 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
+import { type Server } from "http";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { z } from "zod";
 import { insertMenuSchema, users } from "@shared/schema";
-import { hashPassword } from "./auth";
-import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 export async function registerRoutes(
   httpServer: Server,
