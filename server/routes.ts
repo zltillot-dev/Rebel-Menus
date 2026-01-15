@@ -173,6 +173,23 @@ export async function registerRoutes(
                       fraternity: "Delta Tau Delta"
                   } as any);
               }
+              
+              // Seed test user account
+              const userEmail = "testuser@olemiss.edu";
+              const testUser = await storage.getUserByEmail(userEmail);
+              if (testUser) {
+                  console.log("Updating existing test user password...");
+                  await db.update(users).set({ password }).where(eq(users.id, testUser.id));
+              } else {
+                  console.log("Seeding test user...");
+                  await storage.createUser({
+                      name: "Test Member",
+                      email: userEmail,
+                      password,
+                      role: "user",
+                      fraternity: "Delta Tau Delta"
+                  } as any);
+              }
               console.log("Seeding complete. Accounts updated with hashed passwords.");
           } catch (err) {
               console.error("Seeding failed:", err);
