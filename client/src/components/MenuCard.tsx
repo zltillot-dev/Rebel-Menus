@@ -40,6 +40,20 @@ export function MenuCard({ day, items, onFeedbackClick, menuId }: MenuCardProps)
                 </div>
               </div>
               
+              {((item as any).side1 || (item as any).side2 || (item as any).side3) && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {(item as any).side1 && (
+                    <span className="text-sm text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">{(item as any).side1}</span>
+                  )}
+                  {(item as any).side2 && (
+                    <span className="text-sm text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">{(item as any).side2}</span>
+                  )}
+                  {(item as any).side3 && (
+                    <span className="text-sm text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">{(item as any).side3}</span>
+                  )}
+                </div>
+              )}
+              
               <div className="flex gap-3 mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
                 <MacroBadge icon={Wheat} value={item.carbs} label="Carbs" color="text-blue-500" />
                 <MacroBadge icon={Zap} value={item.protein} label="Protein" color="text-red-500" />

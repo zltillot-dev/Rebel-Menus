@@ -47,9 +47,17 @@ The backend follows a layered architecture:
 Key entities:
 - Users (with roles: user, chef, admin)
 - Menus (weekly menus per fraternity)
-- Menu Items (individual meals with nutritional data)
+- Menu Items (individual meals with nutritional data including: description/main protein, side1, side2, side3, and macros)
 - Feedback (user ratings and comments)
 - Requests (late plates, substitutions, future requests)
+
+## Recent Changes
+
+### January 2026
+- Enhanced menu item schema: Added side1, side2, side3 fields to store sides/details separately from main protein
+- Updated chef menu creation form: Now has 4 input fields per meal (Main Protein/Item, Side 1, Side 2, Side 3/Details)
+- Updated MenuCard component: Displays sides as pills below the main item description
+- Fixed session cookie configuration: Added proper cookie settings for reliable authentication
 
 ### API Design
 - RESTful endpoints defined in `shared/routes.ts`
