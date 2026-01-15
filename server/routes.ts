@@ -44,7 +44,7 @@ export async function registerRoutes(
       const validatedMenu = insertMenuSchema.parse({ 
         ...menuData, 
         chefId: (req.user as any).id,
-        fraternity: (req.user as any).fraternity // Chef's fraternity
+        fraternity: (req.user as any).fraternity || menuData.fraternity
       });
       
       const menu = await storage.createMenu(validatedMenu, items);

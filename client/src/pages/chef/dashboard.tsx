@@ -28,9 +28,33 @@ export default function ChefDashboard() {
   const initializeMenu = () => {
     const items = [];
     for (const day of DAYS) {
-      items.push({ day, meal: "Lunch", description: "", side1: "", side2: "", side3: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
-      if (day !== "Friday") { // No dinner on Friday
-        items.push({ day, meal: "Dinner", description: "", side1: "", side2: "", side3: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
+      items.push({ 
+        day, 
+        meal: "Lunch", 
+        description: "", 
+        side1: "", 
+        side2: "", 
+        side3: "", 
+        calories: 0, 
+        carbs: 0, 
+        fats: 0, 
+        protein: 0, 
+        sugar: 0 
+      });
+      if (day !== "Friday") {
+        items.push({ 
+          day, 
+          meal: "Dinner", 
+          description: "", 
+          side1: "", 
+          side2: "", 
+          side3: "", 
+          calories: 0, 
+          carbs: 0, 
+          fats: 0, 
+          protein: 0, 
+          sugar: 0 
+        });
       }
     }
     setMenuItems(items);
@@ -45,19 +69,26 @@ export default function ChefDashboard() {
   const handleSubmit = () => {
     if (!user?.fraternity) return;
     
-    // Filter out empty items if needed, or validate all fields
+    // Filter out items without a description (Main Protein)
+    const activeItems = menuItems.filter(item => item.description.trim() !== "");
+    
+    if (activeItems.length === 0) {
+      alert("Please enter at least one meal description.");
+      return;
+    }
+
     createMenu({
       fraternity: user.fraternity,
       weekOf: weekOf,
       status: "pending",
       chefId: user.id,
-      items: menuItems.map(item => ({
+      items: activeItems.map(item => ({
         ...item,
-        calories: Number(item.calories),
-        carbs: Number(item.carbs),
-        fats: Number(item.fats),
-        protein: Number(item.protein),
-        sugar: Number(item.sugar),
+        calories: Number(item.calories) || 0,
+        carbs: Number(item.carbs) || 0,
+        fats: Number(item.fats) || 0,
+        protein: Number(item.protein) || 0,
+        sugar: Number(item.sugar) || 0,
       }))
     }, {
       onSuccess: () => setCreateOpen(false)
