@@ -8,7 +8,7 @@ export const ROLES = ["user", "chef", "admin"] as const;
 export const FRATERNITIES = ["Delta Tau Delta", "Sigma Chi"] as const;
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 export const MEAL_TYPES = ["Lunch", "Dinner"] as const;
-export const MENU_STATUS = ["draft", "pending", "approved"] as const;
+export const MENU_STATUS = ["draft", "pending", "approved", "needs_revision"] as const;
 export const REQUEST_TYPES = ["late_plate", "substitution", "future_request"] as const;
 
 // Tables
@@ -27,6 +27,7 @@ export const menus = pgTable("menus", {
   weekOf: date("week_of").notNull(), // Start date of the week
   status: text("status", { enum: MENU_STATUS }).notNull().default("draft"),
   chefId: integer("chef_id").references(() => users.id),
+  adminNotes: text("admin_notes"), // Notes/suggestions from admin when requesting revisions
 });
 
 export const menuItems = pgTable("menu_items", {
