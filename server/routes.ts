@@ -36,7 +36,9 @@ export async function registerRoutes(
   });
 
   app.post(api.menus.create.path, async (req, res) => {
-    if (!req.user || (req.user as any).role === 'user') return res.status(403).send("Forbidden");
+    if (!req.user || ((req.user as any).role !== 'chef' && (req.user as any).role !== 'admin')) {
+      return res.status(403).send("Forbidden");
+    }
     try {
       const { items, ...menuData } = req.body;
       const validatedMenu = insertMenuSchema.parse({ 

@@ -49,7 +49,7 @@ export default function ChefDashboard() {
     createMenu({
       fraternity: user.fraternity,
       weekOf: weekOf,
-      status: "draft",
+      status: "pending",
       chefId: user.id,
       items: menuItems.map(item => ({
         ...item,
