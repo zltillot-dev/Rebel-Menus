@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus } from "@/hooks/use-menus";
@@ -16,9 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { DAYS } from "@shared/schema";
+import { DAYS, MEAL_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfWeek, addDays } from "date-fns";
+import { format, startOfWeek, addDays, isAfter, isBefore, setHours, setMinutes, getDay, isToday, isSameDay } from "date-fns";
 
 export default function UserDashboard() {
   const [location] = useLocation();
@@ -33,6 +33,9 @@ export default function UserDashboard() {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "future_request">("late_plate");
   const [requestDetails, setRequestDetails] = useState("");
+  const [selectedMealDay, setSelectedMealDay] = useState<string>("");
+  const [selectedMealType, setSelectedMealType] = useState<"Lunch" | "Dinner" | "">("");
+  const { toast } = useToast();
   
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
@@ -45,6 +48,60 @@ export default function UserDashboard() {
   // Filter feedback to only show user's own
   const myFeedback = userFeedback?.filter((f: any) => f.userId === user?.id) || [];
 
+  // Generate available meal options for late plate requests
+  // Shows meals for the current week (Mon-Fri) that haven't passed their cutoff time
+  const availableMealOptions = useMemo(() => {
+    const options: { date: Date; day: string; mealType: "Lunch" | "Dinner"; label: string; isAvailable: boolean }[] = [];
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+    
+    for (let i = 0; i < 5; i++) { // Mon-Fri
+      const date = addDays(weekStart, i);
+      const dayName = format(date, "EEEE");
+      const dateStr = format(date, "MMMM d");
+      const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const isFutureDay = dateStart > todayStart;
+      const isTodayDate = dateStart.getTime() === todayStart.getTime();
+      
+      // Add lunch option
+      const lunchCutoff = setMinutes(setHours(date, 12), 45); // 12:45 PM
+      // For today, check cutoff time. For future days, always available.
+      const lunchAvailable = isFutureDay || (isTodayDate && isBefore(now, lunchCutoff));
+      options.push({
+        date,
+        day: dayName,
+        mealType: "Lunch",
+        label: `${dayName}, ${dateStr} - Lunch`,
+        isAvailable: lunchAvailable
+      });
+      
+      // Add dinner option (except Friday and Wednesday)
+      if (i < 4) { // No Friday dinner
+        const dinnerCutoff = setMinutes(setHours(date, 17), 45); // 5:45 PM
+        const isWednesday = getDay(date) === 3;
+        // Wednesday dinners are NEVER available
+        // For today, check cutoff time. For future days, always available (except Wednesday).
+        const dinnerAvailable = !isWednesday && (isFutureDay || (isTodayDate && isBefore(now, dinnerCutoff)));
+        
+        options.push({
+          date,
+          day: dayName,
+          mealType: "Dinner",
+          label: `${dayName}, ${dateStr} - Dinner`,
+          isAvailable: dinnerAvailable
+        });
+      }
+    }
+    
+    return options.filter(opt => opt.isAvailable);
+  }, []);
+
+  // Get cutoff time display for selected meal
+  const getCutoffTimeDisplay = (mealType: "Lunch" | "Dinner") => {
+    return mealType === "Lunch" ? "12:45 PM" : "5:45 PM";
+  };
+
   // Get current menu (most recent approved menu for this week)
   // Simplified logic: just grab the first one returned
   const currentMenu = menus?.[0];
@@ -54,18 +111,67 @@ export default function UserDashboard() {
 
   const handleRequestSubmit = () => {
     if (!user) return;
-    createRequest({
-      userId: user.id,
-      type: requestType,
-      details: requestDetails,
-      status: "pending",
-      date: new Date().toISOString(),
-    }, {
-      onSuccess: () => {
-        setRequestModalOpen(false);
-        setRequestDetails("");
+    
+    // For late plate requests, validate meal selection
+    if (requestType === "late_plate") {
+      if (!selectedMealDay || !selectedMealType) {
+        toast({
+          title: "Please select a meal",
+          description: "Choose which day and meal you need a late plate for.",
+          variant: "destructive"
+        });
+        return;
       }
-    });
+      
+      // Find the selected option to get the date
+      const selectedOption = availableMealOptions.find(
+        opt => format(opt.date, "yyyy-MM-dd") === selectedMealDay && opt.mealType === selectedMealType
+      );
+      
+      if (!selectedOption) {
+        toast({
+          title: "Invalid selection",
+          description: "The cutoff time for this meal has passed.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      createRequest({
+        userId: user.id,
+        type: requestType,
+        details: requestDetails,
+        status: "pending",
+        date: new Date().toISOString(),
+        mealDay: selectedMealDay,
+        mealType: selectedMealType,
+        fraternity: user.fraternity || undefined,
+      }, {
+        onSuccess: () => {
+          setRequestModalOpen(false);
+          setRequestDetails("");
+          setSelectedMealDay("");
+          setSelectedMealType("");
+          toast({
+            title: "Late Plate Request Submitted",
+            description: `Your request for ${selectedOption.label} has been submitted.`
+          });
+        }
+      });
+    } else {
+      createRequest({
+        userId: user.id,
+        type: requestType,
+        details: requestDetails,
+        status: "pending",
+        date: new Date().toISOString(),
+      }, {
+        onSuccess: () => {
+          setRequestModalOpen(false);
+          setRequestDetails("");
+        }
+      });
+    }
   };
 
   const handleFeedbackSubmit = () => {
@@ -87,6 +193,9 @@ export default function UserDashboard() {
 
   const openRequestModal = (type: typeof requestType) => {
     setRequestType(type);
+    setSelectedMealDay("");
+    setSelectedMealType("");
+    setRequestDetails("");
     setRequestModalOpen(true);
   };
 
@@ -340,23 +449,74 @@ export default function UserDashboard() {
                 {requestType === "late_plate" ? "Request Late Plate" : "Request Substitution"}
               </DialogTitle>
               <DialogDescription>
-                Please provide details for your request. All requests are sent to the chef.
+                {requestType === "late_plate" 
+                  ? "Select the meal you need a late plate for. Cutoff is 12:45 PM for lunch and 5:45 PM for dinner."
+                  : "Please provide details for your request. All requests are sent to the chef."
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              {requestType === "late_plate" && (
+                <div className="space-y-2">
+                  <Label>Select Meal</Label>
+                  {availableMealOptions.length === 0 ? (
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <AlertCircle className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No meals available for late plate requests at this time.
+                        Cutoff times have passed for all remaining meals this week.
+                      </p>
+                    </div>
+                  ) : (
+                    <Select
+                      value={selectedMealDay && selectedMealType ? `${selectedMealDay}|${selectedMealType}` : ""}
+                      onValueChange={(value) => {
+                        const [day, type] = value.split("|");
+                        setSelectedMealDay(day);
+                        setSelectedMealType(type as "Lunch" | "Dinner");
+                      }}
+                    >
+                      <SelectTrigger data-testid="select-meal-trigger">
+                        <SelectValue placeholder="Choose a meal..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableMealOptions.map((option) => (
+                          <SelectItem 
+                            key={`${format(option.date, "yyyy-MM-dd")}|${option.mealType}`}
+                            value={`${format(option.date, "yyyy-MM-dd")}|${option.mealType}`}
+                            data-testid={`select-item-${format(option.date, "yyyy-MM-dd")}-${option.mealType}`}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {selectedMealType && (
+                    <p className="text-xs text-muted-foreground">
+                      Request must be submitted before {getCutoffTimeDisplay(selectedMealType)}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="space-y-2">
-                <Label>Details</Label>
+                <Label>{requestType === "late_plate" ? "Pickup Details (Optional)" : "Details"}</Label>
                 <Textarea 
                   placeholder={requestType === "late_plate" ? "I will pick up at 7 PM..." : "I have a gluten allergy, can I get..."}
                   value={requestDetails}
                   onChange={(e) => setRequestDetails(e.target.value)}
                   className="min-h-[100px]"
+                  data-testid="input-request-details"
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setRequestModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleRequestSubmit} disabled={isRequesting || !requestDetails}>
+              <Button 
+                onClick={handleRequestSubmit} 
+                disabled={isRequesting || (requestType === "late_plate" ? (!selectedMealDay || !selectedMealType) : !requestDetails)}
+                data-testid="button-submit-request"
+              >
                 {isRequesting ? "Submitting..." : "Submit Request"}
               </Button>
             </DialogFooter>

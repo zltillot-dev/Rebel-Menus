@@ -98,3 +98,15 @@ export function useDeleteRequest() {
     },
   });
 }
+
+// Late plates for chef dashboard
+export function useLatePlates() {
+  return useQuery({
+    queryKey: ["/api/late-plates"],
+    queryFn: async () => {
+      const res = await fetch("/api/late-plates", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch late plates");
+      return res.json();
+    },
+  });
+}

@@ -198,15 +198,61 @@ export async function registerRoutes(
     
     const userRole = (req.user as any).role;
     const userId = (req.user as any).id;
+    const userFraternity = (req.user as any).fraternity;
     
-    // Users can only see their own requests, admins/chefs can see all
+    // Users can only see their own requests
     const allRequests = await storage.getRequests();
     if (userRole === 'user') {
       const userRequests = allRequests.filter(r => r.userId === userId);
       return res.json(userRequests);
     }
     
+    // Chefs can see late plates for their fraternity
+    if (userRole === 'chef' && userFraternity) {
+      const fraternityRequests = allRequests.filter(r => 
+        r.fraternity === userFraternity || r.userId === userId
+      );
+      return res.json(fraternityRequests);
+    }
+    
+    // Admins can see all
     res.json(allRequests);
+  });
+
+  // Late plates for chef dashboard - organized by meal service
+  app.get("/api/late-plates", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const allRequests = await storage.getRequests();
+    
+    // Filter to late plate requests only
+    let latePlates = allRequests.filter(r => r.type === 'late_plate');
+    
+    // Chefs only see their fraternity's late plates
+    if (userRole === 'chef' && userFraternity) {
+      latePlates = latePlates.filter(r => r.fraternity === userFraternity);
+    }
+    
+    // Get user names for the late plates
+    const latePlatesWithUsers = await Promise.all(
+      latePlates.map(async (lp) => {
+        const user = await storage.getUser(lp.userId);
+        return {
+          ...lp,
+          userName: user?.name || 'Unknown User',
+          userEmail: user?.email || ''
+        };
+      })
+    );
+    
+    res.json(latePlatesWithUsers);
   });
 
   app.delete(api.requests.delete.path, async (req, res) => {

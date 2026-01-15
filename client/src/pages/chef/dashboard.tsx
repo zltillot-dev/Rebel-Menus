@@ -1,23 +1,25 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useCreateMenu, useUpdateMenuStatus, useUpdateMenu, useDeleteMenu } from "@/hooks/use-menus";
+import { useLatePlates } from "@/hooks/use-requests";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { format, startOfWeek, addWeeks } from "date-fns";
+import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 
 export default function ChefDashboard() {
   const { user } = useAuth();
   const { data: menus } = useMenus({ fraternity: user?.fraternity || undefined });
+  const { data: latePlates, isLoading: isLoadingLatePlates } = useLatePlates();
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: updateMenu, isPending: isUpdatingMenu } = useUpdateMenu();
@@ -29,6 +31,52 @@ export default function ChefDashboard() {
   // Filter menus that need revision
   const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
   const otherMenus = menus?.filter(m => m.status !== 'needs_revision') || [];
+
+  // Organize late plates by meal service (day + meal type)
+  const latePlatesByMealService = useMemo(() => {
+    if (!latePlates) return {};
+    
+    const grouped: Record<string, any[]> = {};
+    
+    for (const lp of latePlates) {
+      if (lp.mealDay && lp.mealType) {
+        const key = `${lp.mealDay}|${lp.mealType}`;
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+        grouped[key].push(lp);
+      }
+    }
+    
+    // Sort by date
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      const [dateA] = a.split("|");
+      const [dateB] = b.split("|");
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+    
+    const sorted: Record<string, any[]> = {};
+    for (const key of sortedKeys) {
+      sorted[key] = grouped[key];
+    }
+    
+    return sorted;
+  }, [latePlates]);
+
+  // Get today's late plates for prominent display
+  const todaysLatePlates = useMemo(() => {
+    const today = new Date();
+    const result: Record<string, any[]> = {};
+    
+    for (const [key, plates] of Object.entries(latePlatesByMealService)) {
+      const [dateStr] = key.split("|");
+      if (isSameDay(parseISO(dateStr), today)) {
+        result[key] = plates;
+      }
+    }
+    
+    return result;
+  }, [latePlatesByMealService]);
 
   // New Menu State
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
@@ -420,6 +468,109 @@ export default function ChefDashboard() {
             </DialogContent>
           </Dialog>
         </header>
+
+        {/* Late Plates Loading State */}
+        {isLoadingLatePlates && (
+          <section className="mb-8">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              Late Plate Requests
+            </h2>
+            <div className="h-24 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          </section>
+        )}
+
+        {/* Today's Late Plates - Prominent Display */}
+        {!isLoadingLatePlates && Object.keys(todaysLatePlates).length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-primary mb-4">
+              <Clock className="w-5 h-5" />
+              Today's Late Plates
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {Object.entries(todaysLatePlates).map(([key, plates]) => {
+                const [dateStr, mealType] = key.split("|");
+                const cutoffTime = mealType === "Lunch" ? "12:45 PM" : "5:45 PM";
+                return (
+                  <Card key={key} className="border-primary/30 bg-primary/5" data-testid={`card-late-plates-${key}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg">
+                          {format(parseISO(dateStr), "EEEE, MMMM d")} - {mealType}
+                        </CardTitle>
+                        <Badge variant="secondary">
+                          {plates.length} request{plates.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <CardDescription>Cutoff: {cutoffTime}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {plates.map((lp: any) => (
+                          <div key={lp.id} className="flex items-center gap-3 p-2 bg-background rounded-md border" data-testid={`late-plate-${lp.id}`}>
+                            <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{lp.userName}</p>
+                              {lp.details && (
+                                <p className="text-xs text-muted-foreground truncate">{lp.details}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* All Late Plates by Meal Service */}
+        {!isLoadingLatePlates && Object.keys(latePlatesByMealService).length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              Late Plate Requests
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(latePlatesByMealService).map(([key, plates]) => {
+                const [dateStr, mealType] = key.split("|");
+                const date = parseISO(dateStr);
+                const isForToday = isToday(date);
+                
+                return (
+                  <Card key={key} className={isForToday ? "border-primary/30" : ""} data-testid={`card-all-late-plates-${key}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-base">
+                          {format(date, "EEE, MMM d")} - {mealType}
+                        </CardTitle>
+                        <Badge variant={isForToday ? "default" : "secondary"} className="text-xs">
+                          {plates.length}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1">
+                        {plates.map((lp: any) => (
+                          <div key={lp.id} className="text-sm py-1 border-b last:border-0">
+                            <span className="font-medium">{lp.userName}</span>
+                            {lp.details && (
+                              <span className="text-muted-foreground ml-2 text-xs">- {lp.details}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Menus Needing Revision */}
         {menusNeedingRevision.length > 0 && (

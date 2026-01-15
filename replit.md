@@ -54,6 +54,19 @@ Key entities:
 ## Recent Changes
 
 ### January 2026
+
+#### Late Plate Request Enhancements
+- Added cutoff time validation: Lunch late plates must be submitted before 12:45 PM, dinner before 5:45 PM
+- Wednesday dinners are NEVER available for late plate requests
+- Users must select specific day and meal when requesting late plates (e.g., "Monday, January 19th - Lunch")
+- Added mealDay, mealType, and fraternity fields to requests table schema
+- Chef dashboard now displays late plate requests organized by meal service:
+  - "Today's Late Plates" section for prominent display of current day's requests
+  - "Late Plate Requests" section showing all requests grouped by meal
+- Added /api/late-plates endpoint for chef-specific late plate fetching with user info
+- Chefs only see late plates for their own fraternity
+
+#### Previous Changes
 - AI-powered macro estimation: Chefs can auto-estimate nutritional information (calories, protein, carbs, fats, sugar) using AI based on food item descriptions
 - Users can now delete their own requests with confirmation dialog
 - Fixed feedback API to allow users to view their own submitted feedback
