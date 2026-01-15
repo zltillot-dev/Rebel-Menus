@@ -55,7 +55,22 @@ Key entities:
 
 ### January 2026
 
-#### Menu Suggestions & Substitutions Separation (Latest)
+#### Per-Meal Feedback & Admin Delete (Latest)
+- Users now rate specific meals (selecting day + meal type like "Monday Lunch") instead of rating entire days
+- Feedback dialog requires selecting both mealDay and mealType before submitting
+- Admin can delete ANY menu regardless of status (pending, approved, active) via "All Menus" tab
+- Menu deletion cascades to delete associated feedback entries (prevents FK constraint violations)
+- Admin dashboard now has "Pending" and "All Menus" tabs for better menu management
+- Schema updated: feedback.mealDay and feedback.mealType are now required (NOT NULL)
+- API validation added: feedback creation validates mealDay (Mon-Fri) and mealType (Lunch/Dinner)
+
+#### Chef Dashboard Email-Style Interface
+- Chef dashboard redesigned with left sidebar navigation tabs
+- Tabs: Late Plates, Substitutions, Meal Suggestions, Feedback, Past Menus
+- Content area updates based on selected tab (similar to email client layout)
+- Added useChefFeedback hook and /api/chef-feedback endpoint for chef-specific feedback viewing
+
+#### Menu Suggestions & Substitutions Separation
 - User dashboard now has three distinct action buttons: "Late Plate", "Substitution", and "Menu Suggestion"
 - Late Plate requests are separate from Substitutions (different icons, workflows)
 - Menu Suggestions allow users to suggest dishes for future menus

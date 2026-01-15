@@ -122,3 +122,15 @@ export function useChefRequests() {
     },
   });
 }
+
+// Feedback for chef dashboard
+export function useChefFeedback() {
+  return useQuery({
+    queryKey: ["/api/chef-feedback"],
+    queryFn: async () => {
+      const res = await fetch("/api/chef-feedback", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch chef feedback");
+      return res.json();
+    },
+  });
+}

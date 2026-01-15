@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMenus, useUpdateMenuStatus } from "@/hooks/use-menus";
+import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
 import { useChefs, useCreateChef } from "@/hooks/use-admin";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
@@ -31,11 +32,13 @@ export default function AdminDashboard() {
   const { data: menus } = useMenus();
   const { data: chefs } = useChefs();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
+  const { mutate: deleteMenu, isPending: isDeleting } = useDeleteMenu();
   const { mutate: createChef, isPending: isCreatingChef } = useCreateChef();
   const [createChefOpen, setCreateChefOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
   const [reviewMenu, setReviewMenu] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState("");
+  const [activeTab, setActiveTab] = useState<"pending" | "all">("pending");
 
   const form = useForm({
     resolver: zodResolver(createChefSchema),
@@ -73,67 +76,171 @@ export default function AdminDashboard() {
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Pending Approvals */}
+            {/* Menu Management */}
             <section>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-amber-500" />
-                Pending Approvals
+                <Calendar className="w-5 h-5 text-primary" />
+                Menu Management
               </h2>
-              {pendingMenus.length === 0 ? (
-                <Card className="bg-muted/30 border-dashed">
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No menus pending approval
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {pendingMenus.map((menu) => (
-                    <Card key={menu.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle>Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
-                            <CardDescription className="mt-1 font-medium text-primary">
-                              {menu.fraternity} • {menu.items.length} items
-                            </CardDescription>
-                          </div>
-                          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
-                            Pending Review
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => setViewMenu(menu)}
-                          data-testid={`button-view-menu-${menu.id}`}
-                        >
-                          <Eye className="w-4 h-4 mr-2" /> View Full Menu
-                        </Button>
-                        <div className="flex gap-3">
-                          <Button 
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                            onClick={() => updateStatus({ id: menu.id, status: 'approved' })}
-                            disabled={isUpdating}
-                            data-testid={`button-approve-menu-${menu.id}`}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-2" /> Approve
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => { setReviewMenu(menu); setAdminNotes(""); }}
-                            data-testid={`button-request-changes-${menu.id}`}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" /> Request Changes
-                          </Button>
-                        </div>
+              
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <TabsList className="grid grid-cols-2 w-full mb-4">
+                  <TabsTrigger value="pending" data-testid="tab-pending">
+                    Pending ({pendingMenus.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="all" data-testid="tab-all">
+                    All Menus ({menus?.length || 0})
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Pending Approvals Tab */}
+                <TabsContent value="pending">
+                  {pendingMenus.length === 0 ? (
+                    <Card className="bg-muted/30 border-dashed">
+                      <CardContent className="py-8 text-center text-muted-foreground">
+                        No menus pending approval
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              )}
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingMenus.map((menu) => (
+                        <Card key={menu.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <CardTitle>Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
+                                <CardDescription className="mt-1 font-medium text-primary">
+                                  {menu.fraternity} • {menu.items.length} items
+                                </CardDescription>
+                              </div>
+                              <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+                                Pending Review
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <Button 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => setViewMenu(menu)}
+                              data-testid={`button-view-menu-${menu.id}`}
+                            >
+                              <Eye className="w-4 h-4 mr-2" /> View Full Menu
+                            </Button>
+                            <div className="flex gap-3">
+                              <Button 
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                onClick={() => updateStatus({ id: menu.id, status: 'approved' })}
+                                disabled={isUpdating}
+                                data-testid={`button-approve-menu-${menu.id}`}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" /> Approve
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                className="flex-1"
+                                onClick={() => { setReviewMenu(menu); setAdminNotes(""); }}
+                                data-testid={`button-request-changes-${menu.id}`}
+                              >
+                                <MessageSquare className="w-4 h-4 mr-2" /> Request Changes
+                              </Button>
+                            </div>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-menu-${menu.id}`}>
+                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Menu
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Menu</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this menu? This will also delete all associated feedback. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* All Menus Tab */}
+                <TabsContent value="all">
+                  {!menus || menus.length === 0 ? (
+                    <Card className="bg-muted/30 border-dashed">
+                      <CardContent className="py-8 text-center text-muted-foreground">
+                        No menus created yet
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {menus.map((menu) => (
+                        <Card key={menu.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <CardTitle>Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
+                                <CardDescription className="mt-1 font-medium text-primary">
+                                  {menu.fraternity} • {menu.items.length} items
+                                </CardDescription>
+                              </div>
+                              <Badge variant={
+                                menu.status === 'approved' ? 'default' : 
+                                menu.status === 'pending' ? 'secondary' : 
+                                menu.status === 'needs_revision' ? 'outline' : 'outline'
+                              } className={
+                                menu.status === 'needs_revision' ? 'bg-amber-50 text-amber-600 border-amber-200' : ''
+                              }>
+                                {menu.status === 'needs_revision' ? 'Needs Revision' : menu.status}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <Button 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => setViewMenu(menu)}
+                              data-testid={`button-view-all-menu-${menu.id}`}
+                            >
+                              <Eye className="w-4 h-4 mr-2" /> View Full Menu
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-all-menu-${menu.id}`}>
+                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Menu
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Menu</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this menu? This will also delete all associated feedback. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </section>
 
             {/* Chef Management */}

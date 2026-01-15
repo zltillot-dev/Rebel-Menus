@@ -51,6 +51,8 @@ export const feedback = pgTable("feedback", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   menuId: integer("menu_id").notNull().references(() => menus.id),
+  mealDay: text("meal_day", { enum: DAYS }).notNull(), // Day of the meal being rated (required)
+  mealType: text("meal_type", { enum: MEAL_TYPES }).notNull(), // Lunch or Dinner (required)
   rating: integer("rating").notNull(),
   comment: text("comment"),
   isAnonymous: boolean("is_anonymous").default(false),

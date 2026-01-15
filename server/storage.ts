@@ -148,7 +148,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMenu(id: number): Promise<void> {
-    // Delete menu items first (foreign key constraint)
+    // Delete feedback first (foreign key constraint)
+    await db.delete(feedback).where(eq(feedback.menuId, id));
+    // Delete menu items (foreign key constraint)
     await db.delete(menuItems).where(eq(menuItems.menuId, id));
     // Delete the menu
     await db.delete(menus).where(eq(menus.id, id));

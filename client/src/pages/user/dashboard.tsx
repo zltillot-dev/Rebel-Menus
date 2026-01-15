@@ -39,6 +39,8 @@ export default function UserDashboard() {
   
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
+  const [feedbackMealDay, setFeedbackMealDay] = useState<string>("");
+  const [feedbackMealType, setFeedbackMealType] = useState<"Lunch" | "Dinner" | "">("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
@@ -182,10 +184,12 @@ export default function UserDashboard() {
   };
 
   const handleFeedbackSubmit = () => {
-    if (!user || !selectedMenuId) return;
+    if (!user || !selectedMenuId || !feedbackMealDay || !feedbackMealType) return;
     createFeedback({
       userId: user.id,
       menuId: selectedMenuId,
+      mealDay: feedbackMealDay as typeof DAYS[number],
+      mealType: feedbackMealType as typeof MEAL_TYPES[number],
       rating,
       comment,
       isAnonymous: false,
@@ -194,6 +198,12 @@ export default function UserDashboard() {
         setFeedbackModalOpen(false);
         setComment("");
         setRating(5);
+        setFeedbackMealDay("");
+        setFeedbackMealType("");
+        toast({
+          title: "Feedback Submitted",
+          description: `Your rating for ${feedbackMealDay} ${feedbackMealType} has been recorded.`
+        });
       }
     });
   };
@@ -564,37 +574,81 @@ export default function UserDashboard() {
         <Dialog open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Rate this Meal</DialogTitle>
+              <DialogTitle>Rate a Meal</DialogTitle>
               <DialogDescription>
-                Let the chefs know what you thought about today's menu.
+                Select the specific meal you'd like to rate and let the chefs know what you thought.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
-              <div className="flex justify-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button 
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className="focus:outline-none transition-transform hover:scale-110"
+              {/* Meal Selection */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Day</Label>
+                  <Select value={feedbackMealDay} onValueChange={setFeedbackMealDay}>
+                    <SelectTrigger data-testid="select-feedback-day">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS.map((day) => (
+                        <SelectItem key={day} value={day}>{day}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Meal</Label>
+                  <Select 
+                    value={feedbackMealType} 
+                    onValueChange={(value: "Lunch" | "Dinner") => setFeedbackMealType(value)}
                   >
-                    <Star 
-                      className={`w-8 h-8 ${rating >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} 
-                    />
-                  </button>
-                ))}
+                    <SelectTrigger data-testid="select-feedback-meal">
+                      <SelectValue placeholder="Select meal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MEAL_TYPES.map((meal) => (
+                        <SelectItem key={meal} value={meal}>{meal}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              {/* Star Rating */}
+              <div className="space-y-2">
+                <Label className="text-center block">Your Rating</Label>
+                <div className="flex justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button 
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                      data-testid={`button-rating-${star}`}
+                    >
+                      <Star 
+                        className={`w-8 h-8 ${rating >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>Comments (Optional)</Label>
                 <Textarea 
                   placeholder="The chicken was great, but the rice was a bit dry..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
+                  data-testid="textarea-feedback-comment"
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setFeedbackModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleFeedbackSubmit} disabled={isFeedbacking}>
+              <Button 
+                onClick={handleFeedbackSubmit} 
+                disabled={isFeedbacking || !feedbackMealDay || !feedbackMealType}
+                data-testid="button-submit-feedback"
+              >
                 {isFeedbacking ? "Submitting..." : "Submit Feedback"}
               </Button>
             </DialogFooter>

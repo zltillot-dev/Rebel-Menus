@@ -161,8 +161,30 @@ export async function registerRoutes(
   // Feedback
   app.post(api.feedback.create.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
+    
+    // Validate required fields for per-meal feedback
+    const { menuId, mealDay, mealType, rating, comment, isAnonymous } = req.body;
+    
+    if (!menuId || typeof menuId !== 'number') {
+      return res.status(400).json({ error: "menuId is required" });
+    }
+    if (!mealDay || !["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(mealDay)) {
+      return res.status(400).json({ error: "Valid mealDay is required (Monday-Friday)" });
+    }
+    if (!mealType || !["Lunch", "Dinner"].includes(mealType)) {
+      return res.status(400).json({ error: "Valid mealType is required (Lunch or Dinner)" });
+    }
+    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+    
     const feedback = await storage.createFeedback({
-      ...req.body,
+      menuId,
+      mealDay,
+      mealType,
+      rating,
+      comment: comment || null,
+      isAnonymous: isAnonymous || false,
       userId: (req.user as any).id
     });
     res.status(201).json(feedback);
@@ -298,6 +320,52 @@ export async function registerRoutes(
     );
     
     res.json(latePlatesWithUsers);
+  });
+
+  // Feedback for chef dashboard - filtered by fraternity menus
+  app.get("/api/chef-feedback", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const allFeedback = await storage.getFeedback();
+    const allMenus = await storage.getMenus();
+    
+    // Get menu IDs for the chef's fraternity
+    let fraternityMenuIds: number[] = [];
+    if (userRole === 'chef' && userFraternity) {
+      fraternityMenuIds = allMenus
+        .filter(m => m.fraternity === userFraternity)
+        .map(m => m.id);
+    } else {
+      fraternityMenuIds = allMenus.map(m => m.id);
+    }
+    
+    // Filter feedback to only show feedback for fraternity menus
+    const fraternityFeedback = allFeedback.filter(f => 
+      fraternityMenuIds.includes(f.menuId)
+    );
+    
+    // Get user names and menu info
+    const feedbackWithDetails = await Promise.all(
+      fraternityFeedback.map(async (fb) => {
+        const user = await storage.getUser(fb.userId);
+        const menu = allMenus.find(m => m.id === fb.menuId);
+        return {
+          ...fb,
+          userName: fb.isAnonymous ? 'Anonymous' : (user?.name || 'Unknown User'),
+          userEmail: fb.isAnonymous ? null : (user?.email || ''),
+          menuWeek: menu?.weekOf || ''
+        };
+      })
+    );
+    
+    res.json(feedbackWithDetails);
   });
 
   // Substitutions and menu suggestions for chef dashboard
