@@ -472,7 +472,7 @@ export default function ChefDashboard() {
   return (
     <div className="flex min-h-screen bg-background" data-testid="chef-dashboard">
       <Sidebar />
-      <div className="flex flex-1">
+      <div className="flex flex-1 ml-64">
         {/* Left Tab Navigation */}
         <div className="w-56 border-r bg-muted/30 flex flex-col">
           <div className="p-4 border-b">
