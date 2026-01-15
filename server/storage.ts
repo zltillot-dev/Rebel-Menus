@@ -16,6 +16,7 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   getChefs(): Promise<User[]>;
   updateUserPhone(id: number, phoneNumber: string): Promise<User>;
+  updateUser(id: number, updates: Partial<{ name: string; email: string; password: string }>): Promise<User>;
 
   // Menus
   getMenus(fraternity?: string, status?: string): Promise<(Menu & { items: MenuItem[] })[]>;
@@ -71,6 +72,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPhone(id: number, phoneNumber: string): Promise<User> {
     const [user] = await db.update(users).set({ phoneNumber }).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<{ name: string; email: string; password: string }>): Promise<User> {
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return user;
   }
 

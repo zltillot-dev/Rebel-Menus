@@ -55,6 +55,13 @@ Key entities:
 
 ### January 2026
 
+#### Admin & Chef Account Management (Latest)
+- Updated admin credentials: chefzak@rebelchefs.net / Drum14me!!
+- Admin can add new chefs from the Admin Dashboard with email/password/name/fraternity
+- Chefs can update their profile (name, email, password) via "Account Settings" button in Chef Dashboard
+- Profile updates require current password verification when changing password
+- Branding updated: App now uses "REBEL CHEFS" text branding (removed logo images)
+
 #### Late Plate Request Enhancements
 - Added cutoff time validation: Lunch late plates must be submitted before 12:45 PM, dinner before 5:45 PM
 - Wednesday dinners are NEVER available for late plate requests

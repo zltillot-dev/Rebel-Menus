@@ -355,6 +355,103 @@ export async function registerRoutes(
     }
   });
 
+  // Profile update schema
+  const profileUpdateSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().email("Invalid email address").optional(),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
+  }).refine(data => {
+    // If changing password, current password is required
+    if (data.newPassword && !data.currentPassword) {
+      return false;
+    }
+    return true;
+  }, { message: "Current password is required to set a new password" });
+
+  // Update user profile (chefs can update their own credentials)
+  app.patch("/api/user/profile", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    
+    // Only chefs can update their profile through this endpoint
+    if (userRole !== 'chef') {
+      return res.status(403).send("Forbidden - only chefs can update their profile");
+    }
+    
+    const parseResult = profileUpdateSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        message: parseResult.error.errors[0]?.message || "Invalid input" 
+      });
+    }
+    
+    const { name, email, currentPassword, newPassword } = parseResult.data;
+    
+    try {
+      const updates: Partial<{ name: string; email: string; password: string }> = {};
+      
+      // Update name if provided
+      if (name) {
+        updates.name = name;
+      }
+      
+      // Update email if provided (check for conflicts)
+      if (email && email !== (req.user as any).email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+        updates.email = email;
+      }
+      
+      // Update password if provided
+      if (newPassword && currentPassword) {
+        // Verify current password
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        const { scrypt, timingSafeEqual } = await import("crypto");
+        const { promisify } = await import("util");
+        const scryptAsync = promisify(scrypt);
+        
+        const [storedHash, salt] = user.password.split(".");
+        const storedBuf = Buffer.from(storedHash, "hex");
+        const suppliedBuf = (await scryptAsync(currentPassword, salt, 64)) as Buffer;
+        
+        if (!timingSafeEqual(storedBuf, suppliedBuf)) {
+          return res.status(400).json({ message: "Current password is incorrect" });
+        }
+        
+        // Hash and set new password
+        updates.password = await hashPassword(newPassword);
+      }
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "No changes provided" });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, updates);
+      res.json({ 
+        success: true,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          fraternity: updatedUser.fraternity
+        }
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   // Phone number update schema
   const phoneUpdateSchema = z.object({
     phoneNumber: z.string()
@@ -415,35 +512,38 @@ export async function registerRoutes(
   if (process.env.NODE_ENV !== 'production') {
       (async () => {
           try {
-              const password = await hashPassword("password123");
-              const adminEmail = "admin@rebelchefs.com";
+              // Primary admin account
+              const adminEmail = "chefzak@rebelchefs.net";
+              const adminPassword = await hashPassword("Drum14me!!");
               const admin = await storage.getUserByEmail(adminEmail);
               
               if (admin) {
                   console.log("Updating existing admin password...");
-                  await db.update(users).set({ password }).where(eq(users.id, admin.id));
+                  await db.update(users).set({ password: adminPassword }).where(eq(users.id, admin.id));
               } else {
                   console.log("Seeding admin user...");
                   await storage.createUser({
-                      name: "Admin User",
+                      name: "Chef Zak",
                       email: adminEmail,
-                      password,
+                      password: adminPassword,
                       role: "admin",
                       fraternity: null
                   } as any);
               }
               
+              // Also seed test chef for development
+              const testPassword = await hashPassword("password123");
               const chefEmail = "chef.dtd@rebelchefs.com";
               const chef = await storage.getUserByEmail(chefEmail);
               if (chef) {
                   console.log("Updating existing chef password...");
-                  await db.update(users).set({ password }).where(eq(users.id, chef.id));
+                  await db.update(users).set({ password: testPassword }).where(eq(users.id, chef.id));
               } else {
                   console.log("Seeding chef user...");
                   await storage.createUser({
                       name: "Head Chef DTD",
                       email: chefEmail,
-                      password,
+                      password: testPassword,
                       role: "chef",
                       fraternity: "Delta Tau Delta"
                   } as any);
@@ -454,18 +554,18 @@ export async function registerRoutes(
               const testUser = await storage.getUserByEmail(userEmail);
               if (testUser) {
                   console.log("Updating existing test user password...");
-                  await db.update(users).set({ password }).where(eq(users.id, testUser.id));
+                  await db.update(users).set({ password: testPassword }).where(eq(users.id, testUser.id));
               } else {
                   console.log("Seeding test user...");
                   await storage.createUser({
                       name: "Test Member",
                       email: userEmail,
-                      password,
+                      password: testPassword,
                       role: "user",
                       fraternity: "Delta Tau Delta"
                   } as any);
               }
-              console.log("Seeding complete. Accounts updated with hashed passwords.");
+              console.log("Seeding complete. Admin: chefzak@rebelchefs.net / Drum14me!!");
           } catch (err) {
               console.error("Seeding failed:", err);
           }

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
@@ -32,6 +32,12 @@ export default function ChefDashboard() {
   const [editMenu, setEditMenu] = useState<any>(null);
   const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -48,6 +54,17 @@ export default function ChefDashboard() {
       setPhoneNumber(user.phoneNumber);
     }
   }, [phoneDialogOpen, user?.phoneNumber]);
+
+  // Reset profile inputs when dialog opens
+  useEffect(() => {
+    if (profileDialogOpen && user) {
+      setProfileName(user.name || "");
+      setProfileEmail(user.email || "");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [profileDialogOpen, user]);
 
   // Phone number update mutation
   const updatePhoneMutation = useMutation({
@@ -71,6 +88,68 @@ export default function ChefDashboard() {
       });
     }
   });
+
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+      const res = await apiRequest("PATCH", "/api/user/profile", data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile updated",
+        description: "Your account details have been saved successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      setProfileDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update profile",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleProfileUpdate = () => {
+    // Validate password confirmation
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your new password and confirmation match.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updates: { name?: string; email?: string; currentPassword?: string; newPassword?: string } = {};
+    
+    if (profileName && profileName !== user?.name) {
+      updates.name = profileName;
+    }
+    if (profileEmail && profileEmail !== user?.email) {
+      updates.email = profileEmail;
+    }
+    if (newPassword && currentPassword) {
+      updates.currentPassword = currentPassword;
+      updates.newPassword = newPassword;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      toast({
+        title: "No changes",
+        description: "No changes were made to your profile.",
+      });
+      return;
+    }
+
+    updateProfileMutation.mutate(updates);
+  };
 
   // Filter menus that need revision
   const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
@@ -380,6 +459,104 @@ export default function ChefDashboard() {
             <p className="text-muted-foreground">Manage your weekly menus for {user?.fraternity}</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Profile Settings Dialog */}
+            <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="default"
+                  data-testid="button-profile-settings"
+                >
+                  <UserCog className="w-4 h-4 mr-2" />
+                  Account Settings
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Account Settings</DialogTitle>
+                  <DialogDescription>
+                    Update your name, email, or password. Leave password fields empty to keep your current password.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="profileName">Full Name</Label>
+                    <Input 
+                      id="profileName"
+                      placeholder="Your name"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      data-testid="input-profile-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profileEmail">Email</Label>
+                    <Input 
+                      id="profileEmail"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
+                      data-testid="input-profile-email"
+                    />
+                  </div>
+                  <div className="border-t pt-4 space-y-4">
+                    <h4 className="font-medium text-sm">Change Password</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword">Current Password</Label>
+                      <Input 
+                        id="currentPassword"
+                        type="password"
+                        placeholder="Enter current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        data-testid="input-current-password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input 
+                        id="newPassword"
+                        type="password"
+                        placeholder="Enter new password (min 6 characters)"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        data-testid="input-new-password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Input 
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        data-testid="input-confirm-password"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleProfileUpdate}
+                    disabled={updateProfileMutation.isPending}
+                    data-testid="button-save-profile"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* SMS Settings Dialog */}
             <Dialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
