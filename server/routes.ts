@@ -8,6 +8,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import OpenAI from "openai";
+import { sendSMS } from "./twilio";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -187,10 +188,53 @@ export async function registerRoutes(
   // Requests
   app.post(api.requests.create.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userFraternity = (req.user as any).fraternity;
+    const userName = (req.user as any).name;
+    const userEmail = (req.user as any).email;
+    const requestType = req.body.type;
+    
     const request = await storage.createRequest({
       ...req.body,
-      userId: (req.user as any).id
+      userId: (req.user as any).id,
+      fraternity: userFraternity || req.body.fraternity
     });
+    
+    // Send SMS notification to chef for substitutions and menu suggestions
+    if (requestType === 'substitution' || requestType === 'menu_suggestion') {
+      try {
+        // Find the chef for this fraternity
+        if (userFraternity) {
+          const chefs = await storage.getChefs();
+          const fraternityChef = chefs.find(c => c.fraternity === userFraternity && c.phoneNumber);
+          
+          if (fraternityChef && fraternityChef.phoneNumber) {
+            const typeLabel = requestType === 'substitution' ? 'Substitution Request' : 'Menu Suggestion';
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', { 
+              weekday: 'long', 
+              month: 'long', 
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true 
+            });
+            
+            const smsBody = `REBEL CHEFS - New ${typeLabel}\n` +
+              `From: ${userName} (${userEmail})\n` +
+              `Time: ${timeStr}\n` +
+              `Details: ${req.body.details || 'No details provided'}`;
+            
+            await sendSMS(fraternityChef.phoneNumber, smsBody);
+            console.log(`SMS sent to chef for ${typeLabel} from ${userEmail}`);
+          }
+        }
+      } catch (smsError) {
+        console.error('Failed to send SMS notification:', smsError);
+        // Don't fail the request if SMS fails
+      }
+    }
+    
     res.status(201).json(request);
   });
 
@@ -254,6 +298,52 @@ export async function registerRoutes(
     );
     
     res.json(latePlatesWithUsers);
+  });
+
+  // Substitutions and menu suggestions for chef dashboard
+  app.get("/api/chef-requests", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const allRequests = await storage.getRequests();
+    
+    // Filter to substitutions and menu suggestions only
+    let chefRequests = allRequests.filter(r => 
+      r.type === 'substitution' || r.type === 'menu_suggestion'
+    );
+    
+    // Chefs only see their fraternity's requests
+    if (userRole === 'chef' && userFraternity) {
+      chefRequests = chefRequests.filter(r => r.fraternity === userFraternity);
+    }
+    
+    // Filter to last 60 days
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    chefRequests = chefRequests.filter(r => {
+      const requestDate = new Date(r.date || '');
+      return requestDate >= sixtyDaysAgo;
+    });
+    
+    // Get user names for the requests
+    const requestsWithUsers = await Promise.all(
+      chefRequests.map(async (req) => {
+        const user = await storage.getUser(req.userId);
+        return {
+          ...req,
+          userName: user?.name || 'Unknown User',
+          userEmail: user?.email || ''
+        };
+      })
+    );
+    
+    res.json(requestsWithUsers);
   });
 
   app.delete(api.requests.delete.path, async (req, res) => {

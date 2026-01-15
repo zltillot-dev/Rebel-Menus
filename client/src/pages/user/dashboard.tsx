@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle, Trash2 } from "lucide-react";
+import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle, Trash2, Lightbulb } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +31,7 @@ export default function UserDashboard() {
   const { mutate: deleteRequest, isPending: isDeleting } = useDeleteRequest();
   
   const [requestModalOpen, setRequestModalOpen] = useState(false);
-  const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "future_request">("late_plate");
+  const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "menu_suggestion" | "future_request">("late_plate");
   const [requestDetails, setRequestDetails] = useState("");
   const [selectedMealDay, setSelectedMealDay] = useState<string>("");
   const [selectedMealType, setSelectedMealType] = useState<"Lunch" | "Dinner" | "">("");
@@ -159,16 +159,23 @@ export default function UserDashboard() {
         }
       });
     } else {
+      // Substitutions and menu suggestions
       createRequest({
         userId: user.id,
         type: requestType,
         details: requestDetails,
         status: "pending",
         date: new Date().toISOString(),
+        fraternity: user.fraternity || undefined,
       }, {
         onSuccess: () => {
           setRequestModalOpen(false);
           setRequestDetails("");
+          const typeLabel = requestType === 'substitution' ? 'Substitution' : 'Menu Suggestion';
+          toast({
+            title: `${typeLabel} Submitted`,
+            description: `Your ${typeLabel.toLowerCase()} has been sent to the chef.`
+          });
         }
       });
     }
@@ -222,6 +229,7 @@ export default function UserDashboard() {
               <Button 
                 onClick={() => openRequestModal("late_plate")}
                 className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                data-testid="button-late-plate"
               >
                 <Clock className="w-4 h-4 mr-2 text-primary" />
                 Late Plate
@@ -229,9 +237,18 @@ export default function UserDashboard() {
               <Button 
                 onClick={() => openRequestModal("substitution")}
                 className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                data-testid="button-substitution"
               >
                 <RefreshCcw className="w-4 h-4 mr-2 text-primary" />
                 Substitution
+              </Button>
+              <Button 
+                onClick={() => openRequestModal("menu_suggestion")}
+                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                data-testid="button-menu-suggestion"
+              >
+                <Lightbulb className="w-4 h-4 mr-2 text-primary" />
+                Menu Suggestion
               </Button>
             </div>
           </header>
@@ -323,6 +340,8 @@ export default function UserDashboard() {
                             <Clock className="w-5 h-5 text-blue-500" />
                           ) : request.type === 'substitution' ? (
                             <RefreshCcw className="w-5 h-5 text-green-500" />
+                          ) : request.type === 'menu_suggestion' ? (
+                            <Lightbulb className="w-5 h-5 text-amber-500" />
                           ) : (
                             <AlertCircle className="w-5 h-5 text-purple-500" />
                           )}
@@ -446,12 +465,18 @@ export default function UserDashboard() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {requestType === "late_plate" ? "Request Late Plate" : "Request Substitution"}
+                {requestType === "late_plate" 
+                  ? "Request Late Plate" 
+                  : requestType === "substitution" 
+                  ? "Request Substitution"
+                  : "Menu Suggestion"}
               </DialogTitle>
               <DialogDescription>
                 {requestType === "late_plate" 
                   ? "Select the meal you need a late plate for. Cutoff is 12:45 PM for lunch and 5:45 PM for dinner."
-                  : "Please provide details for your request. All requests are sent to the chef."
+                  : requestType === "substitution"
+                  ? "Provide details for your substitution request (e.g., allergies, dietary restrictions). This will be sent to the chef."
+                  : "Suggest a dish or meal idea for future menus. Your suggestion will be sent to the chef."
                 }
               </DialogDescription>
             </DialogHeader>
@@ -500,9 +525,21 @@ export default function UserDashboard() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>{requestType === "late_plate" ? "Pickup Details (Optional)" : "Details"}</Label>
+                <Label>
+                  {requestType === "late_plate" 
+                    ? "Pickup Details (Optional)" 
+                    : requestType === "substitution" 
+                    ? "Substitution Details" 
+                    : "Your Suggestion"}
+                </Label>
                 <Textarea 
-                  placeholder={requestType === "late_plate" ? "I will pick up at 7 PM..." : "I have a gluten allergy, can I get..."}
+                  placeholder={
+                    requestType === "late_plate" 
+                      ? "I will pick up at 7 PM..." 
+                      : requestType === "substitution"
+                      ? "I have a gluten allergy, can I get..." 
+                      : "I'd love to see chicken alfredo on the menu..."
+                  }
                   value={requestDetails}
                   onChange={(e) => setRequestDetails(e.target.value)}
                   className="min-h-[100px]"

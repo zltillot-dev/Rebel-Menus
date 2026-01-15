@@ -110,3 +110,15 @@ export function useLatePlates() {
     },
   });
 }
+
+// Substitutions and menu suggestions for chef dashboard
+export function useChefRequests() {
+  return useQuery({
+    queryKey: ["/api/chef-requests"],
+    queryFn: async () => {
+      const res = await fetch("/api/chef-requests", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch chef requests");
+      return res.json();
+    },
+  });
+}

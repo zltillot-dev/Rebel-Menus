@@ -55,7 +55,17 @@ Key entities:
 
 ### January 2026
 
-#### Admin & Chef Account Management (Latest)
+#### Menu Suggestions & Substitutions Separation (Latest)
+- User dashboard now has three distinct action buttons: "Late Plate", "Substitution", and "Menu Suggestion"
+- Late Plate requests are separate from Substitutions (different icons, workflows)
+- Menu Suggestions allow users to suggest dishes for future menus
+- Both Substitutions and Menu Suggestions trigger instant SMS notifications to the chef
+- SMS format includes: user name, email, timestamp, and details
+- Chef dashboard displays a "Substitutions & Menu Suggestions" section with two cards
+- Substitutions and menu suggestions are kept for 60 days, then automatically deleted
+- Daily cleanup job runs to remove old entries (60+ days old)
+
+#### Admin & Chef Account Management
 - Updated admin credentials: chefzak@rebelchefs.net / Drum14me!!
 - Admin can add new chefs from the Admin Dashboard with email/password/name/fraternity
 - Chefs can update their profile (name, email, password) via "Account Settings" button in Chef Dashboard

@@ -124,6 +124,32 @@ async function checkAndRunJobs() {
 }
 
 let schedulerInterval: NodeJS.Timeout | null = null;
+let cleanupInterval: NodeJS.Timeout | null = null;
+
+// Cleanup old substitutions and menu suggestions (older than 60 days)
+async function cleanupOldRequests() {
+  try {
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    
+    const allRequests = await storage.getRequests();
+    const oldRequests = allRequests.filter(r => {
+      if (r.type !== 'substitution' && r.type !== 'menu_suggestion') return false;
+      const requestDate = new Date(r.date || '');
+      return requestDate < sixtyDaysAgo;
+    });
+    
+    if (oldRequests.length > 0) {
+      console.log(`[Cleanup] Deleting ${oldRequests.length} old substitutions/menu suggestions`);
+      for (const req of oldRequests) {
+        await storage.deleteRequest(req.id);
+      }
+      console.log('[Cleanup] Cleanup complete');
+    }
+  } catch (error) {
+    console.error('[Cleanup] Error cleaning up old requests:', error);
+  }
+}
 
 export function startScheduler() {
   if (schedulerInterval) {
@@ -135,9 +161,14 @@ export function startScheduler() {
   console.log('[Scheduler] Jobs scheduled:');
   console.log('  - Lunch late plates: 12:45 PM');
   console.log('  - Dinner late plates: 5:45 PM');
+  console.log('  - Daily cleanup: Old substitutions/menu suggestions (60 days)');
   
   // Check every 30 seconds
   schedulerInterval = setInterval(checkAndRunJobs, 30000);
+  
+  // Cleanup daily (run every 24 hours, also run once on startup)
+  cleanupOldRequests();
+  cleanupInterval = setInterval(cleanupOldRequests, 24 * 60 * 60 * 1000);
   
   // Also run immediately to check current time
   checkAndRunJobs();

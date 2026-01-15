@@ -9,7 +9,7 @@ export const FRATERNITIES = ["Delta Tau Delta", "Sigma Chi"] as const;
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 export const MEAL_TYPES = ["Lunch", "Dinner"] as const;
 export const MENU_STATUS = ["draft", "pending", "approved", "needs_revision"] as const;
-export const REQUEST_TYPES = ["late_plate", "substitution", "future_request"] as const;
+export const REQUEST_TYPES = ["late_plate", "substitution", "menu_suggestion", "future_request"] as const;
 
 // Tables
 export const users = pgTable("users", {
