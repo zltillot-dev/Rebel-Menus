@@ -28,9 +28,9 @@ export default function ChefDashboard() {
   const initializeMenu = () => {
     const items = [];
     for (const day of DAYS) {
-      items.push({ day, meal: "Lunch", description: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
+      items.push({ day, meal: "Lunch", description: "", side1: "", side2: "", side3: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
       if (day !== "Friday") { // No dinner on Friday
-        items.push({ day, meal: "Dinner", description: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
+        items.push({ day, meal: "Dinner", description: "", side1: "", side2: "", side3: "", calories: 0, carbs: 0, fats: 0, protein: 0, sugar: 0 });
       }
     }
     setMenuItems(items);
@@ -117,13 +117,39 @@ export default function ChefDashboard() {
                               <CardTitle className="text-lg">{item.meal}</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-4 space-y-4">
-                              <div>
-                                <Label>Description</Label>
-                                <Input 
-                                  placeholder="e.g. Grilled Chicken with Quinoa" 
-                                  value={item.description}
-                                  onChange={(e) => handleItemChange(idx, "description", e.target.value)}
-                                />
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label>Main Protein / Item</Label>
+                                  <Input 
+                                    placeholder="e.g. Grilled Chicken" 
+                                    value={item.description}
+                                    onChange={(e) => handleItemChange(idx, "description", e.target.value)}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Side 1</Label>
+                                  <Input 
+                                    placeholder="e.g. Quinoa" 
+                                    value={item.side1}
+                                    onChange={(e) => handleItemChange(idx, "side1", e.target.value)}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Side 2</Label>
+                                  <Input 
+                                    placeholder="e.g. Steamed Broccoli" 
+                                    value={item.side2}
+                                    onChange={(e) => handleItemChange(idx, "side2", e.target.value)}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Side 3 / Details</Label>
+                                  <Input 
+                                    placeholder="e.g. Garlic Butter Sauce" 
+                                    value={item.side3}
+                                    onChange={(e) => handleItemChange(idx, "side3", e.target.value)}
+                                  />
+                                </div>
                               </div>
                               <div className="grid grid-cols-5 gap-3">
                                 <div>
