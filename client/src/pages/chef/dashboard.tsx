@@ -367,6 +367,7 @@ export default function ChefDashboard() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <Button 
+                                  type="button"
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => estimateMacros(idx)}
@@ -699,6 +700,7 @@ export default function ChefDashboard() {
                             </div>
                             <div className="flex items-center justify-between">
                               <Button 
+                                type="button"
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => estimateEditMacros(idx)}
