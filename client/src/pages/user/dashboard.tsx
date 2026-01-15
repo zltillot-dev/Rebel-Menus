@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus } from "@/hooks/use-menus";
-import { useCreateRequest, useCreateFeedback, useRequests, useFeedback } from "@/hooks/use-requests";
+import { useCreateRequest, useCreateFeedback, useRequests, useFeedback, useDeleteRequest } from "@/hooks/use-requests";
 import { Sidebar } from "@/components/Sidebar";
 import { MenuCard } from "@/components/MenuCard";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle } from "lucide-react";
+import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DAYS } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfWeek, addDays } from "date-fns";
@@ -27,6 +28,7 @@ export default function UserDashboard() {
   const { data: userFeedback, isLoading: isLoadingFeedback } = useFeedback();
   const { mutate: createRequest, isPending: isRequesting } = useCreateRequest();
   const { mutate: createFeedback, isPending: isFeedbacking } = useCreateFeedback();
+  const { mutate: deleteRequest, isPending: isDeleting } = useDeleteRequest();
   
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "future_request">("late_plate");
@@ -224,12 +226,44 @@ export default function UserDashboard() {
                             </p>
                           </div>
                         </div>
-                        <Badge variant={
-                          request.status === 'approved' ? 'default' :
-                          request.status === 'denied' ? 'destructive' : 'secondary'
-                        }>
-                          {request.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={
+                            request.status === 'approved' ? 'default' :
+                            request.status === 'denied' ? 'destructive' : 'secondary'
+                          }>
+                            {request.status}
+                          </Badge>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-muted-foreground"
+                                data-testid={`button-delete-request-${request.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Request</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this {request.type.replace('_', ' ')} request? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteRequest(request.id)}
+                                  disabled={isDeleting}
+                                  data-testid="button-confirm-delete"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>

@@ -155,6 +155,14 @@ export const api = {
         200: z.array(z.custom<typeof requests.$inferSelect & { user: typeof users.$inferSelect }>()),
       },
     },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/requests/:id',
+      responses: {
+        200: z.object({ message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
   },
   admin: {
     createChef: {

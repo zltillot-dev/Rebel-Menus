@@ -161,7 +161,18 @@ export async function registerRoutes(
   });
 
   app.get(api.feedback.list.path, async (req, res) => {
-    if (!req.user || (req.user as any).role === 'user') return res.status(403).send("Forbidden");
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    
+    // Users can only see their own feedback, admins/chefs can see all
+    if (userRole === 'user') {
+      const feedback = await storage.getFeedback();
+      const userFeedback = feedback.filter(f => f.userId === userId);
+      return res.json(userFeedback);
+    }
+    
     const feedback = await storage.getFeedback();
     res.json(feedback);
   });
@@ -178,8 +189,39 @@ export async function registerRoutes(
 
   app.get(api.requests.list.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
-    const requests = await storage.getRequests();
-    res.json(requests);
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    
+    // Users can only see their own requests, admins/chefs can see all
+    const allRequests = await storage.getRequests();
+    if (userRole === 'user') {
+      const userRequests = allRequests.filter(r => r.userId === userId);
+      return res.json(userRequests);
+    }
+    
+    res.json(allRequests);
+  });
+
+  app.delete(api.requests.delete.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    const requestId = Number(req.params.id);
+    
+    const existingRequest = await storage.getRequest(requestId);
+    if (!existingRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+    
+    // Users can only delete their own requests, admins can delete any
+    if (userRole === 'user' && existingRequest.userId !== userId) {
+      return res.status(403).send("Forbidden - not your request");
+    }
+    
+    await storage.deleteRequest(requestId);
+    return res.json({ message: "Request deleted successfully" });
   });
 
   // Admin

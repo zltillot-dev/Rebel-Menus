@@ -30,6 +30,8 @@ export interface IStorage {
   // Requests
   createRequest(request: InsertRequest): Promise<Request>;
   getRequests(userId?: number): Promise<(Request & { user: User })[]>;
+  getRequest(id: number): Promise<Request | undefined>;
+  deleteRequest(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -165,6 +167,15 @@ export class DatabaseStorage implements IStorage {
       }
     }
     return result;
+  }
+
+  async getRequest(id: number): Promise<Request | undefined> {
+    const [request] = await db.select().from(requests).where(eq(requests.id, id));
+    return request;
+  }
+
+  async deleteRequest(id: number): Promise<void> {
+    await db.delete(requests).where(eq(requests.id, id));
   }
 }
 

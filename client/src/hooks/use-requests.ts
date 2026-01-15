@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type InsertRequest, type InsertFeedback } from "@shared/routes";
+import { api, buildUrl, type InsertRequest, type InsertFeedback } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 
 export function useRequests() {
@@ -66,6 +66,35 @@ export function useCreateFeedback() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.feedback.list.path] });
       toast({ title: "Thank you!", description: "Your feedback has been recorded." });
+    },
+  });
+}
+
+export function useDeleteRequest() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.requests.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.requests.delete.method,
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete request");
+      return api.requests.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.requests.list.path] });
+      toast({ title: "Success", description: "Request deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 }
