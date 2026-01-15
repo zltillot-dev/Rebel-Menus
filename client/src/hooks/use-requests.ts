@@ -134,3 +134,43 @@ export function useChefFeedback() {
     },
   });
 }
+
+// Tasks for chef dashboard
+export function useChefTasks() {
+  return useQuery({
+    queryKey: [api.chefTasks.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.chefTasks.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch chef tasks");
+      return res.json();
+    },
+  });
+}
+
+export function useUpdateChefTask() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, isCompleted }: { id: number; isCompleted: boolean }) => {
+      const res = await fetch(api.chefTasks.update.path.replace(':id', String(id)), {
+        method: api.chefTasks.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isCompleted }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.chefTasks.list.path] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
-import { useChefs, useCreateChef } from "@/hooks/use-admin";
+import { useChefs, useCreateChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,15 +30,24 @@ const createChefSchema = insertUserSchema.extend({
 
 export default function AdminDashboard() {
   const { data: menus } = useMenus();
-  const { data: chefs } = useChefs();
+  const { data: chefs, isLoading: isLoadingChefs } = useChefs();
+  const { data: allTasks, isLoading: isLoadingTasks } = useAllChefTasks();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: deleteMenu, isPending: isDeleting } = useDeleteMenu();
   const { mutate: createChef, isPending: isCreatingChef } = useCreateChef();
+  const { mutate: createTask, isPending: isCreatingTask } = useCreateChefTask();
+  const { mutate: deleteTask, isPending: isDeletingTask } = useDeleteChefTask();
   const [createChefOpen, setCreateChefOpen] = useState(false);
+  const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
   const [reviewMenu, setReviewMenu] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "all">("pending");
+  const [newTaskChefId, setNewTaskChefId] = useState<string>("");
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState("medium");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
 
   const form = useForm({
     resolver: zodResolver(createChefSchema),
@@ -62,6 +71,32 @@ export default function AdminDashboard() {
       }
     });
   };
+
+  const handleCreateTask = () => {
+    if (!newTaskChefId || !newTaskTitle.trim()) return;
+    createTask({
+      chefId: parseInt(newTaskChefId),
+      title: newTaskTitle.trim(),
+      description: newTaskDescription.trim() || undefined,
+      priority: newTaskPriority,
+      dueDate: newTaskDueDate || undefined,
+    }, {
+      onSuccess: () => {
+        setCreateTaskOpen(false);
+        setNewTaskChefId("");
+        setNewTaskTitle("");
+        setNewTaskDescription("");
+        setNewTaskPriority("medium");
+        setNewTaskDueDate("");
+      }
+    });
+  };
+
+  const tasksByChef = (allTasks || []).reduce((acc: Record<number, any[]>, task: any) => {
+    if (!acc[task.chefId]) acc[task.chefId] = [];
+    acc[task.chefId].push(task);
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -315,6 +350,199 @@ export default function AdminDashboard() {
                   </Card>
                 ))}
               </div>
+            </section>
+
+            {/* Chef Tasks Management */}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <ListTodo className="w-5 h-5 text-primary" />
+                  Chef Tasks & Reminders
+                </h2>
+                <Dialog open={createTaskOpen} onOpenChange={setCreateTaskOpen}>
+                  <DialogTrigger asChild>
+                    <Button data-testid="button-add-task">
+                      <Plus className="w-4 h-4 mr-2" /> Add Task
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create Task for Chef</DialogTitle>
+                      <DialogDescription>Assign a task or reminder to a specific chef.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Chef</Label>
+                        <Select value={newTaskChefId} onValueChange={setNewTaskChefId}>
+                          <SelectTrigger data-testid="select-task-chef">
+                            <SelectValue placeholder="Select a chef" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {activeChefs.map((chef) => (
+                              <SelectItem key={chef.id} value={String(chef.id)}>
+                                {chef.name} ({chef.fraternity})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Task Title</Label>
+                        <Input 
+                          value={newTaskTitle} 
+                          onChange={(e) => setNewTaskTitle(e.target.value)}
+                          placeholder="e.g., Update weekly menu"
+                          data-testid="input-task-title"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Description (optional)</Label>
+                        <Textarea 
+                          value={newTaskDescription} 
+                          onChange={(e) => setNewTaskDescription(e.target.value)}
+                          placeholder="Additional details..."
+                          data-testid="input-task-description"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Priority</Label>
+                          <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                            <SelectTrigger data-testid="select-task-priority">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Low</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="high">High</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Due Date (optional)</Label>
+                          <Input 
+                            type="date" 
+                            value={newTaskDueDate} 
+                            onChange={(e) => setNewTaskDueDate(e.target.value)}
+                            data-testid="input-task-due-date"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setCreateTaskOpen(false)}>Cancel</Button>
+                      <Button 
+                        onClick={handleCreateTask} 
+                        disabled={isCreatingTask || !newTaskChefId || !newTaskTitle.trim()}
+                        data-testid="button-submit-task"
+                      >
+                        {isCreatingTask ? "Creating..." : "Create Task"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {isLoadingChefs || isLoadingTasks ? (
+                <Card className="bg-muted/30 border-dashed">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Loading...
+                  </CardContent>
+                </Card>
+              ) : activeChefs.length === 0 ? (
+                <Card className="bg-muted/30 border-dashed">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No chefs available. Add a chef first to assign tasks.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {activeChefs.map((chef) => {
+                    const chefTasks = tasksByChef[chef.id] || [];
+                    const incompleteTasks = chefTasks.filter((t: any) => !t.isCompleted);
+                    const completedTasks = chefTasks.filter((t: any) => t.isCompleted);
+                    
+                    return (
+                      <Card key={chef.id} data-testid={`card-chef-tasks-${chef.id}`}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                {chef.name.charAt(0)}
+                              </div>
+                              <div>
+                                <CardTitle className="text-base">{chef.name}</CardTitle>
+                                <CardDescription>{chef.fraternity}</CardDescription>
+                              </div>
+                            </div>
+                            <Badge variant="outline">
+                              {incompleteTasks.length} active task{incompleteTasks.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {chefTasks.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No tasks assigned</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {incompleteTasks.map((task: any) => (
+                                <div key={task.id} className="flex items-start justify-between gap-2 p-2 bg-muted/50 rounded-md" data-testid={`task-admin-${task.id}`}>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{task.title}</div>
+                                    {task.description && <p className="text-xs text-muted-foreground">{task.description}</p>}
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
+                                        {task.priority}
+                                      </Badge>
+                                      {task.dueDate && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Due: {format(parseISO(task.dueDate), "MMM d")}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button size="sm" variant="ghost" className="text-destructive" disabled={isDeletingTask} data-testid={`button-delete-task-${task.id}`}>
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Task?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete this task? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteTask(task.id)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              ))}
+                              {completedTasks.length > 0 && (
+                                <div className="pt-2 border-t">
+                                  <p className="text-xs text-muted-foreground mb-2">{completedTasks.length} completed</p>
+                                  {completedTasks.slice(0, 2).map((task: any) => (
+                                    <div key={task.id} className="flex items-center justify-between p-2 opacity-60">
+                                      <span className="text-sm line-through">{task.title}</span>
+                                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteTask(task.id)}>
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           </div>
 

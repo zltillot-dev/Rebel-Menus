@@ -70,11 +70,31 @@ export const requests = pgTable("requests", {
   fraternity: text("fraternity", { enum: FRATERNITIES }), // Which fraternity the request is for
 });
 
+// Chef tasks/reminders assigned by admin
+export const chefTasks = pgTable("chef_tasks", {
+  id: serial("id").primaryKey(),
+  chefId: integer("chef_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: date("created_at").defaultNow(),
+  dueDate: date("due_date"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   menus: many(menus),
   feedback: many(feedback),
   requests: many(requests),
+  tasks: many(chefTasks),
+}));
+
+export const chefTasksRelations = relations(chefTasks, ({ one }) => ({
+  chef: one(users, {
+    fields: [chefTasks.chefId],
+    references: [users.id],
+  }),
 }));
 
 export const menusRelations = relations(menus, ({ one, many }) => ({
@@ -117,6 +137,7 @@ export const insertMenuSchema = createInsertSchema(menus);
 export const insertMenuItemSchema = createInsertSchema(menuItems);
 export const insertFeedbackSchema = createInsertSchema(feedback);
 export const insertRequestSchema = createInsertSchema(requests);
+export const insertChefTaskSchema = createInsertSchema(chefTasks).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -124,8 +145,10 @@ export type Menu = typeof menus.$inferSelect;
 export type MenuItem = typeof menuItems.$inferSelect;
 export type Feedback = typeof feedback.$inferSelect;
 export type Request = typeof requests.$inferSelect;
+export type ChefTask = typeof chefTasks.$inferSelect;
 
 export type InsertMenu = z.infer<typeof insertMenuSchema>;
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type InsertRequest = z.infer<typeof insertRequestSchema>;
+export type InsertChefTask = z.infer<typeof insertChefTaskSchema>;

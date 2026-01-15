@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, menus, menuItems, feedback, requests, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback } from "@shared/schema";
+import { users, menus, menuItems, feedback, requests, chefTasks, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 import session from "express-session";
@@ -35,6 +35,13 @@ export interface IStorage {
   getRequests(userId?: number): Promise<(Request & { user: User })[]>;
   getRequest(id: number): Promise<Request | undefined>;
   deleteRequest(id: number): Promise<void>;
+
+  // Chef Tasks
+  getChefTasks(chefId: number): Promise<ChefTask[]>;
+  getAllChefTasks(): Promise<(ChefTask & { chef: User })[]>;
+  createChefTask(task: InsertChefTask): Promise<ChefTask>;
+  updateChefTask(id: number, updates: Partial<ChefTask>): Promise<ChefTask>;
+  deleteChefTask(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -195,6 +202,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRequest(id: number): Promise<void> {
     await db.delete(requests).where(eq(requests.id, id));
+  }
+
+  async getChefTasks(chefId: number): Promise<ChefTask[]> {
+    return db.select().from(chefTasks).where(eq(chefTasks.chefId, chefId)).orderBy(desc(chefTasks.createdAt));
+  }
+
+  async getAllChefTasks(): Promise<(ChefTask & { chef: User })[]> {
+    const tasks = await db.select().from(chefTasks).orderBy(desc(chefTasks.createdAt));
+    const result = [];
+    for (const task of tasks) {
+      const [chef] = await db.select().from(users).where(eq(users.id, task.chefId));
+      result.push({ ...task, chef });
+    }
+    return result;
+  }
+
+  async createChefTask(task: InsertChefTask): Promise<ChefTask> {
+    const [created] = await db.insert(chefTasks).values(task).returning();
+    return created;
+  }
+
+  async updateChefTask(id: number, updates: Partial<ChefTask>): Promise<ChefTask> {
+    const [updated] = await db.update(chefTasks).set(updates).where(eq(chefTasks.id, id)).returning();
+    return updated;
+  }
+
+  async deleteChefTask(id: number): Promise<void> {
+    await db.delete(chefTasks).where(eq(chefTasks.id, id));
   }
 }
 

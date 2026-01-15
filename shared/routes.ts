@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { 
-  insertUserSchema, insertMenuSchema, insertMenuItemSchema, insertFeedbackSchema, insertRequestSchema, 
-  users, menus, menuItems, feedback, requests,
-  type InsertMenu, type InsertMenuItem, type InsertFeedback, type InsertRequest
+  insertUserSchema, insertMenuSchema, insertMenuItemSchema, insertFeedbackSchema, insertRequestSchema, insertChefTaskSchema,
+  users, menus, menuItems, feedback, requests, chefTasks,
+  type InsertMenu, type InsertMenuItem, type InsertFeedback, type InsertRequest, type InsertChefTask
 } from './schema';
 
 export * from './schema';
@@ -180,7 +180,53 @@ export const api = {
         200: z.array(z.custom<typeof users.$inferSelect>()),
       },
     },
-  }
+    listChefTasks: {
+      method: 'GET' as const,
+      path: '/api/admin/chef-tasks',
+      responses: {
+        200: z.array(z.custom<typeof chefTasks.$inferSelect & { chef: typeof users.$inferSelect }>()),
+      },
+    },
+    createChefTask: {
+      method: 'POST' as const,
+      path: '/api/admin/chef-tasks',
+      input: insertChefTaskSchema,
+      responses: {
+        201: z.custom<typeof chefTasks.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.unauthorized,
+      },
+    },
+    deleteChefTask: {
+      method: 'DELETE' as const,
+      path: '/api/admin/chef-tasks/:id',
+      responses: {
+        200: z.object({ message: z.string() }),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
+  chefTasks: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/chef-tasks',
+      responses: {
+        200: z.array(z.custom<typeof chefTasks.$inferSelect>()),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/chef-tasks/:id',
+      input: z.object({ isCompleted: z.boolean().optional() }),
+      responses: {
+        200: z.custom<typeof chefTasks.$inferSelect>(),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

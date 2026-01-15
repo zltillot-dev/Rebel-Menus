@@ -55,7 +55,29 @@ Key entities:
 
 ### January 2026
 
-#### Per-Meal Feedback & Admin Delete (Latest)
+#### Chef Dashboard Redesign & Tasks System (Latest)
+- **Chef Tasks & Reminders**: New system for admin to assign tasks/reminders to chefs
+  - `chef_tasks` table added with: title, description, priority (low/medium/high), isCompleted, dueDate
+  - API endpoints: GET/POST /api/admin/chef-tasks (admin), GET /api/chef-tasks (chef), PATCH/DELETE
+  - Admin can create, view, and delete tasks for any chef
+  - Chefs can view and mark tasks as completed
+- **Chef Dashboard Consolidated View**: 
+  - Dashboard view (/chef) now shows: Current week's menu, Tasks & Reminders section, collapsible inbox sections (Late Plates, Substitutions, Meal Suggestions, Feedback)
+  - Removed the left tab navigation in favor of consolidated dashboard
+  - Inbox sections use collapsible cards for better organization
+- **Manage Menus View** (/chef/menus):
+  - Current week's menu with edit capability
+  - Menus needing revision section at top (highlighted)
+  - Future menus section
+  - Past menus section
+  - Create Menu button for new menus
+- **Admin Tasks Management**:
+  - New "Chef Tasks & Reminders" section in admin dashboard
+  - Add Task dialog to assign tasks to specific chefs
+  - View tasks grouped by chef with priority badges and due dates
+  - Delete tasks with confirmation
+
+#### Per-Meal Feedback & Admin Delete
 - Users now rate specific meals (selecting day + meal type like "Monday Lunch") instead of rating entire days
 - Feedback dialog requires selecting both mealDay and mealType before submitting
 - Admin can delete ANY menu regardless of status (pending, approved, active) via "All Menus" tab

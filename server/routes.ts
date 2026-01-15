@@ -645,6 +645,92 @@ export async function registerRoutes(
     }
   });
 
+  // Chef Tasks API
+  // Get tasks for the logged-in chef
+  app.get(api.chefTasks.list.path, async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const userRole = (req.user as any).role;
+    
+    if (userRole !== 'chef') {
+      return res.status(403).json({ message: "Forbidden - only chefs can view their tasks" });
+    }
+    
+    const tasks = await storage.getChefTasks(userId);
+    res.json(tasks);
+  });
+
+  // Get all tasks (admin only)
+  app.get(api.admin.listChefTasks.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const tasks = await storage.getAllChefTasks();
+    res.json(tasks);
+  });
+
+  // Create task for a chef (admin only)
+  app.post(api.admin.createChefTask.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    try {
+      const { insertChefTaskSchema } = await import("@shared/schema");
+      const validated = insertChefTaskSchema.parse(req.body);
+      const task = await storage.createChefTask(validated);
+      res.status(201).json(task);
+    } catch (error: any) {
+      console.error("Error creating task:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: error.errors[0]?.message || "Invalid input" });
+      }
+      res.status(400).json({ message: "Failed to create task" });
+    }
+  });
+
+  // Update task (admin can update any, chef can only mark complete)
+  app.patch(api.chefTasks.update.path, async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const taskId = Number(req.params.id);
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    
+    // Validate input using the shared schema
+    const parseResult = api.chefTasks.update.input.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ message: parseResult.error.errors[0]?.message || "Invalid input" });
+    }
+    const validatedData = parseResult.data;
+    
+    if (userRole === 'admin') {
+      const task = await storage.updateChefTask(taskId, validatedData);
+      return res.json(task);
+    }
+    
+    if (userRole === 'chef') {
+      // Chefs can only update isCompleted on their own tasks
+      const tasks = await storage.getChefTasks(userId);
+      const ownTask = tasks.find(t => t.id === taskId);
+      if (!ownTask) {
+        return res.status(403).json({ message: "Forbidden - not your task" });
+      }
+      const task = await storage.updateChefTask(taskId, { isCompleted: validatedData.isCompleted });
+      return res.json(task);
+    }
+    
+    return res.status(403).json({ message: "Forbidden" });
+  });
+
+  // Delete task (admin only)
+  app.delete(api.admin.deleteChefTask.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    await storage.deleteChefTask(Number(req.params.id));
+    res.json({ message: "Task deleted successfully" });
+  });
+
   // Manual trigger for late plate SMS (for testing - admin only)
   app.post("/api/admin/trigger-late-plate-sms", async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') {
