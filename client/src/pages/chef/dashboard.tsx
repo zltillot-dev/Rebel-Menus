@@ -19,6 +19,7 @@ export default function ChefDashboard() {
   const { data: menus } = useMenus({ fraternity: user?.fraternity || undefined });
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
   const [createOpen, setCreateOpen] = useState(false);
+  const [viewMenu, setViewMenu] = useState<any>(null);
 
   // New Menu State
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
@@ -245,7 +246,7 @@ export default function ChefDashboard() {
                   <div className="text-sm text-muted-foreground mb-4">
                     {menu.items.length} items scheduled
                   </div>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => setViewMenu(menu)} data-testid={`button-view-menu-${menu.id}`}>
                     <FileEdit className="w-4 h-4 mr-2" /> View Details
                   </Button>
                 </CardContent>
@@ -253,6 +254,60 @@ export default function ChefDashboard() {
             ))}
           </div>
         </section>
+
+        <Dialog open={!!viewMenu} onOpenChange={(open) => !open && setViewMenu(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5" />
+                Menu for {viewMenu && format(new Date(viewMenu.weekOf), "MMMM d, yyyy")}
+              </DialogTitle>
+              <DialogDescription>
+                {viewMenu?.fraternity} - Status: {viewMenu?.status}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              {DAYS.map(day => {
+                const dayItems = viewMenu?.items?.filter((item: any) => item.day === day) || [];
+                if (dayItems.length === 0) return null;
+                return (
+                  <div key={day} className="border rounded-lg p-4">
+                    <h3 className="font-semibold text-lg mb-3">{day}</h3>
+                    <div className="space-y-3">
+                      {dayItems.map((item: any) => (
+                        <div key={item.id} className="bg-muted/50 rounded-md p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-medium">{item.meal}</span>
+                              <p className="text-sm mt-1">{item.description}</p>
+                              {(item.side1 || item.side2 || item.side3) && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {item.side1 && <Badge variant="outline" className="text-xs">{item.side1}</Badge>}
+                                  {item.side2 && <Badge variant="outline" className="text-xs">{item.side2}</Badge>}
+                                  {item.side3 && <Badge variant="outline" className="text-xs">{item.side3}</Badge>}
+                                </div>
+                              )}
+                            </div>
+                            <Badge variant="secondary">{item.calories} cal</Badge>
+                          </div>
+                          <div className="flex gap-4 text-xs text-muted-foreground mt-2">
+                            <span>Carbs: {item.carbs}g</span>
+                            <span>Fats: {item.fats}g</span>
+                            <span>Protein: {item.protein}g</span>
+                            <span>Sugar: {item.sugar}g</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewMenu(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
