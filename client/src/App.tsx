@@ -36,17 +36,16 @@ function Router() {
         )}
       </Route>
 
-      <Route path="/admin">
-        {!user ? <Redirect to="/auth" /> : (user.role === 'admin' ? <AdminDashboard /> : <Redirect to="/" />)}
-      </Route>
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/chefs" component={AdminDashboard} />
+      <Route path="/admin/menus" component={AdminDashboard} />
+      
+      <Route path="/chef" component={ChefDashboard} />
+      <Route path="/chef/menus" component={ChefDashboard} />
 
-      <Route path="/chef">
-        {!user ? <Redirect to="/auth" /> : (user.role === 'chef' ? <ChefDashboard /> : <Redirect to="/" />)}
-      </Route>
-
-      <Route path="/dashboard">
-        {!user ? <Redirect to="/auth" /> : <UserDashboard />}
-      </Route>
+      <Route path="/dashboard" component={UserDashboard} />
+      <Route path="/requests" component={UserDashboard} />
+      <Route path="/feedback" component={UserDashboard} />
 
       <Route component={NotFound} />
     </Switch>
