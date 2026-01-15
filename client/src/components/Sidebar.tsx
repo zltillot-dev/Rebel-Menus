@@ -11,6 +11,7 @@ import {
   Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import rebelChefsLogo from "@assets/rebel_finals-01_1768464666863.jpg";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -47,9 +48,11 @@ export function Sidebar() {
     <div className="h-screen w-64 bg-card border-r border-border fixed left-0 top-0 flex flex-col z-50">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
-            <ChefHat className="w-6 h-6 text-white" />
-          </div>
+          <img 
+            src={rebelChefsLogo} 
+            alt="Rebel Chefs" 
+            className="w-12 h-12 object-contain dark:invert"
+          />
           <div>
             <h1 className="font-display font-bold text-xl leading-none">Rebel Chefs</h1>
             <p className="text-xs text-muted-foreground mt-1">

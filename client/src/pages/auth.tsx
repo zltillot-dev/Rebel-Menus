@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChefHat } from "lucide-react";
+import rebelChefsLogo from "@assets/rebel_finals-01_1768464666863.jpg";
 
 // Auth schemas
 const loginSchema = z.object({
@@ -60,9 +61,11 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-blue-900/90" />
         
         <div className="relative z-10 text-center text-primary-foreground max-w-lg">
-          <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl border border-white/20">
-            <ChefHat className="w-10 h-10 text-white" />
-          </div>
+          <img 
+            src={rebelChefsLogo} 
+            alt="Rebel Chefs" 
+            className="w-48 h-48 object-contain mx-auto mb-8 invert"
+          />
           <h1 className="text-5xl font-display font-bold mb-6">Rebel Chefs</h1>
           <p className="text-xl text-primary-foreground/80 font-light leading-relaxed">
             Premium dining management for fraternities. View weekly menus, track macros, and manage meal requests with ease.
@@ -74,9 +77,11 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden text-center mb-8">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <ChefHat className="w-6 h-6 text-primary" />
-            </div>
+            <img 
+              src={rebelChefsLogo} 
+              alt="Rebel Chefs" 
+              className="w-20 h-20 object-contain mx-auto mb-4 dark:invert"
+            />
             <h1 className="text-3xl font-display font-bold text-primary">Rebel Chefs</h1>
           </div>
 
