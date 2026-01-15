@@ -20,6 +20,8 @@ export interface IStorage {
   getMenu(id: number): Promise<(Menu & { items: MenuItem[] }) | undefined>;
   createMenu(menu: InsertMenu, items: any[]): Promise<Menu>;
   updateMenuStatus(id: number, status: string, adminNotes?: string): Promise<Menu>;
+  updateMenu(id: number, menu: InsertMenu, items: any[]): Promise<Menu & { items: MenuItem[] }>;
+  deleteMenu(id: number): Promise<void>;
 
   // Feedback
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -106,6 +108,31 @@ export class DatabaseStorage implements IStorage {
     }
     const [menu] = await db.update(menus).set(updateData).where(eq(menus.id, id)).returning();
     return menu;
+  }
+
+  async updateMenu(id: number, menuData: InsertMenu, items: any[]): Promise<Menu & { items: MenuItem[] }> {
+    // Update menu
+    const [menu] = await db.update(menus).set({
+      weekOf: menuData.weekOf,
+      status: menuData.status as any,
+    }).where(eq(menus.id, id)).returning();
+    
+    // Delete existing items and insert new ones
+    await db.delete(menuItems).where(eq(menuItems.menuId, id));
+    const insertedItems: MenuItem[] = [];
+    for (const item of items) {
+      const [insertedItem] = await db.insert(menuItems).values({ ...item, menuId: id }).returning();
+      insertedItems.push(insertedItem);
+    }
+    
+    return { ...menu, items: insertedItems };
+  }
+
+  async deleteMenu(id: number): Promise<void> {
+    // Delete menu items first (foreign key constraint)
+    await db.delete(menuItems).where(eq(menuItems.menuId, id));
+    // Delete the menu
+    await db.delete(menus).where(eq(menus.id, id));
   }
 
   async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {

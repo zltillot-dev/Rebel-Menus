@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMenus, useCreateMenu, useUpdateMenuStatus } from "@/hooks/use-menus";
+import { useMenus, useCreateMenu, useUpdateMenuStatus, useUpdateMenu, useDeleteMenu } from "@/hooks/use-menus";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 
@@ -19,8 +20,11 @@ export default function ChefDashboard() {
   const { data: menus } = useMenus({ fraternity: user?.fraternity || undefined });
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
+  const { mutate: updateMenu, isPending: isUpdatingMenu } = useUpdateMenu();
+  const { mutate: deleteMenu, isPending: isDeleting } = useDeleteMenu();
   const [createOpen, setCreateOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
+  const [editMenu, setEditMenu] = useState<any>(null);
 
   // Filter menus that need revision
   const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
@@ -29,6 +33,10 @@ export default function ChefDashboard() {
   // New Menu State
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
   const [menuItems, setMenuItems] = useState<any[]>([]);
+  
+  // Edit Menu State
+  const [editWeekOf, setEditWeekOf] = useState("");
+  const [editMenuItems, setEditMenuItems] = useState<any[]>([]);
 
   // Initialize empty items structure
   const initializeMenu = () => {
@@ -72,6 +80,53 @@ export default function ChefDashboard() {
     setMenuItems(newItems);
   };
 
+  const handleEditItemChange = (index: number, field: string, value: any) => {
+    const newItems = [...editMenuItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setEditMenuItems(newItems);
+  };
+
+  // Initialize edit menu from existing menu
+  const initializeEditMenu = (menu: any) => {
+    setEditWeekOf(menu.weekOf);
+    // Create full structure for all days/meals
+    const items = [];
+    for (const day of DAYS) {
+      const lunchItem = menu.items.find((i: any) => i.day === day && i.meal === "Lunch");
+      items.push(lunchItem || { 
+        day, 
+        meal: "Lunch", 
+        description: "", 
+        side1: "", 
+        side2: "", 
+        side3: "", 
+        calories: 0, 
+        carbs: 0, 
+        fats: 0, 
+        protein: 0, 
+        sugar: 0 
+      });
+      if (day !== "Friday") {
+        const dinnerItem = menu.items.find((i: any) => i.day === day && i.meal === "Dinner");
+        items.push(dinnerItem || { 
+          day, 
+          meal: "Dinner", 
+          description: "", 
+          side1: "", 
+          side2: "", 
+          side3: "", 
+          calories: 0, 
+          carbs: 0, 
+          fats: 0, 
+          protein: 0, 
+          sugar: 0 
+        });
+      }
+    }
+    setEditMenuItems(items);
+    setEditMenu(menu);
+  };
+
   const handleSubmit = () => {
     if (!user?.fraternity) return;
     
@@ -99,6 +154,47 @@ export default function ChefDashboard() {
     }, {
       onSuccess: () => setCreateOpen(false)
     });
+  };
+
+  const handleEditSubmit = () => {
+    if (!user?.fraternity || !editMenu) return;
+    
+    // Filter out items without a description (Main Protein)
+    const activeItems = editMenuItems.filter(item => item.description.trim() !== "");
+    
+    if (activeItems.length === 0) {
+      alert("Please enter at least one meal description.");
+      return;
+    }
+
+    updateMenu({
+      id: editMenu.id,
+      data: {
+        fraternity: user.fraternity,
+        weekOf: editWeekOf,
+        status: "pending", // Resubmit as pending after edit
+        chefId: user.id,
+        items: activeItems.map(item => ({
+          day: item.day,
+          meal: item.meal,
+          description: item.description,
+          side1: item.side1 || "",
+          side2: item.side2 || "",
+          side3: item.side3 || "",
+          calories: Number(item.calories) || 0,
+          carbs: Number(item.carbs) || 0,
+          fats: Number(item.fats) || 0,
+          protein: Number(item.protein) || 0,
+          sugar: Number(item.sugar) || 0,
+        }))
+      }
+    }, {
+      onSuccess: () => setEditMenu(null)
+    });
+  };
+
+  const handleDelete = (menuId: number) => {
+    deleteMenu(menuId);
   };
 
   return (
@@ -261,6 +357,16 @@ export default function ChefDashboard() {
                         <FileEdit className="w-4 h-4 mr-2" /> View
                       </Button>
                       <Button 
+                        variant="default"
+                        className="flex-1" 
+                        onClick={() => initializeEditMenu(menu)}
+                        data-testid={`button-edit-revision-${menu.id}`}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" /> Edit
+                      </Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
                         className="flex-1" 
                         onClick={() => updateStatus({ id: menu.id, status: 'pending' })}
                         disabled={isUpdating}
@@ -268,6 +374,27 @@ export default function ChefDashboard() {
                       >
                         <Send className="w-4 h-4 mr-2" /> Resubmit
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="icon" data-testid={`button-delete-revision-${menu.id}`}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Menu</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this menu? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(menu.id)} disabled={isDeleting}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>
@@ -296,13 +423,46 @@ export default function ChefDashboard() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground mb-4">
+                <CardContent className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
                     {menu.items.length} items scheduled
                   </div>
-                  <Button variant="outline" className="w-full" onClick={() => setViewMenu(menu)} data-testid={`button-view-menu-${menu.id}`}>
-                    <FileEdit className="w-4 h-4 mr-2" /> View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => setViewMenu(menu)} data-testid={`button-view-menu-${menu.id}`}>
+                      <FileEdit className="w-4 h-4 mr-2" /> View
+                    </Button>
+                    {menu.status === 'pending' && (
+                      <Button 
+                        variant="default"
+                        className="flex-1" 
+                        onClick={() => initializeEditMenu(menu)}
+                        data-testid={`button-edit-menu-${menu.id}`}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" /> Edit
+                      </Button>
+                    )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" data-testid={`button-delete-menu-${menu.id}`}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Menu</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this menu? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(menu.id)} disabled={isDeleting}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -359,6 +519,123 @@ export default function ChefDashboard() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setViewMenu(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Menu Dialog */}
+        <Dialog open={!!editMenu} onOpenChange={(open) => !open && setEditMenu(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Menu - {editMenu && format(new Date(editMenu.weekOf), "MMMM d, yyyy")}</DialogTitle>
+              <DialogDescription>
+                Update meal information and resubmit for approval.
+                {editMenu?.adminNotes && (
+                  <span className="block mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-700">
+                    Admin Feedback: {editMenu.adminNotes}
+                  </span>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <div className="mb-6">
+                <Label>Week Of (Monday)</Label>
+                <Input 
+                  type="date" 
+                  value={editWeekOf} 
+                  onChange={(e) => setEditWeekOf(e.target.value)} 
+                  className="w-full sm:w-64"
+                />
+              </div>
+
+              <Tabs defaultValue="Monday" className="w-full">
+                <TabsList className="grid grid-cols-5 mb-6">
+                  {DAYS.map(day => (
+                    <TabsTrigger key={day} value={day}>{day}</TabsTrigger>
+                  ))}
+                </TabsList>
+                
+                {DAYS.map(day => (
+                  <TabsContent key={day} value={day} className="space-y-6">
+                    {editMenuItems
+                      .map((item, idx) => ({ item, idx }))
+                      .filter(({ item }) => item.day === day)
+                      .map(({ item, idx }) => (
+                        <Card key={`${day}-${item.meal}`}>
+                          <CardHeader className="bg-muted/50 pb-3">
+                            <CardTitle className="text-lg">{item.meal}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-4 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Main Protein / Item</Label>
+                                <Input 
+                                  placeholder="e.g. Grilled Chicken" 
+                                  value={item.description}
+                                  onChange={(e) => handleEditItemChange(idx, "description", e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Side 1</Label>
+                                <Input 
+                                  placeholder="e.g. Quinoa" 
+                                  value={item.side1 || ""}
+                                  onChange={(e) => handleEditItemChange(idx, "side1", e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Side 2</Label>
+                                <Input 
+                                  placeholder="e.g. Steamed Broccoli" 
+                                  value={item.side2 || ""}
+                                  onChange={(e) => handleEditItemChange(idx, "side2", e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Side 3 / Details</Label>
+                                <Input 
+                                  placeholder="e.g. Garlic Butter Sauce" 
+                                  value={item.side3 || ""}
+                                  onChange={(e) => handleEditItemChange(idx, "side3", e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-5 gap-3">
+                              <div>
+                                <Label className="text-xs">Calories</Label>
+                                <Input type="number" value={item.calories} onChange={(e) => handleEditItemChange(idx, "calories", e.target.value)} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Carbs (g)</Label>
+                                <Input type="number" value={item.carbs} onChange={(e) => handleEditItemChange(idx, "carbs", e.target.value)} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Fats (g)</Label>
+                                <Input type="number" value={item.fats} onChange={(e) => handleEditItemChange(idx, "fats", e.target.value)} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Protein (g)</Label>
+                                <Input type="number" value={item.protein} onChange={(e) => handleEditItemChange(idx, "protein", e.target.value)} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Sugar (g)</Label>
+                                <Input type="number" value={item.sugar} onChange={(e) => handleEditItemChange(idx, "sugar", e.target.value)} />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditMenu(null)}>Cancel</Button>
+              <Button onClick={handleEditSubmit} disabled={isUpdatingMenu} data-testid="button-save-edit">
+                {isUpdatingMenu ? "Saving..." : "Save & Resubmit"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -102,6 +102,25 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/menus/:id',
+      input: insertMenuSchema.extend({
+        items: z.array(insertMenuItemSchema.omit({ menuId: true }))
+      }),
+      responses: {
+        200: z.custom<typeof menus.$inferSelect & { items: typeof menuItems.$inferSelect[] }>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/menus/:id',
+      responses: {
+        200: z.object({ message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
   },
   feedback: {
     create: {

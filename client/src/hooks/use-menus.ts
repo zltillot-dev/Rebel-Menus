@@ -93,3 +93,63 @@ export function useUpdateMenuStatus() {
     },
   });
 }
+
+export function useUpdateMenu() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: CreateMenuInput }) => {
+      const url = buildUrl(api.menus.update.path, { id });
+      const res = await fetch(url, {
+        method: api.menus.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to update menu");
+      return api.menus.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.menus.list.path] });
+      toast({ title: "Success", description: "Menu updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+}
+
+export function useDeleteMenu() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.menus.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.menus.delete.method,
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete menu");
+      return api.menus.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.menus.list.path] });
+      toast({ title: "Success", description: "Menu deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+}

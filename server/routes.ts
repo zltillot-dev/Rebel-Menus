@@ -84,6 +84,72 @@ export async function registerRoutes(
     return res.status(403).send("Forbidden");
   });
 
+  // Update menu (chef can edit their own menus that need revision or are pending)
+  app.put(api.menus.update.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    const menuId = Number(req.params.id);
+    
+    const existingMenu = await storage.getMenu(menuId);
+    if (!existingMenu) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
+    
+    // Only chefs can edit their own menus (needs_revision or pending)
+    if (userRole === 'chef') {
+      if (existingMenu.chefId !== userId) {
+        return res.status(403).send("Forbidden - not your menu");
+      }
+      if (existingMenu.status !== 'needs_revision' && existingMenu.status !== 'pending') {
+        return res.status(403).send("Forbidden - can only edit pending or needs_revision menus");
+      }
+    } else if (userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    try {
+      const { items, ...menuData } = req.body;
+      
+      // Chefs can only set status to pending when editing - never approved
+      if (userRole === 'chef') {
+        menuData.status = 'pending';
+      }
+      
+      const menu = await storage.updateMenu(menuId, menuData, items);
+      return res.json(menu);
+    } catch (e) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+  });
+
+  // Delete menu (chef can delete their own menus)
+  app.delete(api.menus.delete.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    const menuId = Number(req.params.id);
+    
+    const existingMenu = await storage.getMenu(menuId);
+    if (!existingMenu) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
+    
+    // Chefs can only delete their own menus
+    if (userRole === 'chef') {
+      if (existingMenu.chefId !== userId) {
+        return res.status(403).send("Forbidden - not your menu");
+      }
+    } else if (userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    await storage.deleteMenu(menuId);
+    return res.json({ message: "Menu deleted successfully" });
+  });
+
   // Feedback
   app.post(api.feedback.create.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
