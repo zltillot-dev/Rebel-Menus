@@ -13,6 +13,12 @@ export async function registerRoutes(
 ): Promise<Server> {
   setupAuth(app);
 
+  // Debug middleware to log session info
+  app.use((req, res, next) => {
+    console.log(`[Session Debug] ${req.method} ${req.path} - Session ID: ${req.sessionID?.slice(0, 8) || 'none'}, User: ${req.user ? (req.user as any).email : 'none'}`);
+    next();
+  });
+
   // Menus
   app.get(api.menus.list.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
