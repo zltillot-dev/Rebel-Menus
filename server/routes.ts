@@ -6,6 +6,12 @@ import { api } from "@shared/routes";
 import { insertMenuSchema, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -242,6 +248,64 @@ export async function registerRoutes(
     if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
     const chefs = await storage.getChefs();
     res.json(chefs);
+  });
+
+  // AI Macro Estimation
+  app.post("/api/estimate-macros", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    // Only chefs and admins can use this feature
+    const userRole = (req.user as any).role;
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const { description, side1, side2, side3 } = req.body;
+    
+    if (!description) {
+      return res.status(400).json({ message: "Main item description is required" });
+    }
+    
+    try {
+      const foodItems = [description, side1, side2, side3].filter(Boolean).join(", ");
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a nutritionist assistant. Given a meal description, estimate the nutritional information for a typical serving. Return ONLY a JSON object with these fields: calories (number), protein (number in grams), carbs (number in grams), fats (number in grams), sugar (number in grams). Be reasonable with estimates for typical fraternity house portion sizes (generous but not excessive). Return only valid JSON, no markdown or explanation.`
+          },
+          {
+            role: "user",
+            content: `Estimate the nutritional information for this meal: ${foodItems}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 200,
+      });
+      
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error("No response from AI");
+      }
+      
+      const macros = JSON.parse(content);
+      
+      // Ensure all fields are numbers and within reasonable bounds
+      const result = {
+        calories: Math.min(Math.max(Math.round(Number(macros.calories) || 0), 0), 3000),
+        protein: Math.min(Math.max(Math.round(Number(macros.protein) || 0), 0), 200),
+        carbs: Math.min(Math.max(Math.round(Number(macros.carbs) || 0), 0), 500),
+        fats: Math.min(Math.max(Math.round(Number(macros.fats) || 0), 0), 200),
+        sugar: Math.min(Math.max(Math.round(Number(macros.sugar) || 0), 0), 200),
+      };
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error estimating macros:", error);
+      return res.status(500).json({ message: "Failed to estimate nutritional information" });
+    }
   });
 
   // Seed Data

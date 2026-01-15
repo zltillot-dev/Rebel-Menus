@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2 } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
@@ -37,6 +37,10 @@ export default function ChefDashboard() {
   // Edit Menu State
   const [editWeekOf, setEditWeekOf] = useState("");
   const [editMenuItems, setEditMenuItems] = useState<any[]>([]);
+  
+  // Macro estimation state
+  const [estimatingIndex, setEstimatingIndex] = useState<number | null>(null);
+  const [editEstimatingIndex, setEditEstimatingIndex] = useState<number | null>(null);
 
   // Initialize empty items structure
   const initializeMenu = () => {
@@ -84,6 +88,83 @@ export default function ChefDashboard() {
     const newItems = [...editMenuItems];
     newItems[index] = { ...newItems[index], [field]: value };
     setEditMenuItems(newItems);
+  };
+
+  // Auto-estimate macros using AI
+  const estimateMacros = async (index: number) => {
+    const item = menuItems[index];
+    if (!item || !item.description) return;
+    
+    setEstimatingIndex(index);
+    try {
+      const res = await fetch("/api/estimate-macros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: item.description,
+          side1: item.side1,
+          side2: item.side2,
+          side3: item.side3,
+        }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to estimate");
+      
+      const macros = await res.json();
+      const newItems = [...menuItems];
+      newItems[index] = {
+        ...newItems[index],
+        calories: macros.calories,
+        carbs: macros.carbs,
+        fats: macros.fats,
+        protein: macros.protein,
+        sugar: macros.sugar,
+      };
+      setMenuItems(newItems);
+    } catch (error) {
+      console.error("Failed to estimate macros:", error);
+    } finally {
+      setEstimatingIndex(null);
+    }
+  };
+
+  const estimateEditMacros = async (index: number) => {
+    const item = editMenuItems[index];
+    if (!item.description) return;
+    
+    setEditEstimatingIndex(index);
+    try {
+      const res = await fetch("/api/estimate-macros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: item.description,
+          side1: item.side1,
+          side2: item.side2,
+          side3: item.side3,
+        }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to estimate");
+      
+      const macros = await res.json();
+      const newItems = [...editMenuItems];
+      newItems[index] = {
+        ...newItems[index],
+        calories: macros.calories,
+        carbs: macros.carbs,
+        fats: macros.fats,
+        protein: macros.protein,
+        sugar: macros.sugar,
+      };
+      setEditMenuItems(newItems);
+    } catch (error) {
+      console.error("Failed to estimate macros:", error);
+    } finally {
+      setEditEstimatingIndex(null);
+    }
   };
 
   // Initialize edit menu from existing menu
@@ -283,6 +364,21 @@ export default function ChefDashboard() {
                                     onChange={(e) => handleItemChange(idx, "side3", e.target.value)}
                                   />
                                 </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => estimateMacros(idx)}
+                                  disabled={!item.description || estimatingIndex === idx}
+                                  data-testid={`button-estimate-macros-${idx}`}
+                                >
+                                  {estimatingIndex === idx ? (
+                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Estimating...</>
+                                  ) : (
+                                    <><Sparkles className="w-4 h-4 mr-2" /> Auto-estimate Macros</>
+                                  )}
+                                </Button>
                               </div>
                               <div className="grid grid-cols-5 gap-3">
                                 <div>
@@ -600,6 +696,21 @@ export default function ChefDashboard() {
                                   onChange={(e) => handleEditItemChange(idx, "side3", e.target.value)}
                                 />
                               </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => estimateEditMacros(idx)}
+                                disabled={!item.description || editEstimatingIndex === idx}
+                                data-testid={`button-edit-estimate-macros-${idx}`}
+                              >
+                                {editEstimatingIndex === idx ? (
+                                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Estimating...</>
+                                ) : (
+                                  <><Sparkles className="w-4 h-4 mr-2" /> Auto-estimate Macros</>
+                                )}
+                              </Button>
                             </div>
                             <div className="grid grid-cols-5 gap-3">
                               <div>

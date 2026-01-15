@@ -54,6 +54,10 @@ Key entities:
 ## Recent Changes
 
 ### January 2026
+- AI-powered macro estimation: Chefs can auto-estimate nutritional information (calories, protein, carbs, fats, sugar) using AI based on food item descriptions
+- Users can now delete their own requests with confirmation dialog
+- Fixed feedback API to allow users to view their own submitted feedback
+- Fixed requests API to filter by user for privacy (users only see their own requests)
 - Enhanced menu item schema: Added side1, side2, side3 fields to store sides/details separately from main protein
 - Updated chef menu creation form: Now has 4 input fields per meal (Main Protein/Item, Side 1, Side 2, Side 3/Details)
 - Updated MenuCard component: Displays sides as pills below the main item description
@@ -85,6 +89,13 @@ Key entities:
 - **esbuild**: Production bundling for server
 - **TSX**: TypeScript execution for development
 
+### AI Integration
+- **OpenAI via Replit AI Integrations**: Used for automatic macro/nutrition estimation
+- Environment variables: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`
+- Model: gpt-4o-mini for efficient JSON responses
+
 ### Environment Variables Required
 - `DATABASE_URL`: PostgreSQL connection string
 - `SESSION_SECRET`: Secret for session encryption (optional, has fallback)
+- `AI_INTEGRATIONS_OPENAI_API_KEY`: Provided by Replit AI Integrations
+- `AI_INTEGRATIONS_OPENAI_BASE_URL`: Provided by Replit AI Integrations
