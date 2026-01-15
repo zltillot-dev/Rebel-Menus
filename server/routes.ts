@@ -4,8 +4,10 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertMenuSchema } from "@shared/schema";
+import { insertMenuSchema, users } from "@shared/schema";
 import { hashPassword } from "./auth";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -113,41 +115,43 @@ export async function registerRoutes(
   // Seed Data
   if (process.env.NODE_ENV !== 'production') {
       (async () => {
-          const chefs = await storage.getChefs();
-          const admin = await storage.getUserByEmail("admin@rebelchefs.com");
-          if (!admin || chefs.length === 0) {
-              console.log("Seeding database...");
+          try {
               const password = await hashPassword("password123");
+              const adminEmail = "admin@rebelchefs.com";
+              const admin = await storage.getUserByEmail(adminEmail);
               
               if (admin) {
-                  // Re-seed admin if it exists but login failed (likely due to no hash)
-                  // Actually safer to just update the password if we suspect it's plain text
+                  console.log("Updating existing admin password...");
                   await db.update(users).set({ password }).where(eq(users.id, admin.id));
               } else {
+                  console.log("Seeding admin user...");
                   await storage.createUser({
                       name: "Admin User",
-                      email: "admin@rebelchefs.com",
+                      email: adminEmail,
                       password,
                       role: "admin",
                       fraternity: null
                   } as any);
               }
               
-              if (chefs.length === 0) {
+              const chefEmail = "chef.dtd@rebelchefs.com";
+              const chef = await storage.getUserByEmail(chefEmail);
+              if (chef) {
+                  console.log("Updating existing chef password...");
+                  await db.update(users).set({ password }).where(eq(users.id, chef.id));
+              } else {
+                  console.log("Seeding chef user...");
                   await storage.createUser({
                       name: "Head Chef DTD",
-                      email: "chef.dtd@rebelchefs.com",
+                      email: chefEmail,
                       password,
                       role: "chef",
                       fraternity: "Delta Tau Delta"
                   } as any);
-              } else {
-                  // Update existing chefs too just in case
-                  for (const chef of chefs) {
-                      await db.update(users).set({ password }).where(eq(users.id, chef.id));
-                  }
               }
               console.log("Seeding complete. Accounts updated with hashed passwords.");
+          } catch (err) {
+              console.error("Seeding failed:", err);
           }
       })();
   }
