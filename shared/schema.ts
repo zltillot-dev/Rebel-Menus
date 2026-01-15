@@ -62,6 +62,9 @@ export const requests = pgTable("requests", {
   details: text("details").notNull(),
   status: text("status").default("pending"),
   date: date("date").defaultNow(),
+  mealDay: date("meal_day"), // The specific date of the meal for late plate requests
+  mealType: text("meal_type", { enum: MEAL_TYPES }), // Lunch or Dinner
+  fraternity: text("fraternity", { enum: FRATERNITIES }), // Which fraternity the request is for
 });
 
 // Relations
