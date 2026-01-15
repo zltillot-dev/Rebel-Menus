@@ -19,7 +19,7 @@ export interface IStorage {
   getMenus(fraternity?: string, status?: string): Promise<(Menu & { items: MenuItem[] })[]>;
   getMenu(id: number): Promise<(Menu & { items: MenuItem[] }) | undefined>;
   createMenu(menu: InsertMenu, items: any[]): Promise<Menu>;
-  updateMenuStatus(id: number, status: string): Promise<Menu>;
+  updateMenuStatus(id: number, status: string, adminNotes?: string): Promise<Menu>;
 
   // Feedback
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -95,8 +95,16 @@ export class DatabaseStorage implements IStorage {
     return menu;
   }
 
-  async updateMenuStatus(id: number, status: string): Promise<Menu> {
-    const [menu] = await db.update(menus).set({ status: status as any }).where(eq(menus.id, id)).returning();
+  async updateMenuStatus(id: number, status: string, adminNotes?: string): Promise<Menu> {
+    const updateData: any = { status: status as any };
+    if (adminNotes !== undefined) {
+      updateData.adminNotes = adminNotes;
+    }
+    // Clear admin notes when approved
+    if (status === 'approved') {
+      updateData.adminNotes = null;
+    }
+    const [menu] = await db.update(menus).set(updateData).where(eq(menus.id, id)).returning();
     return menu;
   }
 

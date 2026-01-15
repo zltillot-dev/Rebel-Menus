@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMenus, useCreateMenu } from "@/hooks/use-menus";
+import { useMenus, useCreateMenu, useUpdateMenuStatus } from "@/hooks/use-menus";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send } from "lucide-react";
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 
@@ -18,8 +18,13 @@ export default function ChefDashboard() {
   const { user } = useAuth();
   const { data: menus } = useMenus({ fraternity: user?.fraternity || undefined });
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const [createOpen, setCreateOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
+
+  // Filter menus that need revision
+  const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
+  const otherMenus = menus?.filter(m => m.status !== 'needs_revision') || [];
 
   // New Menu State
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
@@ -223,10 +228,59 @@ export default function ChefDashboard() {
           </Dialog>
         </header>
 
+        {/* Menus Needing Revision */}
+        {menusNeedingRevision.length > 0 && (
+          <section className="grid gap-6 mb-8">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-amber-600">
+              <AlertCircle className="w-5 h-5" />
+              Menus Needing Revision
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {menusNeedingRevision.map((menu: any) => (
+                <Card key={menu.id} className="border-amber-300 bg-amber-50/50 hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                        {format(new Date(menu.weekOf), "MMM d, yyyy")}
+                      </CardTitle>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                        Needs Revision
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {menu.adminNotes && (
+                      <div className="bg-white rounded-md p-3 border border-amber-200">
+                        <p className="text-xs font-medium text-amber-700 mb-1">Admin Feedback:</p>
+                        <p className="text-sm text-muted-foreground">{menu.adminNotes}</p>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={() => setViewMenu(menu)} data-testid={`button-view-revision-${menu.id}`}>
+                        <FileEdit className="w-4 h-4 mr-2" /> View
+                      </Button>
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => updateStatus({ id: menu.id, status: 'pending' })}
+                        disabled={isUpdating}
+                        data-testid={`button-resubmit-${menu.id}`}
+                      >
+                        <Send className="w-4 h-4 mr-2" /> Resubmit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent Menus */}
         <section className="grid gap-6">
           <h2 className="text-xl font-bold">Recent Menus</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {menus?.map((menu) => (
+            {otherMenus.map((menu: any) => (
               <Card key={menu.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">

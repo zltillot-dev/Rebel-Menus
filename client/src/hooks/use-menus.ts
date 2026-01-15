@@ -72,21 +72,24 @@ export function useUpdateMenuStatus() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+    mutationFn: async ({ id, status, adminNotes }: { id: number; status: string; adminNotes?: string }) => {
       const url = buildUrl(api.menus.updateStatus.path, { id });
       const res = await fetch(url, {
         method: api.menus.updateStatus.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, adminNotes }),
         credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to update menu status");
       return api.menus.updateStatus.responses[200].parse(await res.json());
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.menus.list.path] });
-      toast({ title: "Success", description: "Menu status updated" });
+      const message = variables.status === 'needs_revision' 
+        ? "Menu sent back for revision" 
+        : "Menu status updated";
+      toast({ title: "Success", description: message });
     },
   });
 }

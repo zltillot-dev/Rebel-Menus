@@ -55,9 +55,33 @@ export async function registerRoutes(
   });
 
   app.patch(api.menus.updateStatus.path, async (req, res) => {
-    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
-    const menu = await storage.updateMenuStatus(Number(req.params.id), req.body.status);
-    res.json(menu);
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    const menuId = Number(req.params.id);
+    const newStatus = req.body.status;
+    
+    // Admins can update any menu status
+    if (userRole === 'admin') {
+      const menu = await storage.updateMenuStatus(menuId, newStatus, req.body.adminNotes);
+      return res.json(menu);
+    }
+    
+    // Chefs can only resubmit their own menus from needs_revision to pending
+    if (userRole === 'chef') {
+      const existingMenu = await storage.getMenu(menuId);
+      if (!existingMenu || existingMenu.chefId !== userId) {
+        return res.status(403).send("Forbidden - not your menu");
+      }
+      if (existingMenu.status !== 'needs_revision' || newStatus !== 'pending') {
+        return res.status(403).send("Forbidden - can only resubmit menus needing revision");
+      }
+      const menu = await storage.updateMenuStatus(menuId, newStatus);
+      return res.json(menu);
+    }
+    
+    return res.status(403).send("Forbidden");
   });
 
   // Feedback

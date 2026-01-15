@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { FRATERNITIES } from "@shared/schema";
+import { FRATERNITIES, DAYS } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,9 +30,12 @@ const createChefSchema = insertUserSchema.extend({
 export default function AdminDashboard() {
   const { data: menus } = useMenus();
   const { data: chefs } = useChefs();
-  const { mutate: updateStatus } = useUpdateMenuStatus();
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: createChef, isPending: isCreatingChef } = useCreateChef();
   const [createChefOpen, setCreateChefOpen] = useState(false);
+  const [viewMenu, setViewMenu] = useState<any>(null);
+  const [reviewMenu, setReviewMenu] = useState<any>(null);
+  const [adminNotes, setAdminNotes] = useState("");
 
   const form = useForm({
     resolver: zodResolver(createChefSchema),
@@ -90,7 +94,7 @@ export default function AdminDashboard() {
                           <div>
                             <CardTitle>Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
                             <CardDescription className="mt-1 font-medium text-primary">
-                              {menu.fraternity}
+                              {menu.fraternity} • {menu.items.length} items
                             </CardDescription>
                           </div>
                           <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
@@ -98,20 +102,31 @@ export default function AdminDashboard() {
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex gap-3 mt-2">
+                      <CardContent className="space-y-3">
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => setViewMenu(menu)}
+                          data-testid={`button-view-menu-${menu.id}`}
+                        >
+                          <Eye className="w-4 h-4 mr-2" /> View Full Menu
+                        </Button>
+                        <div className="flex gap-3">
                           <Button 
-                            className="w-full bg-green-600 hover:bg-green-700"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
                             onClick={() => updateStatus({ id: menu.id, status: 'approved' })}
+                            disabled={isUpdating}
+                            data-testid={`button-approve-menu-${menu.id}`}
                           >
                             <CheckCircle className="w-4 h-4 mr-2" /> Approve
                           </Button>
                           <Button 
                             variant="outline" 
-                            className="w-full text-destructive border-destructive/20 hover:bg-destructive/5"
-                            onClick={() => updateStatus({ id: menu.id, status: 'draft' })}
+                            className="flex-1"
+                            onClick={() => { setReviewMenu(menu); setAdminNotes(""); }}
+                            data-testid={`button-request-changes-${menu.id}`}
                           >
-                            <XCircle className="w-4 h-4 mr-2" /> Reject
+                            <MessageSquare className="w-4 h-4 mr-2" /> Request Changes
                           </Button>
                         </div>
                       </CardContent>
@@ -230,6 +245,123 @@ export default function AdminDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* View Menu Dialog */}
+        <Dialog open={!!viewMenu} onOpenChange={(open) => !open && setViewMenu(null)}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Menu for {viewMenu && format(new Date(viewMenu.weekOf), "MMMM d, yyyy")}
+              </DialogTitle>
+              <DialogDescription>
+                {viewMenu?.fraternity} - Status: {viewMenu?.status}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              {DAYS.map(day => {
+                const dayItems = viewMenu?.items?.filter((item: any) => item.day === day) || [];
+                if (dayItems.length === 0) return null;
+                return (
+                  <div key={day} className="border rounded-lg p-4">
+                    <h3 className="font-semibold text-lg mb-3">{day}</h3>
+                    <div className="space-y-3">
+                      {dayItems.map((item: any) => (
+                        <div key={item.id} className="bg-muted/50 rounded-md p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-medium">{item.meal}</span>
+                              <p className="text-sm mt-1">{item.description}</p>
+                              {(item.side1 || item.side2 || item.side3) && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {item.side1 && <Badge variant="outline" className="text-xs">{item.side1}</Badge>}
+                                  {item.side2 && <Badge variant="outline" className="text-xs">{item.side2}</Badge>}
+                                  {item.side3 && <Badge variant="outline" className="text-xs">{item.side3}</Badge>}
+                                </div>
+                              )}
+                            </div>
+                            <Badge variant="secondary">{item.calories} cal</Badge>
+                          </div>
+                          <div className="flex gap-4 text-xs text-muted-foreground mt-2">
+                            <span>Carbs: {item.carbs}g</span>
+                            <span>Fats: {item.fats}g</span>
+                            <span>Protein: {item.protein}g</span>
+                            <span>Sugar: {item.sugar}g</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setViewMenu(null)}>Close</Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  updateStatus({ id: viewMenu.id, status: 'approved' });
+                  setViewMenu(null);
+                }}
+              >
+                <CheckCircle className="w-4 h-4 mr-2" /> Approve Menu
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setReviewMenu(viewMenu);
+                  setAdminNotes("");
+                  setViewMenu(null);
+                }}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" /> Request Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Request Changes Dialog */}
+        <Dialog open={!!reviewMenu} onOpenChange={(open) => !open && setReviewMenu(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Request Menu Changes
+              </DialogTitle>
+              <DialogDescription>
+                Send feedback to the chef for: Week of {reviewMenu && format(new Date(reviewMenu.weekOf), "MMMM d, yyyy")}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Notes & Suggestions for the Chef</Label>
+                <Textarea 
+                  placeholder="Enter your feedback, suggestions, or required changes here..."
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  rows={6}
+                  data-testid="input-admin-notes"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The chef will see these notes and can make corrections before resubmitting.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReviewMenu(null)}>Cancel</Button>
+              <Button 
+                onClick={() => {
+                  updateStatus({ id: reviewMenu.id, status: 'needs_revision', adminNotes });
+                  setReviewMenu(null);
+                }}
+                disabled={!adminNotes.trim() || isUpdating}
+                data-testid="button-submit-revision-request"
+              >
+                Send to Chef for Revision
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
