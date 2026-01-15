@@ -1,16 +1,138 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { api } from "@shared/routes";
+import { z } from "zod";
+import { insertMenuSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  setupAuth(app);
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Menus
+  app.get(api.menus.list.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    // Admins see all, Chefs see their fraternity, Users see their fraternity
+    let fraternity = (req.user as any).fraternity;
+    if ((req.user as any).role === 'admin') {
+        fraternity = req.query.fraternity as string | undefined;
+    }
+    const status = req.query.status as string | undefined;
+
+    const menus = await storage.getMenus(fraternity, status);
+    res.json(menus);
+  });
+
+  app.get(api.menus.get.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    const menu = await storage.getMenu(Number(req.params.id));
+    if (!menu) return res.status(404).json({ message: "Menu not found" });
+    res.json(menu);
+  });
+
+  app.post(api.menus.create.path, async (req, res) => {
+    if (!req.user || (req.user as any).role === 'user') return res.status(403).send("Forbidden");
+    try {
+      const { items, ...menuData } = req.body;
+      const validatedMenu = insertMenuSchema.parse({ 
+        ...menuData, 
+        chefId: (req.user as any).id,
+        fraternity: (req.user as any).fraternity // Chef's fraternity
+      });
+      
+      const menu = await storage.createMenu(validatedMenu, items);
+      res.status(201).json(menu);
+    } catch (e) {
+      res.status(400).json({ message: "Invalid input" });
+    }
+  });
+
+  app.patch(api.menus.updateStatus.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
+    const menu = await storage.updateMenuStatus(Number(req.params.id), req.body.status);
+    res.json(menu);
+  });
+
+  // Feedback
+  app.post(api.feedback.create.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    const feedback = await storage.createFeedback({
+      ...req.body,
+      userId: (req.user as any).id
+    });
+    res.status(201).json(feedback);
+  });
+
+  app.get(api.feedback.list.path, async (req, res) => {
+    if (!req.user || (req.user as any).role === 'user') return res.status(403).send("Forbidden");
+    const feedback = await storage.getFeedback();
+    res.json(feedback);
+  });
+
+  // Requests
+  app.post(api.requests.create.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    const request = await storage.createRequest({
+      ...req.body,
+      userId: (req.user as any).id
+    });
+    res.status(201).json(request);
+  });
+
+  app.get(api.requests.list.path, async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    const requests = await storage.getRequests();
+    res.json(requests);
+  });
+
+  // Admin
+  app.post(api.admin.createChef.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
+    const user = await storage.createUser({
+      ...req.body,
+      role: 'chef'
+    });
+    // In a real app, send onboarding email here
+    console.log(`Sending onboarding email to ${user.email}...`);
+    res.status(201).json(user);
+  });
+
+  app.get(api.admin.listChefs.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
+    const chefs = await storage.getChefs();
+    res.json(chefs);
+  });
+
+  // Seed Data
+  if (process.env.NODE_ENV !== 'production') {
+      const users = await storage.getChefs();
+      if (users.length === 0) {
+          console.log("Seeding database...");
+          // Create Admin
+          await storage.createUser({
+              name: "Admin User",
+              email: "admin@rebelchefs.com",
+              password: "password123", // Note: In real app, hash this!
+              role: "admin",
+              fraternity: null
+          } as any);
+          
+          // Create a Chef
+          await storage.createUser({
+              name: "Head Chef DTD",
+              email: "chef.dtd@rebelchefs.com",
+              password: "password123",
+              role: "chef",
+              fraternity: "Delta Tau Delta"
+          } as any);
+
+          console.log("Seeding complete. Accounts: admin@rebelchefs.com, chef.dtd@rebelchefs.com (password123)");
+      }
+  }
 
   return httpServer;
 }
