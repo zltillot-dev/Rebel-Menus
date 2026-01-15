@@ -1,11 +1,11 @@
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users, menus, menuItems, feedback, requests, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
 
-const MemoryStore = createMemoryStore(session);
+const PgStore = connectPgSimple(session);
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -34,8 +34,9 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PgStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
