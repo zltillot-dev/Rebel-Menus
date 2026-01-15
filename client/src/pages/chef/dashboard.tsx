@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useCreateMenu, useUpdateMenuStatus, useUpdateMenu, useDeleteMenu } from "@/hooks/use-menus";
 import { useLatePlates } from "@/hooks/use-requests";
@@ -11,10 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ChefDashboard() {
   const { user } = useAuth();
@@ -27,6 +30,47 @@ export default function ChefDashboard() {
   const [createOpen, setCreateOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
   const [editMenu, setEditMenu] = useState<any>(null);
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Sync phone number state when user data loads or changes
+  useEffect(() => {
+    if (user?.phoneNumber) {
+      setPhoneNumber(user.phoneNumber);
+    }
+  }, [user?.phoneNumber]);
+
+  // Reset phone input when dialog opens
+  useEffect(() => {
+    if (phoneDialogOpen && user?.phoneNumber) {
+      setPhoneNumber(user.phoneNumber);
+    }
+  }, [phoneDialogOpen, user?.phoneNumber]);
+
+  // Phone number update mutation
+  const updatePhoneMutation = useMutation({
+    mutationFn: async (phone: string) => {
+      const res = await apiRequest("PATCH", "/api/user/phone", { phoneNumber: phone });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Phone number updated",
+        description: "You will receive late plate SMS notifications at the cutoff times.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      setPhoneDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update phone number",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Filter menus that need revision
   const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
@@ -330,11 +374,70 @@ export default function ChefDashboard() {
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
       <main className="ml-64 flex-1 p-8 max-w-7xl mx-auto">
-        <header className="mb-8 flex justify-between items-center">
+        <header className="mb-8 flex justify-between items-center gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-display font-bold">Chef Dashboard</h1>
             <p className="text-muted-foreground">Manage your weekly menus for {user?.fraternity}</p>
           </div>
+          <div className="flex items-center gap-3">
+            <Dialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant={user?.phoneNumber ? "outline" : "secondary"} 
+                  size="default"
+                  data-testid="button-phone-settings"
+                >
+                  <Phone className="w-4 h-4 mr-2" />
+                  {user?.phoneNumber ? "SMS Settings" : "Setup SMS Alerts"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Late Plate SMS Notifications</DialogTitle>
+                  <DialogDescription>
+                    Enter your phone number to receive automatic SMS notifications with late plate lists at cutoff times (12:45 PM for lunch, 5:45 PM for dinner).
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input 
+                      id="phoneNumber"
+                      placeholder="+1 (555) 123-4567"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      data-testid="input-phone-number"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Include country code for best results (e.g., +1 for US)
+                    </p>
+                  </div>
+                  {user?.phoneNumber && (
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="text-sm">
+                        <span className="font-medium">Current number:</span> {user.phoneNumber}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPhoneDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => updatePhoneMutation.mutate(phoneNumber)}
+                    disabled={updatePhoneMutation.isPending || !phoneNumber.trim()}
+                    data-testid="button-save-phone"
+                  >
+                    {updatePhoneMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                    ) : (
+                      "Save Phone Number"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           <Dialog open={createOpen} onOpenChange={(open) => {
             if (open) initializeMenu();
             setCreateOpen(open);
@@ -467,6 +570,7 @@ export default function ChefDashboard() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </header>
 
         {/* Late Plates Loading State */}

@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   role: text("role", { enum: ROLES }).notNull().default("user"),
   name: text("name").notNull(),
   fraternity: text("fraternity", { enum: FRATERNITIES }), // Nullable for admins
+  phoneNumber: text("phone_number"), // For SMS notifications (chefs)
 });
 
 export const menus = pgTable("menus", {

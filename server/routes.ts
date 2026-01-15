@@ -4,6 +4,7 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { insertMenuSchema, users } from "@shared/schema";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import OpenAI from "openai";
@@ -351,6 +352,62 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error estimating macros:", error);
       return res.status(500).json({ message: "Failed to estimate nutritional information" });
+    }
+  });
+
+  // Phone number update schema
+  const phoneUpdateSchema = z.object({
+    phoneNumber: z.string()
+      .min(10, "Phone number must be at least 10 digits")
+      .transform(val => val.replace(/[^\d+]/g, ''))
+      .refine(val => val.length >= 10, "Invalid phone number format")
+  });
+
+  // Update user phone number (for SMS notifications)
+  app.patch("/api/user/phone", async (req, res) => {
+    if (!req.user) return res.status(401).send("Unauthorized");
+    
+    const userId = (req.user as any).id;
+    
+    const parseResult = phoneUpdateSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        message: parseResult.error.errors[0]?.message || "Invalid phone number" 
+      });
+    }
+    
+    const { phoneNumber: cleanedPhone } = parseResult.data;
+    
+    try {
+      const user = await storage.updateUserPhone(userId, cleanedPhone);
+      res.json({ 
+        success: true, 
+        phoneNumber: user.phoneNumber 
+      });
+    } catch (error) {
+      console.error("Error updating phone:", error);
+      res.status(500).json({ message: "Failed to update phone number" });
+    }
+  });
+
+  // Manual trigger for late plate SMS (for testing - admin only)
+  app.post("/api/admin/trigger-late-plate-sms", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).send("Forbidden");
+    }
+    
+    const { mealType } = req.body;
+    if (mealType !== 'Lunch' && mealType !== 'Dinner') {
+      return res.status(400).json({ message: "mealType must be 'Lunch' or 'Dinner'" });
+    }
+    
+    try {
+      const { triggerLatePlateNotification } = await import('./scheduler');
+      await triggerLatePlateNotification(mealType);
+      res.json({ success: true, message: `Triggered ${mealType} late plate notifications` });
+    } catch (error) {
+      console.error("Error triggering SMS:", error);
+      res.status(500).json({ message: "Failed to trigger SMS notifications" });
     }
   });
 

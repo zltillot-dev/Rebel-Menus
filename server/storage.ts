@@ -13,7 +13,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsers(): Promise<User[]>;
   getChefs(): Promise<User[]>;
+  updateUserPhone(id: number, phoneNumber: string): Promise<User>;
 
   // Menus
   getMenus(fraternity?: string, status?: string): Promise<(Menu & { items: MenuItem[] })[]>;
@@ -59,8 +61,17 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
   async getChefs(): Promise<User[]> {
     return db.select().from(users).where(eq(users.role, "chef"));
+  }
+
+  async updateUserPhone(id: number, phoneNumber: string): Promise<User> {
+    const [user] = await db.update(users).set({ phoneNumber }).where(eq(users.id, id)).returning();
+    return user;
   }
 
   async getMenus(fraternity?: string, status?: string): Promise<(Menu & { items: MenuItem[] })[]> {

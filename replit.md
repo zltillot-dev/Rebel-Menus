@@ -66,6 +66,14 @@ Key entities:
 - Added /api/late-plates endpoint for chef-specific late plate fetching with user info
 - Chefs only see late plates for their own fraternity
 
+#### Twilio SMS Notifications
+- Integrated Twilio via Replit Connectors for automatic SMS alerts to chefs
+- Scheduler runs every 30 seconds checking for cutoff times (12:45 PM lunch, 5:45 PM dinner)
+- At cutoff time, chefs with phone numbers receive SMS with formatted late plate list
+- Chefs can update their phone number in the Chef Dashboard via "SMS Settings" button
+- Added phoneNumber field to users table for SMS contact info
+- Admin-only endpoint to manually trigger SMS for testing: POST /api/admin/trigger-late-plate-sms
+
 #### Previous Changes
 - AI-powered macro estimation: Chefs can auto-estimate nutritional information (calories, protein, carbs, fats, sugar) using AI based on food item descriptions
 - Users can now delete their own requests with confirmation dialog
