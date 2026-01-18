@@ -174,3 +174,45 @@ export function useUpdateChefTask() {
     },
   });
 }
+
+// Mark request (substitution/menu suggestion) as read
+export function useMarkRequestRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, isRead }: { id: number; isRead: boolean }) => {
+      const res = await fetch(api.requests.markRead.path.replace(':id', String(id)), {
+        method: api.requests.markRead.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRead }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update request");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chef-requests"] });
+    },
+  });
+}
+
+// Mark feedback as read
+export function useMarkFeedbackRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, isRead }: { id: number; isRead: boolean }) => {
+      const res = await fetch(api.chefFeedback.markRead.path.replace(':id', String(id)), {
+        method: api.chefFeedback.markRead.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRead }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update feedback");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chef-feedback"] });
+    },
+  });
+}

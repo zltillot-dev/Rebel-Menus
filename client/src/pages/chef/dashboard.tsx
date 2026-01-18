@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useCreateMenu, useUpdateMenuStatus, useUpdateMenu, useDeleteMenu } from "@/hooks/use-menus";
-import { useLatePlates, useChefRequests, useChefFeedback, useChefTasks, useUpdateChefTask } from "@/hooks/use-requests";
+import { useLatePlates, useChefRequests, useChefFeedback, useChefTasks, useUpdateChefTask, useMarkRequestRead, useMarkFeedbackRead } from "@/hooks/use-requests";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,6 +34,8 @@ export default function ChefDashboard() {
   const { data: chefFeedback, isLoading: isLoadingFeedback } = useChefFeedback();
   const { data: chefTasks, isLoading: isLoadingTasks } = useChefTasks();
   const { mutate: updateTask } = useUpdateChefTask();
+  const { mutate: markRequestRead } = useMarkRequestRead();
+  const { mutate: markFeedbackRead } = useMarkFeedbackRead();
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: updateMenu, isPending: isUpdatingMenu } = useUpdateMenu();
@@ -237,9 +239,21 @@ export default function ChefDashboard() {
     return chefRequests?.filter((r: any) => r.type === 'substitution') || [];
   }, [chefRequests]);
 
+  const unreadSubstitutions = useMemo(() => {
+    return substitutions.filter((r: any) => !r.isRead).length;
+  }, [substitutions]);
+
   const menuSuggestions = useMemo(() => {
     return chefRequests?.filter((r: any) => r.type === 'menu_suggestion') || [];
   }, [chefRequests]);
+
+  const unreadSuggestions = useMemo(() => {
+    return menuSuggestions.filter((r: any) => !r.isRead).length;
+  }, [menuSuggestions]);
+
+  const unreadFeedback = useMemo(() => {
+    return chefFeedback?.filter((fb: any) => !fb.isRead).length || 0;
+  }, [chefFeedback]);
 
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -955,7 +969,8 @@ export default function ChefDashboard() {
                             <span className="flex items-center gap-2">
                               <RefreshCcw className="w-5 h-5" />
                               Substitutions
-                              {substitutions.length > 0 && <Badge>{substitutions.length}</Badge>}
+                              {unreadSubstitutions > 0 && <Badge>{unreadSubstitutions}</Badge>}
+                              {substitutions.length > 0 && unreadSubstitutions === 0 && <Badge variant="outline">{substitutions.length}</Badge>}
                             </span>
                             {substitutionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -972,9 +987,16 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {substitutions.map((req: any) => (
-                                <div key={req.id} className="p-3 bg-muted/50 rounded-lg">
-                                  <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
-                                  <p className="text-sm text-muted-foreground">{req.details}</p>
+                                <div key={req.id} className={`p-3 rounded-lg flex items-start gap-3 ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`substitution-item-${req.id}`}>
+                                  <Checkbox
+                                    checked={req.isRead || false}
+                                    onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
+                                    data-testid={`checkbox-substitution-${req.id}`}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
+                                    <p className="text-sm text-muted-foreground">{req.details}</p>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -993,7 +1015,8 @@ export default function ChefDashboard() {
                             <span className="flex items-center gap-2">
                               <Lightbulb className="w-5 h-5" />
                               Meal Suggestions
-                              {menuSuggestions.length > 0 && <Badge>{menuSuggestions.length}</Badge>}
+                              {unreadSuggestions > 0 && <Badge>{unreadSuggestions}</Badge>}
+                              {menuSuggestions.length > 0 && unreadSuggestions === 0 && <Badge variant="outline">{menuSuggestions.length}</Badge>}
                             </span>
                             {suggestionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1010,9 +1033,16 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {menuSuggestions.map((req: any) => (
-                                <div key={req.id} className="p-3 bg-muted/50 rounded-lg">
-                                  <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
-                                  <p className="text-sm text-muted-foreground">{req.details}</p>
+                                <div key={req.id} className={`p-3 rounded-lg flex items-start gap-3 ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`suggestion-item-${req.id}`}>
+                                  <Checkbox
+                                    checked={req.isRead || false}
+                                    onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
+                                    data-testid={`checkbox-suggestion-${req.id}`}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
+                                    <p className="text-sm text-muted-foreground">{req.details}</p>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -1031,7 +1061,8 @@ export default function ChefDashboard() {
                             <span className="flex items-center gap-2">
                               <MessageSquare className="w-5 h-5" />
                               Feedback
-                              {chefFeedback && chefFeedback.length > 0 && <Badge>{chefFeedback.length}</Badge>}
+                              {unreadFeedback > 0 && <Badge>{unreadFeedback}</Badge>}
+                              {chefFeedback && chefFeedback.length > 0 && unreadFeedback === 0 && <Badge variant="outline">{chefFeedback.length}</Badge>}
                             </span>
                             {feedbackOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1048,18 +1079,25 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {chefFeedback.map((fb: any) => (
-                                <div key={fb.id} className="p-3 bg-muted/50 rounded-lg">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className="flex">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} />
-                                      ))}
+                                <div key={fb.id} className={`p-3 rounded-lg flex items-start gap-3 ${fb.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`feedback-item-${fb.id}`}>
+                                  <Checkbox
+                                    checked={fb.isRead || false}
+                                    onCheckedChange={(checked) => markFeedbackRead({ id: fb.id, isRead: !!checked })}
+                                    data-testid={`checkbox-feedback-${fb.id}`}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="flex">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} />
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">{fb.mealDay} {fb.mealType}</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{fb.mealDay} {fb.mealType}</span>
-                                  </div>
-                                  {fb.comment && <p className="text-sm">{fb.comment}</p>}
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {fb.isAnonymous ? 'Anonymous' : fb.userName || fb.userEmail}
+                                    {fb.comment && <p className="text-sm">{fb.comment}</p>}
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {fb.isAnonymous ? 'Anonymous' : fb.userName || fb.userEmail}
+                                    </div>
                                   </div>
                                 </div>
                               ))}
