@@ -832,30 +832,30 @@ export async function registerRoutes(
     }
   });
 
-  // Seed Data
-  if (process.env.NODE_ENV !== 'production') {
-      (async () => {
-          try {
-              // Primary admin account
-              const adminEmail = "chefzak@rebelchefs.net";
-              const adminPassword = await hashPassword("Drum14me!!");
-              const admin = await storage.getUserByEmail(adminEmail);
-              
-              if (admin) {
-                  console.log("Updating existing admin password...");
-                  await db.update(users).set({ password: adminPassword }).where(eq(users.id, admin.id));
-              } else {
-                  console.log("Seeding admin user...");
-                  await storage.createUser({
-                      name: "Chef Zak",
-                      email: adminEmail,
-                      password: adminPassword,
-                      role: "admin",
-                      fraternity: null
-                  } as any);
-              }
-              
-              // Also seed test chef for development
+  // Seed Data - runs in all environments to ensure admin account exists
+  (async () => {
+      try {
+          // Primary admin account - always ensure this exists
+          const adminEmail = "chefzak@rebelchefs.net";
+          const adminPassword = await hashPassword("Drum14me!!");
+          const admin = await storage.getUserByEmail(adminEmail);
+          
+          if (admin) {
+              console.log("Updating existing admin password...");
+              await db.update(users).set({ password: adminPassword }).where(eq(users.id, admin.id));
+          } else {
+              console.log("Seeding admin user...");
+              await storage.createUser({
+                  name: "Chef Zak",
+                  email: adminEmail,
+                  password: adminPassword,
+                  role: "admin",
+                  fraternity: null
+              } as any);
+          }
+          
+          // Test accounts only in development
+          if (process.env.NODE_ENV !== 'production') {
               const testPassword = await hashPassword("password123");
               const chefEmail = "chef.dtd@rebelchefs.com";
               const chef = await storage.getUserByEmail(chefEmail);
@@ -889,12 +889,12 @@ export async function registerRoutes(
                       fraternity: "Delta Tau Delta"
                   } as any);
               }
-              console.log("Seeding complete. Admin: chefzak@rebelchefs.net / Drum14me!!");
-          } catch (err) {
-              console.error("Seeding failed:", err);
           }
-      })();
-  }
+          console.log("Seeding complete. Admin: chefzak@rebelchefs.net / Drum14me!!");
+      } catch (err) {
+          console.error("Seeding failed:", err);
+      }
+  })();
 
   return httpServer;
 }
