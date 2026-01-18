@@ -55,7 +55,18 @@ Key entities:
 
 ### January 2026
 
-#### Chef Dashboard Redesign & Tasks System (Latest)
+#### Mark as Read for Inbox Items (Latest)
+- Chefs can now mark substitutions, meal suggestions, and feedback as read
+- Each inbox item has a checkbox for toggling read/unread status
+- API endpoints: PATCH /api/requests/:id/read and PATCH /api/feedback/:id/read
+- Authorization: Chefs can only mark their own fraternity's items as read
+- UI changes:
+  - Unread count shown in solid badge, total count in outline badge when all read
+  - Read items appear faded (opacity-60)
+  - Items can be toggled back to unread by unchecking
+- Schema updates: Added isRead boolean field to both `requests` and `feedback` tables
+
+#### Chef Dashboard Redesign & Tasks System
 - **Chef Tasks & Reminders**: New system for admin to assign tasks/reminders to chefs
   - `chef_tasks` table added with: title, description, priority (low/medium/high), isCompleted, dueDate
   - API endpoints: GET/POST /api/admin/chef-tasks (admin), GET /api/chef-tasks (chef), PATCH/DELETE
