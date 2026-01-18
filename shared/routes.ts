@@ -163,6 +163,28 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    markRead: {
+      method: 'PATCH' as const,
+      path: '/api/requests/:id/read',
+      input: z.object({ isRead: z.boolean() }),
+      responses: {
+        200: z.custom<typeof requests.$inferSelect>(),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
+  },
+  chefFeedback: {
+    markRead: {
+      method: 'PATCH' as const,
+      path: '/api/feedback/:id/read',
+      input: z.object({ isRead: z.boolean() }),
+      responses: {
+        200: z.custom<typeof feedback.$inferSelect>(),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
   },
   admin: {
     createChef: {

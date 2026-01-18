@@ -29,11 +29,14 @@ export interface IStorage {
   // Feedback
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   getFeedback(menuId?: number): Promise<Feedback[]>;
+  getFeedbackById(id: number): Promise<Feedback | undefined>;
+  updateFeedbackRead(id: number, isRead: boolean): Promise<Feedback>;
 
   // Requests
   createRequest(request: InsertRequest): Promise<Request>;
   getRequests(userId?: number): Promise<(Request & { user: User })[]>;
   getRequest(id: number): Promise<Request | undefined>;
+  updateRequestRead(id: number, isRead: boolean): Promise<Request>;
   deleteRequest(id: number): Promise<void>;
 
   // Chef Tasks
@@ -175,6 +178,16 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(feedback);
   }
 
+  async getFeedbackById(id: number): Promise<Feedback | undefined> {
+    const [item] = await db.select().from(feedback).where(eq(feedback.id, id));
+    return item;
+  }
+
+  async updateFeedbackRead(id: number, isRead: boolean): Promise<Feedback> {
+    const [updated] = await db.update(feedback).set({ isRead }).where(eq(feedback.id, id)).returning();
+    return updated;
+  }
+
   async createRequest(insertRequest: InsertRequest): Promise<Request> {
     const [item] = await db.insert(requests).values(insertRequest).returning();
     return item;
@@ -198,6 +211,11 @@ export class DatabaseStorage implements IStorage {
   async getRequest(id: number): Promise<Request | undefined> {
     const [request] = await db.select().from(requests).where(eq(requests.id, id));
     return request;
+  }
+
+  async updateRequestRead(id: number, isRead: boolean): Promise<Request> {
+    const [updated] = await db.update(requests).set({ isRead }).where(eq(requests.id, id)).returning();
+    return updated;
   }
 
   async deleteRequest(id: number): Promise<void> {

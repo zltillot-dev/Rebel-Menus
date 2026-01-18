@@ -435,6 +435,74 @@ export async function registerRoutes(
     return res.json({ message: "Request deleted successfully" });
   });
 
+  // Mark request as read (chef only - substitutions and menu suggestions)
+  app.patch(api.requests.markRead.path, async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).json({ message: "Only chefs can mark requests as read" });
+    }
+    
+    // Validate input
+    const parseResult = api.requests.markRead.input.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ message: parseResult.error.errors[0]?.message || "Invalid input" });
+    }
+    
+    const requestId = Number(req.params.id);
+    const existingRequest = await storage.getRequest(requestId);
+    
+    if (!existingRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+    
+    // Chefs can only mark their fraternity's requests
+    if (userRole === 'chef' && existingRequest.fraternity !== userFraternity) {
+      return res.status(403).json({ message: "Not your fraternity's request" });
+    }
+    
+    const updated = await storage.updateRequestRead(requestId, parseResult.data.isRead);
+    return res.json(updated);
+  });
+
+  // Mark feedback as read (chef only)
+  app.patch(api.chefFeedback.markRead.path, async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).json({ message: "Only chefs can mark feedback as read" });
+    }
+    
+    // Validate input
+    const parseResult = api.chefFeedback.markRead.input.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ message: parseResult.error.errors[0]?.message || "Invalid input" });
+    }
+    
+    const feedbackId = Number(req.params.id);
+    const existingFeedback = await storage.getFeedbackById(feedbackId);
+    
+    if (!existingFeedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+    
+    // Chefs can only mark their fraternity's feedback
+    // Get the menu to check fraternity
+    const menu = await storage.getMenu(existingFeedback.menuId);
+    if (userRole === 'chef' && menu?.fraternity !== userFraternity) {
+      return res.status(403).json({ message: "Not your fraternity's feedback" });
+    }
+    
+    const updated = await storage.updateFeedbackRead(feedbackId, parseResult.data.isRead);
+    return res.json(updated);
+  });
+
   // Admin
   app.post(api.admin.createChef.path, async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");

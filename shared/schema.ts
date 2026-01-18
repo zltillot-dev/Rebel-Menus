@@ -56,6 +56,7 @@ export const feedback = pgTable("feedback", {
   rating: integer("rating").notNull(),
   comment: text("comment"),
   isAnonymous: boolean("is_anonymous").default(false),
+  isRead: boolean("is_read").default(false), // Chef has read this feedback
 });
 
 export const requests = pgTable("requests", {
@@ -68,6 +69,7 @@ export const requests = pgTable("requests", {
   mealDay: date("meal_day"), // The specific date of the meal for late plate requests
   mealType: text("meal_type", { enum: MEAL_TYPES }), // Lunch or Dinner
   fraternity: text("fraternity", { enum: FRATERNITIES }), // Which fraternity the request is for
+  isRead: boolean("is_read").default(false), // Chef has read this request
 });
 
 // Chef tasks/reminders assigned by admin
