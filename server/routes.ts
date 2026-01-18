@@ -517,6 +517,18 @@ export async function registerRoutes(
     res.status(201).json(user);
   });
 
+  // Delete chef (admin only)
+  app.delete(api.admin.deleteChef.path, async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
+    const chefId = Number(req.params.id);
+    const chef = await storage.getUser(chefId);
+    if (!chef || chef.role !== 'chef') {
+      return res.status(404).json({ message: "Chef not found" });
+    }
+    await storage.deleteChef(chefId);
+    res.json({ message: "Chef deleted successfully" });
+  });
+
   app.get(api.admin.listChefs.path, async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
     const chefs = await storage.getChefs();

@@ -202,6 +202,15 @@ export const api = {
         200: z.array(z.custom<typeof users.$inferSelect>()),
       },
     },
+    deleteChef: {
+      method: 'DELETE' as const,
+      path: '/api/admin/chefs/:id',
+      responses: {
+        200: z.object({ message: z.string() }),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
     listChefTasks: {
       method: 'GET' as const,
       path: '/api/admin/chef-tasks',
