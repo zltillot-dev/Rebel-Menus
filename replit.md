@@ -55,7 +55,15 @@ Key entities:
 
 ### January 2026
 
-#### Mark as Read for Inbox Items (Latest)
+#### Admin Chef Profile Management (Latest)
+- Admins can now view detailed chef profiles from the admin dashboard
+- View Chef dialog shows: name, fraternity, email, role, phone number, and assigned tasks count
+- Admins can delete chef profiles with confirmation
+- Deleting a chef also deletes all tasks assigned to that chef
+- API endpoint: DELETE /api/admin/chefs/:id (admin only)
+- Each chef card has eye icon (view) and trash icon (delete) buttons
+
+#### Mark as Read for Inbox Items
 - Chefs can now mark substitutions, meal suggestions, and feedback as read
 - Each inbox item has a checkbox for toggling read/unread status
 - API endpoints: PATCH /api/requests/:id/read and PATCH /api/feedback/:id/read
