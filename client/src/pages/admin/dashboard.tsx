@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
-import { useChefs, useCreateChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
+import { useChefs, useCreateChef, useDeleteChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,10 +37,12 @@ export default function AdminDashboard() {
   const { mutate: createChef, isPending: isCreatingChef } = useCreateChef();
   const { mutate: createTask, isPending: isCreatingTask } = useCreateChefTask();
   const { mutate: deleteTask, isPending: isDeletingTask } = useDeleteChefTask();
+  const { mutate: deleteChef, isPending: isDeletingChef } = useDeleteChef();
   const [createChefOpen, setCreateChefOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
   const [reviewMenu, setReviewMenu] = useState<any>(null);
+  const [viewChef, setViewChef] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "all">("pending");
   const [newTaskChefId, setNewTaskChefId] = useState<string>("");
@@ -335,15 +337,56 @@ export default function AdminDashboard() {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {activeChefs.map((chef) => (
-                  <Card key={chef.id}>
+                  <Card key={chef.id} data-testid={`card-chef-${chef.id}`}>
                     <CardHeader className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {chef.name.charAt(0)}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {chef.name.charAt(0)}
+                          </div>
+                          <div>
+                            <h4 className="font-bold">{chef.name}</h4>
+                            <p className="text-xs text-muted-foreground">{chef.fraternity}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-bold">{chef.name}</h4>
-                          <p className="text-xs text-muted-foreground">{chef.fraternity}</p>
+                        <div className="flex gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => setViewChef(chef)}
+                            data-testid={`button-view-chef-${chef.id}`}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                data-testid={`button-delete-chef-${chef.id}`}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Chef</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete {chef.name}? This will also delete all tasks assigned to this chef. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteChef(chef.id)} 
+                                  disabled={isDeletingChef}
+                                  data-testid={`button-confirm-delete-chef-${chef.id}`}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
@@ -694,6 +737,82 @@ export default function AdminDashboard() {
               >
                 Send to Chef for Revision
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Chef Details Dialog */}
+        <Dialog open={!!viewChef} onOpenChange={(open) => !open && setViewChef(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Chef Profile
+              </DialogTitle>
+              <DialogDescription>
+                View chef account details
+              </DialogDescription>
+            </DialogHeader>
+            {viewChef && (
+              <div className="space-y-4 py-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
+                    {viewChef.name?.charAt(0) || "?"}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold" data-testid="text-chef-name">{viewChef.name}</h3>
+                    <p className="text-sm text-muted-foreground">{viewChef.fraternity}</p>
+                  </div>
+                </div>
+                <div className="grid gap-3 pt-4 border-t">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email</span>
+                    <span className="font-medium" data-testid="text-chef-email">{viewChef.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Role</span>
+                    <Badge variant="secondary">{viewChef.role}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phone</span>
+                    <span className="font-medium" data-testid="text-chef-phone">{viewChef.phoneNumber || "Not set"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Assigned Tasks</span>
+                    <span className="font-medium">{tasksByChef[viewChef.id]?.length || 0}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewChef(null)} data-testid="button-close-chef-dialog">Close</Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" data-testid="button-delete-chef-from-dialog">
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete Chef
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Chef</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {viewChef?.name}? This will also delete all tasks assigned to this chef. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => {
+                        deleteChef(viewChef.id);
+                        setViewChef(null);
+                      }} 
+                      disabled={isDeletingChef}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </DialogFooter>
           </DialogContent>
         </Dialog>

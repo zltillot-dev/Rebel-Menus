@@ -43,6 +43,31 @@ export function useCreateChef() {
   });
 }
 
+export function useDeleteChef() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(api.admin.deleteChef.path.replace(':id', String(id)), {
+        method: api.admin.deleteChef.method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete chef");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.listChefs.path] });
+      queryClient.invalidateQueries({ queryKey: [api.admin.listChefTasks.path] });
+      toast({ title: "Success", description: "Chef profile deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
 // Chef Tasks Management
 export function useAllChefTasks() {
   return useQuery({
