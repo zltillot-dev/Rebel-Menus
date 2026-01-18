@@ -55,7 +55,15 @@ Key entities:
 
 ### January 2026
 
-#### Admin Chef Profile Management (Latest)
+#### Progressive Web App (PWA) Support (Latest)
+- App is now installable on mobile home screens (iOS and Android)
+- Web manifest with app name, icons, theme color, and standalone display mode
+- Service worker provides offline caching for static assets
+- PWA icons generated in 8 sizes (72, 96, 128, 144, 152, 192, 384, 512)
+- iOS-specific meta tags for apple-mobile-web-app support
+- Users can add the app to their home screen for quick access
+
+#### Admin Chef Profile Management
 - Admins can now view detailed chef profiles from the admin dashboard
 - View Chef dialog shows: name, fraternity, email, role, phone number, and assigned tasks count
 - Admins can delete chef profiles with confirmation
