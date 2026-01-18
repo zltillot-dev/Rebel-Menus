@@ -55,7 +55,16 @@ Key entities:
 
 ### January 2026
 
-#### Progressive Web App (PWA) Support (Latest)
+#### Mobile-Responsive Design (Latest)
+- All dashboards now work on smartphones (iOS and Android)
+- Sidebar is hidden on mobile and accessible via hamburger menu button
+- Slide-out navigation with overlay backdrop on mobile
+- Headers, buttons, and content adapt to smaller screens
+- Day tabs show abbreviated names on mobile (Mon, Tue, etc.)
+- Action buttons are compact with icons on mobile
+- Touch-friendly interface with proper spacing
+
+#### Progressive Web App (PWA) Support
 - App is now installable on mobile home screens (iOS and Android)
 - Web manifest with app name, icons, theme color, and standalone display mode
 - Service worker provides offline caching for static assets
