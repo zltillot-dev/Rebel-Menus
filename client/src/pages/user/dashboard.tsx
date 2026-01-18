@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus } from "@/hooks/use-menus";
 import { useCreateRequest, useCreateFeedback, useRequests, useFeedback, useDeleteRequest } from "@/hooks/use-requests";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Sidebar } from "@/components/Sidebar";
 import { MenuCard } from "@/components/MenuCard";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,56 @@ export default function UserDashboard() {
   const { mutate: createRequest, isPending: isRequesting } = useCreateRequest();
   const { mutate: createFeedback, isPending: isFeedbacking } = useCreateFeedback();
   const { mutate: deleteRequest, isPending: isDeleting } = useDeleteRequest();
+  const { notifySubstitutionDecision, notifyNewMenu, isGranted: notificationsEnabled } = useNotifications();
+  
+  // Track previous request statuses to detect changes
+  const prevRequestStatuses = useRef<Map<number, string>>(new Map());
+  // Track known menu IDs to detect new menus
+  const knownMenuIds = useRef<Set<number>>(new Set());
+  const hasInitializedMenus = useRef(false);
+  
+  // Detect substitution status changes and notify user
+  useEffect(() => {
+    if (!userRequests || !notificationsEnabled) return;
+    
+    const currentStatuses = new Map<number, string>();
+    userRequests.forEach((req: any) => {
+      if (req.type === 'substitution') {
+        currentStatuses.set(req.id, req.status);
+        
+        const prevStatus = prevRequestStatuses.current.get(req.id);
+        // Only notify if status changed from pending to approved/rejected
+        if (prevStatus === 'pending' && (req.status === 'approved' || req.status === 'rejected')) {
+          const mealInfo = req.mealDay && req.mealType ? `${req.mealDay} ${req.mealType}` : 'your request';
+          notifySubstitutionDecision(req.status === 'approved', mealInfo);
+        }
+      }
+    });
+    
+    prevRequestStatuses.current = currentStatuses;
+  }, [userRequests, notificationsEnabled, notifySubstitutionDecision]);
+  
+  // Detect when new approved menus appear (new menu posted for user's fraternity)
+  useEffect(() => {
+    if (!menus || !notificationsEnabled) return;
+    
+    // On first load, just record existing menu IDs
+    if (!hasInitializedMenus.current) {
+      menus.forEach((menu: any) => knownMenuIds.current.add(menu.id));
+      hasInitializedMenus.current = true;
+      return;
+    }
+    
+    // Check for new menus we haven't seen before
+    menus.forEach((menu: any) => {
+      if (!knownMenuIds.current.has(menu.id)) {
+        // New menu detected
+        const weekOf = format(new Date(menu.weekOf), "MMMM d");
+        notifyNewMenu(menu.fraternity || user?.fraternity || "your fraternity", weekOf);
+        knownMenuIds.current.add(menu.id);
+      }
+    });
+  }, [menus, notificationsEnabled, notifyNewMenu]);
   
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "menu_suggestion" | "future_request">("late_plate");

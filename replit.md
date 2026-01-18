@@ -55,7 +55,38 @@ Key entities:
 
 ### January 2026
 
-#### Mobile-Responsive Design (Latest)
+#### Login Remember Me & Browser Notifications (Latest)
+- **Remember Me checkbox** on login form saves email to localStorage for returning users
+  - Uses localStorage keys: `rebelchefs_remembered_email` and `rebelchefs_remember_me`
+  - Email auto-populates on return visits when "Remember Me" was checked
+- **Browser Notifications System**:
+  - Web Notifications API integration for in-app notifications
+  - Permission toggle in sidebar for all users (Enable/Disable notifications)
+  - Notification utility: `client/src/lib/notifications.ts`
+  - Hook: `client/src/hooks/use-notifications.ts`
+  - **Recipient-side detection** using useRef tracking with react-query polling:
+    - **Users**: Notified when substitution status changes (pending→approved/rejected), and when new approved menus appear for their fraternity
+    - **Chefs**: Notified when their menu status changes (pending→approved/needs_revision)
+    - **Admins**: Notified when new pending menus appear (chef submitted for review)
+  - All detection uses first-load guards to prevent false positives on initial page load
+  - Notifications work when app is open in browser; delivery relies on react-query polling intervals
+
+#### Chef Substitution Approval/Rejection
+- Chefs can now approve or reject substitution requests from their dashboard
+- Approve/Reject buttons appear for pending substitutions in the Inbox section
+- Status badges show approved/rejected state with visual distinction
+- API endpoint: PATCH /api/requests/:id/status
+- Chefs can only manage substitutions for their assigned fraternity
+- Approved/rejected requests are automatically marked as read
+
+#### Admin Dashboard Quick Actions
+- **View All Feedback dialog**: Shows all user feedback across fraternities with star ratings
+- **Request History dialog**: Shows substitution requests and menu suggestions with status badges
+- **View Late Plates dialog**: Shows late plate requests grouped by meal and date
+- All dialogs support filtering by fraternity (All/Delta Tau Delta/Sigma Chi)
+- Quick Actions section in admin sidebar with accessible buttons
+
+#### Mobile-Responsive Design
 - All dashboards now work on smartphones (iOS and Android)
 - Sidebar is hidden on mobile and accessible via hamburger menu button
 - Slide-out navigation with overlay backdrop on mobile

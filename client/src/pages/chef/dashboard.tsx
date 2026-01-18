@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useCreateMenu, useUpdateMenuStatus, useUpdateMenu, useDeleteMenu } from "@/hooks/use-menus";
-import { useLatePlates, useChefRequests, useChefFeedback, useChefTasks, useUpdateChefTask, useMarkRequestRead, useMarkFeedbackRead } from "@/hooks/use-requests";
+import { useLatePlates, useChefRequests, useChefFeedback, useChefTasks, useUpdateChefTask, useMarkRequestRead, useMarkFeedbackRead, useUpdateRequestStatus } from "@/hooks/use-requests";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday, isBefore, isAfter } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
@@ -36,7 +37,34 @@ export default function ChefDashboard() {
   const { mutate: updateTask } = useUpdateChefTask();
   const { mutate: markRequestRead } = useMarkRequestRead();
   const { mutate: markFeedbackRead } = useMarkFeedbackRead();
+  const { mutate: updateRequestStatus, isPending: isUpdatingRequestStatus } = useUpdateRequestStatus();
+  const { notifySubstitutionDecision, notifyMenuApproved, notifyMenuRejected, isGranted: notificationsEnabled } = useNotifications();
+  
+  // Track previous menu statuses to detect changes from admin
+  const prevMenuStatuses = useRef<Map<number, string>>(new Map());
   const { mutate: createMenu, isPending: isCreating } = useCreateMenu();
+  
+  // Detect menu status changes (when admin approves/rejects) and notify chef
+  useEffect(() => {
+    if (!menus || !notificationsEnabled) return;
+    
+    menus.forEach((menu: any) => {
+      const prevStatus = prevMenuStatuses.current.get(menu.id);
+      const currentStatus = menu.status;
+      
+      // Notify if status changed from pending to approved/needs_revision
+      if (prevStatus === 'pending') {
+        const weekOf = format(new Date(menu.weekOf), "MMMM d");
+        if (currentStatus === 'approved') {
+          notifyMenuApproved(weekOf);
+        } else if (currentStatus === 'needs_revision') {
+          notifyMenuRejected(weekOf);
+        }
+      }
+      
+      prevMenuStatuses.current.set(menu.id, currentStatus);
+    });
+  }, [menus, notificationsEnabled, notifyMenuApproved, notifyMenuRejected]);
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: updateMenu, isPending: isUpdatingMenu } = useUpdateMenu();
   const { mutate: deleteMenu, isPending: isDeleting } = useDeleteMenu();
@@ -987,15 +1015,58 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {substitutions.map((req: any) => (
-                                <div key={req.id} className={`p-3 rounded-lg flex items-start gap-3 ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`substitution-item-${req.id}`}>
-                                  <Checkbox
-                                    checked={req.isRead || false}
-                                    onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
-                                    data-testid={`checkbox-substitution-${req.id}`}
-                                  />
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
-                                    <p className="text-sm text-muted-foreground">{req.details}</p>
+                                <div key={req.id} className={`p-3 rounded-lg ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`substitution-item-${req.id}`}>
+                                  <div className="flex items-start gap-3">
+                                    <Checkbox
+                                      checked={req.isRead || false}
+                                      onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
+                                      data-testid={`checkbox-substitution-${req.id}`}
+                                    />
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-medium text-sm">{req.userName || req.userEmail}</span>
+                                        {req.status && req.status !== 'pending' && (
+                                          <Badge variant={req.status === 'approved' ? 'default' : 'destructive'} className="text-xs">
+                                            {req.status}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">{req.details}</p>
+                                      {req.status === 'pending' && (
+                                        <div className="flex gap-2 mt-2">
+                                          <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            className="text-green-600 border-green-300 dark:border-green-800"
+                                            onClick={() => {
+                                              updateRequestStatus({ id: req.id, status: 'approved' });
+                                              if (notificationsEnabled) {
+                                                notifySubstitutionDecision(true, `${req.mealDay} ${req.mealType}`);
+                                              }
+                                            }}
+                                            disabled={isUpdatingRequestStatus}
+                                            data-testid={`button-approve-substitution-${req.id}`}
+                                          >
+                                            <CheckCircle className="w-4 h-4 mr-1" /> Approve
+                                          </Button>
+                                          <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            className="text-red-600 border-red-300 dark:border-red-800"
+                                            onClick={() => {
+                                              updateRequestStatus({ id: req.id, status: 'rejected' });
+                                              if (notificationsEnabled) {
+                                                notifySubstitutionDecision(false, `${req.mealDay} ${req.mealType}`);
+                                              }
+                                            }}
+                                            disabled={isUpdatingRequestStatus}
+                                            data-testid={`button-reject-substitution-${req.id}`}
+                                          >
+                                            <XCircle className="w-4 h-4 mr-1" /> Reject
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               ))}

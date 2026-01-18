@@ -38,6 +38,7 @@ export interface IStorage {
   getRequests(userId?: number): Promise<(Request & { user: User })[]>;
   getRequest(id: number): Promise<Request | undefined>;
   updateRequestRead(id: number, isRead: boolean): Promise<Request>;
+  updateRequestStatus(id: number, status: string): Promise<Request>;
   deleteRequest(id: number): Promise<void>;
 
   // Chef Tasks
@@ -221,6 +222,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateRequestRead(id: number, isRead: boolean): Promise<Request> {
     const [updated] = await db.update(requests).set({ isRead }).where(eq(requests.id, id)).returning();
+    return updated;
+  }
+
+  async updateRequestStatus(id: number, status: string): Promise<Request> {
+    const [updated] = await db.update(requests).set({ status }).where(eq(requests.id, id)).returning();
     return updated;
   }
 

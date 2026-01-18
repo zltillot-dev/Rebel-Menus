@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
 import { useChefs, useCreateChef, useDeleteChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfWeek, subWeeks } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -38,6 +41,51 @@ export default function AdminDashboard() {
   const { mutate: createTask, isPending: isCreatingTask } = useCreateChefTask();
   const { mutate: deleteTask, isPending: isDeletingTask } = useDeleteChefTask();
   const { mutate: deleteChef, isPending: isDeletingChef } = useDeleteChef();
+  const { notifyMenuApproved, notifyMenuRejected, notifyMenuSubmitted, isGranted: notificationsEnabled } = useNotifications();
+  
+  // Track known pending menu IDs to detect new submissions
+  const knownPendingMenuIds = useRef<Set<number>>(new Set());
+  const hasInitializedPendingMenus = useRef(false);
+  
+  // Detect when new pending menus appear (chef submitted for review)
+  useEffect(() => {
+    if (!menus || !notificationsEnabled) return;
+    
+    const pendingMenus = menus.filter((m: any) => m.status === 'pending');
+    
+    // On first load, just record existing pending menu IDs
+    if (!hasInitializedPendingMenus.current) {
+      pendingMenus.forEach((menu: any) => knownPendingMenuIds.current.add(menu.id));
+      hasInitializedPendingMenus.current = true;
+      return;
+    }
+    
+    // Check for new pending menus we haven't seen before
+    pendingMenus.forEach((menu: any) => {
+      if (!knownPendingMenuIds.current.has(menu.id)) {
+        // New pending menu detected - a chef submitted a menu
+        const chefName = menu.chefName || 'A chef';
+        const fraternity = menu.fraternity || 'Unknown';
+        notifyMenuSubmitted(chefName, fraternity);
+        knownPendingMenuIds.current.add(menu.id);
+      }
+    });
+  }, [menus, notificationsEnabled, notifyMenuSubmitted]);
+  
+  // All feedback and requests for admin
+  const { data: allFeedback, isLoading: isLoadingFeedback } = useQuery<any[]>({
+    queryKey: ["/api/chef-feedback"],
+  });
+  
+  const { data: allRequests, isLoading: isLoadingRequests } = useQuery<any[]>({
+    queryKey: ["/api/requests"],
+  });
+  
+  // Late plates for admin (all fraternities)
+  const { data: latePlates, isLoading: isLoadingLatePlates } = useQuery<any[]>({
+    queryKey: ["/api/late-plates"],
+  });
+
   const [createChefOpen, setCreateChefOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [viewMenu, setViewMenu] = useState<any>(null);
@@ -50,6 +98,12 @@ export default function AdminDashboard() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  
+  // Dialog states for quick actions
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
+  const [latePlatesDialogOpen, setLatePlatesDialogOpen] = useState(false);
+  const [selectedFraternity, setSelectedFraternity] = useState<string>("all");
 
   const form = useForm({
     resolver: zodResolver(createChefSchema),
@@ -166,8 +220,13 @@ export default function AdminDashboard() {
                             </Button>
                             <div className="flex gap-3">
                               <Button 
-                                className="flex-1 bg-green-600 hover:bg-green-700"
-                                onClick={() => updateStatus({ id: menu.id, status: 'approved' })}
+                                className="flex-1 bg-green-600"
+                                onClick={() => {
+                                  updateStatus({ id: menu.id, status: 'approved' });
+                                  if (notificationsEnabled) {
+                                    notifyMenuApproved(format(new Date(menu.weekOf), "MMMM d"));
+                                  }
+                                }}
                                 disabled={isUpdating}
                                 data-testid={`button-approve-menu-${menu.id}`}
                               >
@@ -613,11 +672,29 @@ export default function AdminDashboard() {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-2">
-                <Button variant="outline" className="justify-start">
-                  <FileText className="w-4 h-4 mr-2" /> View All Feedback
+                <Button 
+                  variant="outline" 
+                  className="justify-start" 
+                  onClick={() => setFeedbackDialogOpen(true)}
+                  data-testid="button-view-all-feedback"
+                >
+                  <Star className="w-4 h-4 mr-2" /> View All Feedback
                 </Button>
-                <Button variant="outline" className="justify-start">
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => setRequestsDialogOpen(true)}
+                  data-testid="button-request-history"
+                >
                   <FileText className="w-4 h-4 mr-2" /> Request History
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => setLatePlatesDialogOpen(true)}
+                  data-testid="button-view-late-plates"
+                >
+                  <Clock className="w-4 h-4 mr-2" /> View Late Plates
                 </Button>
               </CardContent>
             </Card>
@@ -674,13 +751,17 @@ export default function AdminDashboard() {
               })}
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setViewMenu(null)}>Close</Button>
+              <Button variant="outline" onClick={() => setViewMenu(null)} data-testid="button-close-view-menu">Close</Button>
               <Button 
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600"
                 onClick={() => {
                   updateStatus({ id: viewMenu.id, status: 'approved' });
+                  if (notificationsEnabled) {
+                    notifyMenuApproved(format(new Date(viewMenu.weekOf), "MMMM d"));
+                  }
                   setViewMenu(null);
                 }}
+                data-testid="button-approve-menu-dialog"
               >
                 <CheckCircle className="w-4 h-4 mr-2" /> Approve Menu
               </Button>
@@ -726,10 +807,13 @@ export default function AdminDashboard() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setReviewMenu(null)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setReviewMenu(null)} data-testid="button-cancel-revision">Cancel</Button>
               <Button 
                 onClick={() => {
                   updateStatus({ id: reviewMenu.id, status: 'needs_revision', adminNotes });
+                  if (notificationsEnabled) {
+                    notifyMenuRejected(format(new Date(reviewMenu.weekOf), "MMMM d"));
+                  }
                   setReviewMenu(null);
                 }}
                 disabled={!adminNotes.trim() || isUpdating}
@@ -813,6 +897,258 @@ export default function AdminDashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View All Feedback Dialog */}
+        <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                All Feedback
+              </DialogTitle>
+              <DialogDescription>
+                View all user feedback across fraternities
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mb-4">
+              <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
+                <SelectTrigger data-testid="select-feedback-fraternity">
+                  <SelectValue placeholder="Filter by fraternity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fraternities</SelectItem>
+                  {FRATERNITIES.map((frat) => (
+                    <SelectItem key={frat} value={frat}>{frat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <ScrollArea className="max-h-[50vh]">
+              {isLoadingFeedback ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : !allFeedback || allFeedback.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No feedback received yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allFeedback
+                    .filter((fb: any) => {
+                      if (selectedFraternity === "all") return true;
+                      const menu = menus?.find(m => m.id === fb.menuId);
+                      return menu?.fraternity === selectedFraternity;
+                    })
+                    .map((fb: any) => {
+                      const menu = menus?.find(m => m.id === fb.menuId);
+                      return (
+                        <div key={fb.id} className="p-3 border rounded-lg" data-testid={`feedback-item-${fb.id}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-medium">{fb.userName || 'Anonymous'}</span>
+                              <Badge variant="outline" className="ml-2">{menu?.fraternity}</Badge>
+                            </div>
+                            <div className="flex items-center">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star 
+                                  key={star} 
+                                  className={`w-4 h-4 ${star <= fb.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground mb-1">
+                            {fb.mealDay} {fb.mealType} - Week of {menu?.weekOf ? format(parseISO(menu.weekOf), "MMM d") : 'Unknown'}
+                          </div>
+                          {fb.comment && <p className="text-sm">{fb.comment}</p>}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)} data-testid="button-close-feedback-dialog">Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Request History Dialog */}
+        <Dialog open={requestsDialogOpen} onOpenChange={setRequestsDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Request History
+              </DialogTitle>
+              <DialogDescription>
+                View all user requests (substitutions, menu suggestions)
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mb-4">
+              <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
+                <SelectTrigger data-testid="select-requests-fraternity">
+                  <SelectValue placeholder="Filter by fraternity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fraternities</SelectItem>
+                  {FRATERNITIES.map((frat) => (
+                    <SelectItem key={frat} value={frat}>{frat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <ScrollArea className="max-h-[50vh]">
+              {isLoadingRequests ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : !allRequests || allRequests.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No requests yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allRequests
+                    .filter((req: any) => req.type === 'substitution' || req.type === 'menu_suggestion')
+                    .filter((req: any) => selectedFraternity === "all" || req.fraternity === selectedFraternity)
+                    .map((req: any) => (
+                      <div key={req.id} className="p-3 border rounded-lg" data-testid={`request-item-${req.id}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{req.user?.name || 'Unknown'}</span>
+                            <Badge variant={req.type === 'substitution' ? 'default' : 'secondary'}>
+                              {req.type === 'substitution' ? 'Substitution' : 'Menu Suggestion'}
+                            </Badge>
+                            {req.status && req.status !== 'pending' && (
+                              <Badge variant={req.status === 'approved' ? 'default' : 'destructive'}>
+                                {req.status}
+                              </Badge>
+                            )}
+                          </div>
+                          <Badge variant="outline">{req.fraternity}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {req.date ? format(parseISO(req.date), "MMM d, yyyy") : 'Unknown date'}
+                        </p>
+                        <p className="text-sm">{req.details}</p>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRequestsDialogOpen(false)} data-testid="button-close-requests-dialog">Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Late Plates Dialog */}
+        <Dialog open={latePlatesDialogOpen} onOpenChange={setLatePlatesDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Late Plates
+              </DialogTitle>
+              <DialogDescription>
+                View late plate requests by fraternity
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mb-4">
+              <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
+                <SelectTrigger data-testid="select-lateplates-fraternity">
+                  <SelectValue placeholder="Filter by fraternity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fraternities</SelectItem>
+                  {FRATERNITIES.map((frat) => (
+                    <SelectItem key={frat} value={frat}>{frat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <ScrollArea className="max-h-[50vh]">
+              {isLoadingLatePlates ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : !latePlates || latePlates.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No late plate requests
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(() => {
+                    const filtered = latePlates.filter((lp: any) => 
+                      selectedFraternity === "all" || lp.fraternity === selectedFraternity
+                    );
+                    
+                    // Group by date and meal
+                    const grouped: Record<string, any[]> = {};
+                    for (const lp of filtered) {
+                      if (lp.mealDay && lp.mealType) {
+                        const key = `${lp.mealDay}|${lp.mealType}|${lp.fraternity}`;
+                        if (!grouped[key]) grouped[key] = [];
+                        grouped[key].push(lp);
+                      }
+                    }
+                    
+                    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+                      const [dateA] = a.split("|");
+                      const [dateB] = b.split("|");
+                      return new Date(dateB).getTime() - new Date(dateA).getTime();
+                    });
+                    
+                    if (sortedKeys.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No late plates for selected fraternity
+                        </div>
+                      );
+                    }
+                    
+                    return sortedKeys.map((key) => {
+                      const [dateStr, mealType, fraternity] = key.split("|");
+                      const plates = grouped[key];
+                      const currentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+                      const previousWeek = subWeeks(currentWeek, 1);
+                      const plateDate = parseISO(dateStr);
+                      const isCurrentWeek = plateDate >= currentWeek;
+                      const isPreviousWeek = plateDate >= previousWeek && plateDate < currentWeek;
+                      
+                      return (
+                        <div key={key} className="p-3 border rounded-lg" data-testid={`late-plate-group-${key}`}>
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="font-medium">
+                              {format(parseISO(dateStr), "EEEE, MMM d")} - {mealType}
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge variant="outline">{fraternity}</Badge>
+                              {isCurrentWeek && <Badge>This Week</Badge>}
+                              {isPreviousWeek && <Badge variant="secondary">Last Week</Badge>}
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            {plates.map((plate: any) => (
+                              <div key={plate.id} className="flex items-center gap-2 text-sm">
+                                <span>{plate.userName || plate.userEmail}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setLatePlatesDialogOpen(false)} data-testid="button-close-lateplates-dialog">Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -173,6 +173,16 @@ export const api = {
         403: errorSchemas.unauthorized,
       },
     },
+    updateStatus: {
+      method: 'PATCH' as const,
+      path: '/api/requests/:id/status',
+      input: z.object({ status: z.enum(['approved', 'rejected', 'pending']) }),
+      responses: {
+        200: z.custom<typeof requests.$inferSelect>(),
+        404: errorSchemas.notFound,
+        403: errorSchemas.unauthorized,
+      },
+    },
   },
   chefFeedback: {
     markRead: {

@@ -468,6 +468,48 @@ export async function registerRoutes(
     return res.json(updated);
   });
 
+  // Update request status (chef can approve/reject substitution requests for their fraternity)
+  app.patch(api.requests.updateStatus.path, async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef' && userRole !== 'admin') {
+      return res.status(403).json({ message: "Only chefs can update request status" });
+    }
+    
+    // Validate input
+    const parseResult = api.requests.updateStatus.input.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ message: parseResult.error.errors[0]?.message || "Invalid input" });
+    }
+    
+    const requestId = Number(req.params.id);
+    const existingRequest = await storage.getRequest(requestId);
+    
+    if (!existingRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+    
+    // Only substitution requests can be approved/rejected
+    if (existingRequest.type !== 'substitution') {
+      return res.status(400).json({ message: "Only substitution requests can be approved or rejected" });
+    }
+    
+    // Chefs can only update their fraternity's requests
+    if (userRole === 'chef' && existingRequest.fraternity !== userFraternity) {
+      return res.status(403).json({ message: "Not your fraternity's request" });
+    }
+    
+    const updated = await storage.updateRequestStatus(requestId, parseResult.data.status);
+    
+    // Also mark as read when updating status
+    await storage.updateRequestRead(requestId, true);
+    
+    return res.json(updated);
+  });
+
   // Mark feedback as read (chef only)
   app.patch(api.chefFeedback.markRead.path, async (req, res) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });

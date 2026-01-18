@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Auth schemas
 const loginSchema = z.object({
@@ -25,20 +26,38 @@ const registerSchema = insertUserSchema.extend({
   path: ["confirmPassword"],
 });
 
+// Helper to get saved email from localStorage
+function getSavedEmail(): string {
+  if (typeof window === 'undefined') return '';
+  const savedEmail = localStorage.getItem('rebelchefs_remembered_email');
+  const wasRemembered = localStorage.getItem('rebelchefs_remember_me') === 'true';
+  return (savedEmail && wasRemembered) ? savedEmail : '';
+}
+
+function getRememberMeState(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('rebelchefs_remember_me') === 'true';
+}
+
 export default function AuthPage() {
   const { user, login, register, isLoggingIn, isRegistering } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [rememberMe, setRememberMe] = useState(getRememberMeState);
+
+  // Forms - initialize with saved email if remembered
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: getSavedEmail(),
+      password: '',
+    }
+  });
 
   if (user) {
     if (user.role === 'admin') return <Redirect to="/admin" />;
     if (user.role === 'chef') return <Redirect to="/chef" />;
     return <Redirect to="/" />;
   }
-
-  // Forms
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-  });
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -86,7 +105,17 @@ export default function AuthPage() {
                   <CardDescription>Enter your email to access your dashboard</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
-                  <form onSubmit={loginForm.handleSubmit((data) => login(data))} className="space-y-4">
+                  <form onSubmit={loginForm.handleSubmit((data) => {
+                    // Save or clear remembered email based on checkbox
+                    if (rememberMe) {
+                      localStorage.setItem('rebelchefs_remembered_email', data.username);
+                      localStorage.setItem('rebelchefs_remember_me', 'true');
+                    } else {
+                      localStorage.removeItem('rebelchefs_remembered_email');
+                      localStorage.removeItem('rebelchefs_remember_me');
+                    }
+                    login(data);
+                  })} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input 
@@ -94,6 +123,7 @@ export default function AuthPage() {
                         type="email" 
                         placeholder="name@school.edu" 
                         className="h-11"
+                        data-testid="input-login-email"
                         {...loginForm.register("username")} 
                       />
                       {loginForm.formState.errors.username && (
@@ -106,13 +136,25 @@ export default function AuthPage() {
                         id="password" 
                         type="password"
                         className="h-11"
+                        data-testid="input-login-password"
                         {...loginForm.register("password")} 
                       />
                       {loginForm.formState.errors.password && (
                         <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>
                       )}
                     </div>
-                    <Button type="submit" className="w-full h-11 text-base" disabled={isLoggingIn}>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="remember-me" 
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                        data-testid="checkbox-remember-me"
+                      />
+                      <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                        Remember my email
+                      </Label>
+                    </div>
+                    <Button type="submit" className="w-full h-11 text-base" disabled={isLoggingIn} data-testid="button-login">
                       {isLoggingIn ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>

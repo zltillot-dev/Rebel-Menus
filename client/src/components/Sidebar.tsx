@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useNotifications } from "@/hooks/use-notifications";
 import { 
   LayoutDashboard, 
   ChefHat, 
@@ -11,7 +12,9 @@ import {
   Users,
   Settings,
   Menu,
-  X
+  X,
+  Bell,
+  BellOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@ export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { permission, isSupported, isGranted, isRequesting, requestPermission } = useNotifications();
 
   if (!user) return null;
 
@@ -35,18 +39,18 @@ export function Sidebar() {
     const isActive = location === href;
     return (
       <Link href={href}>
-        <div 
+        <Button 
+          variant={isActive ? "default" : "ghost"}
           className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group",
-            isActive 
-              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-              : "text-muted-foreground hover:bg-secondary/20 hover:text-foreground"
+            "w-full justify-start gap-3 px-4 py-3 h-auto",
+            isActive && "shadow-lg shadow-primary/20"
           )}
           onClick={() => setMobileOpen(false)}
+          data-testid={`nav-item-${label.toLowerCase().replace(/\s+/g, '-')}`}
         >
-          <Icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
+          <Icon className="w-5 h-5" />
           <span className="font-medium">{label}</span>
-        </div>
+        </Button>
       </Link>
     );
   };
@@ -108,14 +112,47 @@ export function Sidebar() {
             <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
           </div>
         </div>
-        <button 
+        
+        {isSupported && (
+          <Button 
+            variant={isGranted ? "secondary" : permission === 'denied' ? "ghost" : "outline"}
+            className={cn(
+              "w-full justify-start mb-2",
+              isGranted && "text-green-600",
+              permission === 'denied' && "opacity-50 cursor-not-allowed"
+            )}
+            onClick={() => requestPermission()}
+            disabled={isRequesting || permission === 'denied'}
+            data-testid="button-notifications"
+          >
+            {isGranted ? (
+              <>
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications On
+              </>
+            ) : permission === 'denied' ? (
+              <>
+                <BellOff className="w-4 h-4 mr-2" />
+                Notifications Blocked
+              </>
+            ) : (
+              <>
+                <Bell className="w-4 h-4 mr-2" />
+                {isRequesting ? 'Requesting...' : 'Enable Notifications'}
+              </>
+            )}
+          </Button>
+        )}
+        
+        <Button 
+          variant="ghost"
+          className="w-full justify-start text-destructive"
           onClick={() => logout()}
-          className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
           data-testid="button-logout"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-4 h-4 mr-2" />
           Sign Out
-        </button>
+        </Button>
       </div>
     </>
   );

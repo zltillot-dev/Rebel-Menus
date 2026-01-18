@@ -216,3 +216,40 @@ export function useMarkFeedbackRead() {
     },
   });
 }
+
+// Update request status (approve/reject substitution)
+export function useUpdateRequestStatus() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: 'approved' | 'rejected' | 'pending' }) => {
+      const res = await fetch(api.requests.updateStatus.path.replace(':id', String(id)), {
+        method: api.requests.updateStatus.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update request status");
+      }
+      return res.json();
+    },
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chef-requests"] });
+      queryClient.invalidateQueries({ queryKey: [api.requests.list.path] });
+      toast({ 
+        title: status === 'approved' ? "Approved" : "Rejected", 
+        description: `Substitution request has been ${status}` 
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+}
