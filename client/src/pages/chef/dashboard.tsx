@@ -702,22 +702,22 @@ export default function ChefDashboard() {
   return (
     <div className="flex min-h-screen bg-background" data-testid="chef-dashboard">
       <Sidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 md:ml-64">
         <ScrollArea className="h-screen">
-          <div className="p-6">
-            <header className="flex items-center justify-between gap-4 mb-6">
+          <div className="p-4 pt-16 md:pt-6 md:p-6">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">
+                <h1 className="text-xl md:text-2xl font-bold" data-testid="text-dashboard-title">
                   {isManageMenusView ? "Manage Menus" : "Chef Dashboard"}
                 </h1>
                 <p className="text-muted-foreground text-sm">{user?.fraternity}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => setPhoneDialogOpen(true)} data-testid="button-sms-settings">
-                  <Phone className="w-4 h-4 mr-2" /> SMS Settings
+                  <Phone className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">SMS</span>
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
-                  <UserCog className="w-4 h-4 mr-2" /> Account
+                  <UserCog className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">Account</span>
                 </Button>
                 {isManageMenusView && (
                   <Dialog open={createOpen} onOpenChange={(open) => {

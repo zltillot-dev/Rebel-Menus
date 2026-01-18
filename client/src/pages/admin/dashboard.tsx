@@ -103,13 +103,13 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-display font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage chefs and approve weekly menus</p>
+      <main className="flex-1 p-4 pt-16 md:pt-8 md:ml-64 md:p-8">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-display font-bold">Admin Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Manage chefs and approve weekly menus</p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-8">
             

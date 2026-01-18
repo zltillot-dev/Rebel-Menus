@@ -223,42 +223,45 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <Sidebar />
       
-      <main className="ml-64 p-8 max-w-7xl mx-auto">
+      <main className="p-4 pt-16 md:pt-8 md:ml-64 md:p-8 max-w-7xl mx-auto">
         {/* Header - only show for menu view */}
         {currentView === 'menu' && (
-          <header className="mb-8 flex justify-between items-end">
+          <header className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
             <div>
-              <h2 className="text-3xl font-display font-bold text-foreground">Weekly Menu</h2>
-              <p className="text-muted-foreground mt-2 flex items-center gap-2">
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground">Weekly Menu</h2>
+              <p className="text-muted-foreground mt-1 md:mt-2 flex items-center gap-2 text-sm md:text-base">
                 <Calendar className="w-4 h-4" />
                 Week of {currentMenu ? format(new Date(currentMenu.weekOf), "MMMM d, yyyy") : weekRange}
               </p>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 md:gap-3">
               <Button 
                 onClick={() => openRequestModal("late_plate")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
+                size="sm"
                 data-testid="button-late-plate"
               >
-                <Clock className="w-4 h-4 mr-2 text-primary" />
-                Late Plate
+                <Clock className="w-4 h-4 mr-1 md:mr-2 text-primary" />
+                <span className="hidden xs:inline">Late</span> Plate
               </Button>
               <Button 
                 onClick={() => openRequestModal("substitution")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
+                size="sm"
                 data-testid="button-substitution"
               >
-                <RefreshCcw className="w-4 h-4 mr-2 text-primary" />
-                Substitution
+                <RefreshCcw className="w-4 h-4 mr-1 md:mr-2 text-primary" />
+                Sub
               </Button>
               <Button 
                 onClick={() => openRequestModal("menu_suggestion")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm"
+                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
+                size="sm"
                 data-testid="button-menu-suggestion"
               >
-                <Lightbulb className="w-4 h-4 mr-2 text-primary" />
-                Menu Suggestion
+                <Lightbulb className="w-4 h-4 mr-1 md:mr-2 text-primary" />
+                Suggest
               </Button>
             </div>
           </header>
@@ -278,14 +281,15 @@ export default function UserDashboard() {
               </div>
             ) : (
               <Tabs defaultValue="Monday" className="w-full">
-                <TabsList className="grid grid-cols-5 w-full mb-8 h-12 bg-muted/50 p-1">
+                <TabsList className="grid grid-cols-5 w-full mb-4 md:mb-8 h-10 md:h-12 bg-muted/50 p-1">
                   {DAYS.map((day) => (
                     <TabsTrigger 
                       key={day} 
                       value={day}
-                      className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium"
+                      className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium text-xs md:text-sm px-1 md:px-3"
                     >
-                      {day}
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.slice(0, 3)}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -315,13 +319,13 @@ export default function UserDashboard() {
 
         {/* Requests View */}
         {currentView === 'requests' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
-                <h2 className="text-2xl font-bold">My Requests</h2>
-                <p className="text-muted-foreground">View and manage your late plate and substitution requests</p>
+                <h2 className="text-xl md:text-2xl font-bold">My Requests</h2>
+                <p className="text-sm text-muted-foreground">View and manage your requests</p>
               </div>
-              <Button onClick={() => setRequestModalOpen(true)} data-testid="button-new-request">
+              <Button onClick={() => setRequestModalOpen(true)} size="sm" data-testid="button-new-request">
                 <MessageSquare className="w-4 h-4 mr-2" /> New Request
               </Button>
             </div>
@@ -416,11 +420,11 @@ export default function UserDashboard() {
 
         {/* Feedback View */}
         {currentView === 'feedback' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
-                <h2 className="text-2xl font-bold">My Feedback</h2>
-                <p className="text-muted-foreground">View your submitted meal ratings and comments</p>
+                <h2 className="text-xl md:text-2xl font-bold">My Feedback</h2>
+                <p className="text-sm text-muted-foreground">Your submitted meal ratings</p>
               </div>
             </div>
             
