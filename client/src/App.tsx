@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth";
 import UserDashboard from "@/pages/user/dashboard";
 import ChefDashboard from "@/pages/chef/dashboard";
 import AdminDashboard from "@/pages/admin/dashboard";
+import HouseDirectorDashboard from "@/pages/house-director/dashboard";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -32,6 +33,7 @@ function Router() {
         {!user ? <Redirect to="/auth" /> : (
           user.role === 'admin' ? <AdminDashboard /> : 
           user.role === 'chef' ? <ChefDashboard /> : 
+          user.role === 'house_director' ? <HouseDirectorDashboard /> :
           <UserDashboard />
         )}
       </Route>
@@ -46,6 +48,9 @@ function Router() {
       <Route path="/dashboard" component={UserDashboard} />
       <Route path="/requests" component={UserDashboard} />
       <Route path="/feedback" component={UserDashboard} />
+
+      <Route path="/house-director" component={HouseDirectorDashboard} />
+      <Route path="/house-director/critiques" component={HouseDirectorDashboard} />
 
       <Route component={NotFound} />
     </Switch>

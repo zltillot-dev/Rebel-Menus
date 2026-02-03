@@ -15,12 +15,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle, ClipboardList } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday, isBefore, isAfter } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -86,6 +86,33 @@ export default function ChefDashboard() {
   const [substitutionsOpen, setSubstitutionsOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [critiquesOpen, setCritiquesOpen] = useState(false);
+  
+  const { data: critiques, isLoading: isLoadingCritiques } = useQuery<any[]>({
+    queryKey: ['/api/critiques'],
+    enabled: !!user,
+  });
+  
+  const acknowledgeCritiqueMutation = useMutation({
+    mutationFn: async (critiqueId: number) => {
+      const res = await fetch(`/api/critiques/${critiqueId}/acknowledge-chef`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to acknowledge critique');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/critiques'] });
+      toast({ title: "Acknowledged", description: "Critique has been acknowledged." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to acknowledge critique", variant: "destructive" });
+    },
+  });
+  
+  const unacknowledgedCritiques = critiques?.filter((c: any) => !c.acknowledgedByChef) || [];
+  const acknowledgedCritiques = critiques?.filter((c: any) => c.acknowledgedByChef) || [];
 
   useEffect(() => {
     if (user?.phoneNumber) {
@@ -1172,6 +1199,84 @@ export default function ChefDashboard() {
                                   </div>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                  
+                  {/* House Director Critiques */}
+                  <Collapsible open={critiquesOpen} onOpenChange={setCritiquesOpen}>
+                    <Card>
+                      <CollapsibleTrigger asChild>
+                        <CardHeader className="cursor-pointer hover:bg-muted/50">
+                          <CardTitle className="flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <ClipboardList className="w-5 h-5" />
+                              HD Critiques
+                              {unacknowledgedCritiques.length > 0 && <Badge variant="destructive">{unacknowledgedCritiques.length}</Badge>}
+                              {critiques && critiques.length > 0 && unacknowledgedCritiques.length === 0 && <Badge variant="outline">{critiques.length}</Badge>}
+                            </span>
+                            {critiquesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </CardTitle>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent>
+                          {isLoadingCritiques ? (
+                            <div className="flex justify-center py-4">
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                            </div>
+                          ) : !critiques || critiques.length === 0 ? (
+                            <p className="text-muted-foreground text-sm">No critiques from house director</p>
+                          ) : (
+                            <div className="space-y-3 max-h-64 overflow-y-auto">
+                              {critiques.map((critique: any) => {
+                                const menu = menus?.find((m: any) => m.id === critique.menuId);
+                                return (
+                                  <div key={critique.id} className={`p-3 rounded-lg ${critique.acknowledgedByChef ? 'bg-muted/30 opacity-60' : 'bg-muted/50 border-l-4 border-amber-500'}`} data-testid={`critique-item-${critique.id}`}>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="text-xs font-medium">
+                                            {menu ? format(parseISO(menu.weekOf), "MMM d, yyyy") : `Menu #${critique.menuId}`}
+                                          </span>
+                                          {critique.acknowledgedByChef ? (
+                                            <Badge variant="outline" className="text-xs">Acknowledged</Badge>
+                                          ) : (
+                                            <Badge variant="destructive" className="text-xs">Needs Acknowledgment</Badge>
+                                          )}
+                                        </div>
+                                        {critique.critiqueText && (
+                                          <p className="text-sm mb-1"><strong>Critique:</strong> {critique.critiqueText}</p>
+                                        )}
+                                        {critique.suggestedEdits && (
+                                          <p className="text-sm text-muted-foreground"><strong>Suggested Edits:</strong> {critique.suggestedEdits}</p>
+                                        )}
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                          Submitted {format(parseISO(critique.createdAt), "MMM d 'at' h:mm a")}
+                                        </p>
+                                      </div>
+                                      {!critique.acknowledgedByChef && (
+                                        <Button
+                                          size="sm"
+                                          onClick={() => acknowledgeCritiqueMutation.mutate(critique.id)}
+                                          disabled={acknowledgeCritiqueMutation.isPending}
+                                          data-testid={`button-acknowledge-critique-${critique.id}`}
+                                        >
+                                          {acknowledgeCritiqueMutation.isPending ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                          ) : (
+                                            <CheckCircle className="w-4 h-4" />
+                                          )}
+                                          <span className="ml-1 hidden sm:inline">Acknowledge</span>
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </CardContent>

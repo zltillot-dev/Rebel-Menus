@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Bell,
-  BellOff
+  BellOff,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,13 @@ export function Sidebar() {
               <NavItem href="/admin" icon={LayoutDashboard} label="Dashboard" />
               <NavItem href="/admin/chefs" icon={Users} label="Manage Chefs" />
               <NavItem href="/admin/menus" icon={CalendarDays} label="All Menus" />
+            </>
+          )}
+
+          {user.role === 'house_director' && (
+            <>
+              <NavItem href="/house-director" icon={LayoutDashboard} label="Dashboard" />
+              <NavItem href="/house-director/critiques" icon={ClipboardList} label="My Critiques" />
             </>
           )}
         </nav>

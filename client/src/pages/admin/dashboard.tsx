@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
 import { useChefs, useCreateChef, useDeleteChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
 import { useNotifications } from "@/hooks/use-notifications";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2, ClipboardList, Home } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO, startOfWeek, subWeeks } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
@@ -85,6 +85,53 @@ export default function AdminDashboard() {
   const { data: latePlates, isLoading: isLoadingLatePlates } = useQuery<any[]>({
     queryKey: ["/api/late-plates"],
   });
+  
+  // House Directors
+  const { data: houseDirectors, isLoading: isLoadingHouseDirectors } = useQuery<any[]>({
+    queryKey: ["/api/admin/house-directors"],
+  });
+  
+  // Critiques from house directors
+  const { data: critiques, isLoading: isLoadingCritiques } = useQuery<any[]>({
+    queryKey: ["/api/critiques"],
+  });
+  
+  const queryClient = useQueryClient();
+  
+  const createHouseDirectorMutation = useMutation({
+    mutationFn: async (data: { name: string; email: string; password: string; fraternity: string; phoneNumber?: string }) => {
+      const res = await fetch('/api/admin/house-directors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to create house director');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/house-directors'] });
+    },
+  });
+  
+  const acknowledgeCritiqueAdminMutation = useMutation({
+    mutationFn: async (critiqueId: number) => {
+      const res = await fetch(`/api/critiques/${critiqueId}/acknowledge-admin`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to acknowledge critique');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/critiques'] });
+    },
+  });
+  
+  const unacknowledgedCritiques = critiques?.filter((c: any) => !c.acknowledgedByAdmin) || [];
 
   const [createChefOpen, setCreateChefOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -103,7 +150,17 @@ export default function AdminDashboard() {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const [latePlatesDialogOpen, setLatePlatesDialogOpen] = useState(false);
+  const [critiquesDialogOpen, setCritiquesDialogOpen] = useState(false);
   const [selectedFraternity, setSelectedFraternity] = useState<string>("all");
+  
+  // House Director creation state
+  const [createHDOpen, setCreateHDOpen] = useState(false);
+  const [hdName, setHDName] = useState("");
+  const [hdEmail, setHDEmail] = useState("");
+  const [hdPassword, setHDPassword] = useState("");
+  const [hdFraternity, setHDFraternity] = useState("Delta Tau Delta");
+  const [hdPhone, setHDPhone] = useState("");
+  const [viewHDDialogOpen, setViewHDDialogOpen] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(createChefSchema),
@@ -639,6 +696,245 @@ export default function AdminDashboard() {
                               )}
                             </div>
                           )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+            
+            {/* House Director Management */}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Home className="w-5 h-5 text-primary" />
+                  House Directors
+                </h2>
+                <Dialog open={createHDOpen} onOpenChange={setCreateHDOpen}>
+                  <DialogTrigger asChild>
+                    <Button data-testid="button-add-house-director">
+                      <Plus className="w-4 h-4 mr-2" /> Add House Director
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add House Director</DialogTitle>
+                      <DialogDescription>Create a house director profile for a fraternity.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="hd-name">Name</Label>
+                        <Input 
+                          id="hd-name"
+                          value={hdName} 
+                          onChange={(e) => setHDName(e.target.value)}
+                          placeholder="John Smith"
+                          data-testid="input-hd-name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hd-email">Email</Label>
+                        <Input 
+                          id="hd-email"
+                          type="email"
+                          value={hdEmail} 
+                          onChange={(e) => setHDEmail(e.target.value)}
+                          placeholder="john@university.edu"
+                          data-testid="input-hd-email"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hd-password">Password</Label>
+                        <Input 
+                          id="hd-password"
+                          type="password"
+                          value={hdPassword} 
+                          onChange={(e) => setHDPassword(e.target.value)}
+                          placeholder="At least 6 characters"
+                          data-testid="input-hd-password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fraternity</Label>
+                        <Select value={hdFraternity} onValueChange={setHDFraternity}>
+                          <SelectTrigger data-testid="select-hd-fraternity">
+                            <SelectValue placeholder="Select fraternity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FRATERNITIES.map(f => (
+                              <SelectItem key={f} value={f}>{f}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hd-phone">Phone Number (optional)</Label>
+                        <Input 
+                          id="hd-phone"
+                          type="tel"
+                          value={hdPhone} 
+                          onChange={(e) => setHDPhone(e.target.value)}
+                          placeholder="+1 555 123 4567"
+                          data-testid="input-hd-phone"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        onClick={() => {
+                          if (!hdName || !hdEmail || !hdPassword || !hdFraternity) return;
+                          createHouseDirectorMutation.mutate({
+                            name: hdName,
+                            email: hdEmail,
+                            password: hdPassword,
+                            fraternity: hdFraternity,
+                            phoneNumber: hdPhone || undefined,
+                          }, {
+                            onSuccess: () => {
+                              setCreateHDOpen(false);
+                              setHDName("");
+                              setHDEmail("");
+                              setHDPassword("");
+                              setHDPhone("");
+                            }
+                          });
+                        }}
+                        disabled={createHouseDirectorMutation.isPending || !hdName || !hdEmail || !hdPassword}
+                        data-testid="button-submit-hd"
+                      >
+                        {createHouseDirectorMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Create House Director"
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {isLoadingHouseDirectors ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : !houseDirectors || houseDirectors.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No house directors yet. Click "Add House Director" to create one.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {houseDirectors.map((hd: any) => (
+                    <Card key={hd.id} data-testid={`hd-card-${hd.id}`}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{hd.name}</CardTitle>
+                            <CardDescription>{hd.email}</CardDescription>
+                          </div>
+                          <Badge variant="secondary">{hd.fraternity}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-sm text-muted-foreground">
+                          {hd.phoneNumber ? (
+                            <p>Phone: {hd.phoneNumber}</p>
+                          ) : (
+                            <p className="italic">No phone number</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
+            
+            {/* House Director Critiques */}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-primary" />
+                  Menu Critiques
+                  {unacknowledgedCritiques.length > 0 && (
+                    <Badge variant="destructive">{unacknowledgedCritiques.length} pending</Badge>
+                  )}
+                </h2>
+              </div>
+              
+              {isLoadingCritiques ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : !critiques || critiques.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No critiques from house directors yet.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {critiques.map((critique: any) => {
+                    const menu = menus?.find((m: any) => m.id === critique.menuId);
+                    return (
+                      <Card key={critique.id} className={!critique.acknowledgedByAdmin ? "border-l-4 border-l-amber-500" : ""} data-testid={`critique-card-${critique.id}`}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                              <CardTitle className="text-base">
+                                {menu ? `Week of ${format(parseISO(menu.weekOf), "MMM d, yyyy")}` : `Menu #${critique.menuId}`}
+                              </CardTitle>
+                              <CardDescription>
+                                {critique.fraternity} | Submitted {format(parseISO(critique.createdAt), "MMM d 'at' h:mm a")}
+                              </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {critique.acknowledgedByAdmin ? (
+                                <Badge variant="outline">
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Acknowledged
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => acknowledgeCritiqueAdminMutation.mutate(critique.id)}
+                                  disabled={acknowledgeCritiqueAdminMutation.isPending}
+                                  data-testid={`button-acknowledge-critique-${critique.id}`}
+                                >
+                                  {acknowledgeCritiqueAdminMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Acknowledge
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {critique.critiqueText && (
+                            <div className="mb-2">
+                              <p className="text-sm font-medium">Critique:</p>
+                              <p className="text-sm text-muted-foreground">{critique.critiqueText}</p>
+                            </div>
+                          )}
+                          {critique.suggestedEdits && (
+                            <div>
+                              <p className="text-sm font-medium">Suggested Edits:</p>
+                              <p className="text-sm text-muted-foreground">{critique.suggestedEdits}</p>
+                            </div>
+                          )}
+                          <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                            <span>Chef: {critique.acknowledgedByChef ? "Acknowledged" : "Pending"}</span>
+                            <span>Admin: {critique.acknowledgedByAdmin ? "Acknowledged" : "Pending"}</span>
+                          </div>
                         </CardContent>
                       </Card>
                     );
