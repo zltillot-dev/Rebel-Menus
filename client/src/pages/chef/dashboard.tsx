@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle, ClipboardList } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle, ClipboardList, FileDown } from "lucide-react";
+import { exportMenuToPDF } from "@/lib/pdf-export";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday, isBefore, isAfter } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
@@ -551,7 +552,36 @@ export default function ChefDashboard() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <CardTitle className="text-lg">Week of {format(parseISO(menu.weekOf), "MMM d, yyyy")}</CardTitle>
-              <Badge className={statusColors[menu.status] || ""}>{menu.status}</Badge>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge className={statusColors[menu.status] || ""}>{menu.status}</Badge>
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => exportMenuToPDF({
+                    id: menu.id,
+                    weekOf: menu.weekOf,
+                    fraternity: menu.fraternity,
+                    status: menu.status,
+                    items: menu.items?.map((item: any) => ({
+                      day: item.day,
+                      mealType: item.meal,
+                      description: item.description,
+                      side1: item.side1,
+                      side2: item.side2,
+                      side3: item.side3,
+                      calories: item.calories,
+                      protein: item.protein,
+                      carbs: item.carbs,
+                      fats: item.fats,
+                      sugar: item.sugar,
+                    })),
+                  })}
+                  data-testid={`button-export-pdf-${menu.id}`}
+                >
+                  <FileDown className="w-4 h-4 mr-1" />
+                  PDF
+                </Button>
+              </div>
             </div>
             {showActions && (menu.status === 'pending' || menu.status === 'needs_revision') && (
               <div className="flex gap-2">

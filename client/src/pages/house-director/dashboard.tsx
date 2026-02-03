@@ -9,9 +9,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar, ClipboardList, Send, Loader2, FileText, Download } from "lucide-react";
+import { Calendar, ClipboardList, Send, Loader2, FileText, Download, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
+import { exportMenuToPDF } from "@/lib/pdf-export";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -157,6 +158,34 @@ export default function HouseDirectorDashboard() {
                       <ClipboardList className="w-4 h-4 mr-1" />
                       <span className="hidden sm:inline">Submit Critique</span>
                       <span className="sm:hidden">Critique</span>
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => exportMenuToPDF({
+                        id: menu.id,
+                        weekOf: menu.weekOf,
+                        fraternity: menu.fraternity,
+                        status: menu.status,
+                        items: menu.items?.map((item: any) => ({
+                          day: item.day,
+                          mealType: item.meal,
+                          description: item.description,
+                          side1: item.side1,
+                          side2: item.side2,
+                          side3: item.side3,
+                          calories: item.calories,
+                          protein: item.protein,
+                          carbs: item.carbs,
+                          fats: item.fats,
+                          sugar: item.sugar,
+                        })),
+                      })}
+                      data-testid={`button-export-pdf-${menu.id}`}
+                    >
+                      <FileDown className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">Export PDF</span>
+                      <span className="sm:hidden">PDF</span>
                     </Button>
                   </div>
                 </div>
