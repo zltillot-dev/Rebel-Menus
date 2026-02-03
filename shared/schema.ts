@@ -4,12 +4,13 @@ import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 // Enums
-export const ROLES = ["user", "chef", "admin"] as const;
+export const ROLES = ["user", "chef", "admin", "house_director"] as const;
 export const FRATERNITIES = ["Delta Tau Delta", "Sigma Chi"] as const;
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 export const MEAL_TYPES = ["Lunch", "Dinner"] as const;
 export const MENU_STATUS = ["draft", "pending", "approved", "needs_revision"] as const;
 export const REQUEST_TYPES = ["late_plate", "substitution", "menu_suggestion", "future_request"] as const;
+export const CRITIQUE_STATUS = ["pending", "acknowledged"] as const;
 
 // Tables
 export const users = pgTable("users", {
@@ -84,12 +85,29 @@ export const chefTasks = pgTable("chef_tasks", {
   dueDate: date("due_date"),
 });
 
+// Menu critiques and suggested edits from House Directors
+export const menuCritiques = pgTable("menu_critiques", {
+  id: serial("id").primaryKey(),
+  menuId: integer("menu_id").notNull().references(() => menus.id),
+  houseDirectorId: integer("house_director_id").notNull().references(() => users.id),
+  fraternity: text("fraternity", { enum: FRATERNITIES }).notNull(),
+  critiqueText: text("critique_text"), // General critique/feedback
+  suggestedEdits: text("suggested_edits"), // Suggested menu changes
+  status: text("status", { enum: CRITIQUE_STATUS }).notNull().default("pending"),
+  acknowledgedByChef: boolean("acknowledged_by_chef").default(false),
+  acknowledgedByAdmin: boolean("acknowledged_by_admin").default(false),
+  acknowledgedByChefAt: date("acknowledged_by_chef_at"),
+  acknowledgedByAdminAt: date("acknowledged_by_admin_at"),
+  createdAt: date("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   menus: many(menus),
   feedback: many(feedback),
   requests: many(requests),
   tasks: many(chefTasks),
+  critiques: many(menuCritiques),
 }));
 
 export const chefTasksRelations = relations(chefTasks, ({ one }) => ({
@@ -133,6 +151,17 @@ export const requestsRelations = relations(requests, ({ one }) => ({
   }),
 }));
 
+export const menuCritiquesRelations = relations(menuCritiques, ({ one }) => ({
+  menu: one(menus, {
+    fields: [menuCritiques.menuId],
+    references: [menus.id],
+  }),
+  houseDirector: one(users, {
+    fields: [menuCritiques.houseDirectorId],
+    references: [users.id],
+  }),
+}));
+
 // Schemas & Types
 export const insertUserSchema = createInsertSchema(users);
 export const insertMenuSchema = createInsertSchema(menus);
@@ -140,6 +169,7 @@ export const insertMenuItemSchema = createInsertSchema(menuItems);
 export const insertFeedbackSchema = createInsertSchema(feedback);
 export const insertRequestSchema = createInsertSchema(requests);
 export const insertChefTaskSchema = createInsertSchema(chefTasks).omit({ id: true, createdAt: true });
+export const insertMenuCritiqueSchema = createInsertSchema(menuCritiques).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -148,9 +178,11 @@ export type MenuItem = typeof menuItems.$inferSelect;
 export type Feedback = typeof feedback.$inferSelect;
 export type Request = typeof requests.$inferSelect;
 export type ChefTask = typeof chefTasks.$inferSelect;
+export type MenuCritique = typeof menuCritiques.$inferSelect;
 
 export type InsertMenu = z.infer<typeof insertMenuSchema>;
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type InsertRequest = z.infer<typeof insertRequestSchema>;
 export type InsertChefTask = z.infer<typeof insertChefTaskSchema>;
+export type InsertMenuCritique = z.infer<typeof insertMenuCritiqueSchema>;
