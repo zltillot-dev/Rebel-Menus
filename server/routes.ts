@@ -25,14 +25,40 @@ export async function registerRoutes(
   app.get(api.menus.list.path, async (req, res) => {
     if (!req.user) return res.status(401).send("Unauthorized");
     
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
     // Admins see all, Chefs see their fraternity, Users see their fraternity
-    let fraternity = (req.user as any).fraternity;
-    if ((req.user as any).role === 'admin') {
+    let fraternity = userFraternity;
+    if (userRole === 'admin') {
         fraternity = req.query.fraternity as string | undefined;
     }
     const status = req.query.status as string | undefined;
 
-    const menus = await storage.getMenus(fraternity, status);
+    let menus = await storage.getMenus(fraternity, status);
+    
+    // House directors only see previous, current, and upcoming week
+    if (userRole === 'house_director') {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday is start of week
+      
+      const currentWeekStart = new Date(now);
+      currentWeekStart.setDate(now.getDate() - diff);
+      currentWeekStart.setHours(0, 0, 0, 0);
+      
+      const previousWeekStart = new Date(currentWeekStart);
+      previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+      
+      const nextWeekEnd = new Date(currentWeekStart);
+      nextWeekEnd.setDate(nextWeekEnd.getDate() + 14); // Current + next week
+      
+      menus = menus.filter((menu: any) => {
+        const menuWeekOf = new Date(menu.weekOf);
+        return menuWeekOf >= previousWeekStart && menuWeekOf < nextWeekEnd;
+      });
+    }
+    
     res.json(menus);
   });
 
@@ -49,13 +75,49 @@ export async function registerRoutes(
     }
     try {
       const { items, ...menuData } = req.body;
+      const chefId = (req.user as any).id;
+      const fraternity = (req.user as any).fraternity || menuData.fraternity;
+      
       const validatedMenu = insertMenuSchema.parse({ 
         ...menuData, 
-        chefId: (req.user as any).id,
-        fraternity: (req.user as any).fraternity || menuData.fraternity
+        chefId,
+        fraternity
       });
       
       const menu = await storage.createMenu(validatedMenu, items);
+      
+      // Send SMS notifications for new menu submission (if status is pending)
+      if ((req.user as any).role === 'chef' && validatedMenu.status === 'pending') {
+        const chefUser = await storage.getUser(chefId);
+        const chefName = chefUser?.name || 'A chef';
+        
+        // Notify house director
+        try {
+          const houseDirector = await storage.getHouseDirectorByFraternity(fraternity);
+          if (houseDirector?.phoneNumber) {
+            const message = `New menu submitted by ${chefName} for ${fraternity}. Please review it in the Rebel Chefs app.`;
+            await sendSMS(houseDirector.phoneNumber, message);
+            console.log(`[SMS] Notified house director ${houseDirector.name} about new menu`);
+          }
+        } catch (smsError) {
+          console.error("Failed to send SMS to house director:", smsError);
+        }
+        
+        // Notify admin
+        try {
+          const admins = await db.select().from(users).where(eq(users.role, 'admin'));
+          for (const admin of admins) {
+            if (admin.phoneNumber) {
+              const message = `New menu submitted by ${chefName} (${fraternity}). Please review for approval in Rebel Chefs.`;
+              await sendSMS(admin.phoneNumber, message);
+              console.log(`[SMS] Notified admin ${admin.name} about new menu`);
+            }
+          }
+        } catch (smsError) {
+          console.error("Failed to send SMS to admin:", smsError);
+        }
+      }
+      
       res.status(201).json(menu);
     } catch (e) {
       res.status(400).json({ message: "Invalid input" });
@@ -853,6 +915,193 @@ export async function registerRoutes(
     res.json({ message: "Task deleted successfully" });
   });
 
+  // ==================== Menu Critiques (House Directors) ====================
+
+  // Get critiques - house directors see their own, chefs/admins see their fraternity's
+  app.get("/api/critiques", async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const userRole = (req.user as any).role;
+    const userId = (req.user as any).id;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole === 'house_director') {
+      const critiques = await storage.getCritiquesByHouseDirector(userId);
+      return res.json(critiques);
+    }
+    
+    if (userRole === 'chef') {
+      const critiques = await storage.getCritiques(userFraternity);
+      return res.json(critiques);
+    }
+    
+    if (userRole === 'admin') {
+      const fraternity = req.query.fraternity as string | undefined;
+      const critiques = await storage.getCritiques(fraternity);
+      return res.json(critiques);
+    }
+    
+    return res.status(403).json({ message: "Forbidden" });
+  });
+
+  // Create critique - house directors only
+  app.post("/api/critiques", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'house_director') {
+      return res.status(403).json({ message: "Only house directors can submit critiques" });
+    }
+    
+    try {
+      const userId = (req.user as any).id;
+      const userFraternity = (req.user as any).fraternity;
+      
+      const { menuId, critiqueText, suggestedEdits } = req.body;
+      
+      if (!menuId) {
+        return res.status(400).json({ message: "menuId is required" });
+      }
+      
+      // Verify menu exists and belongs to house director's fraternity
+      const menu = await storage.getMenu(Number(menuId));
+      if (!menu) {
+        return res.status(404).json({ message: "Menu not found" });
+      }
+      if (menu.fraternity !== userFraternity) {
+        return res.status(403).json({ message: "Can only critique menus for your fraternity" });
+      }
+      
+      const critique = await storage.createCritique({
+        menuId: Number(menuId),
+        houseDirectorId: userId,
+        fraternity: userFraternity,
+        critiqueText: critiqueText || null,
+        suggestedEdits: suggestedEdits || null,
+        status: 'pending',
+        acknowledgedByChef: false,
+        acknowledgedByAdmin: false,
+      });
+      
+      res.status(201).json(critique);
+    } catch (error) {
+      console.error("Error creating critique:", error);
+      res.status(400).json({ message: "Failed to create critique" });
+    }
+  });
+
+  // Acknowledge critique by chef
+  app.patch("/api/critiques/:id/acknowledge-chef", async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+    
+    if (userRole !== 'chef') {
+      return res.status(403).json({ message: "Only chefs can acknowledge critiques" });
+    }
+    
+    const critiqueId = Number(req.params.id);
+    const critique = await storage.getCritique(critiqueId);
+    
+    if (!critique) {
+      return res.status(404).json({ message: "Critique not found" });
+    }
+    
+    if (critique.fraternity !== userFraternity) {
+      return res.status(403).json({ message: "Can only acknowledge critiques for your fraternity" });
+    }
+    
+    const updated = await storage.acknowledgeCritiqueByChef(critiqueId);
+    
+    // Send SMS notification to house director
+    try {
+      const houseDirector = await storage.getHouseDirectorByFraternity(critique.fraternity);
+      if (houseDirector?.phoneNumber) {
+        const chefUser = await storage.getUser((req.user as any).id);
+        const message = `Your menu critique for ${critique.fraternity} has been acknowledged by ${chefUser?.name || 'the chef'}. - Rebel Chefs`;
+        await sendSMS(houseDirector.phoneNumber, message);
+      }
+    } catch (smsError) {
+      console.error("Failed to send SMS to house director:", smsError);
+    }
+    
+    res.json(updated);
+  });
+
+  // Acknowledge critique by admin
+  app.patch("/api/critiques/:id/acknowledge-admin", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Only admins can acknowledge critiques" });
+    }
+    
+    const critiqueId = Number(req.params.id);
+    const critique = await storage.getCritique(critiqueId);
+    
+    if (!critique) {
+      return res.status(404).json({ message: "Critique not found" });
+    }
+    
+    const updated = await storage.acknowledgeCritiqueByAdmin(critiqueId);
+    
+    // Send SMS notification to house director
+    try {
+      const houseDirector = await storage.getHouseDirectorByFraternity(critique.fraternity);
+      if (houseDirector?.phoneNumber) {
+        const message = `Your menu critique for ${critique.fraternity} has been acknowledged by the admin. - Rebel Chefs`;
+        await sendSMS(houseDirector.phoneNumber, message);
+      }
+    } catch (smsError) {
+      console.error("Failed to send SMS to house director:", smsError);
+    }
+    
+    res.json(updated);
+  });
+
+  // Get house directors (admin only)
+  app.get("/api/admin/house-directors", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const houseDirectors = await storage.getHouseDirectors();
+    res.json(houseDirectors);
+  });
+
+  // Create house director (admin only)
+  app.post("/api/admin/house-directors", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    
+    try {
+      const { name, email, password, fraternity, phoneNumber } = req.body;
+      
+      if (!name || !email || !password || !fraternity) {
+        return res.status(400).json({ message: "Name, email, password, and fraternity are required" });
+      }
+      
+      // Check if email already exists
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        role: 'house_director',
+        fraternity,
+        phoneNumber: phoneNumber || null
+      } as any);
+      
+      // Don't return password
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error creating house director:", error);
+      res.status(400).json({ message: "Failed to create house director" });
+    }
+  });
+
   // Manual trigger for late plate SMS (for testing - admin only)
   app.post("/api/admin/trigger-late-plate-sms", async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') {
@@ -929,6 +1178,39 @@ export async function registerRoutes(
                       password: testPassword,
                       role: "user",
                       fraternity: "Delta Tau Delta"
+                  } as any);
+              }
+              
+              // Seed test house director accounts
+              const hdDtdEmail = "hd.dtd@olemiss.edu";
+              const hdDtd = await storage.getUserByEmail(hdDtdEmail);
+              if (hdDtd) {
+                  console.log("Updating existing DTD house director password...");
+                  await db.update(users).set({ password: testPassword }).where(eq(users.id, hdDtd.id));
+              } else {
+                  console.log("Seeding DTD house director...");
+                  await storage.createUser({
+                      name: "House Director DTD",
+                      email: hdDtdEmail,
+                      password: testPassword,
+                      role: "house_director",
+                      fraternity: "Delta Tau Delta"
+                  } as any);
+              }
+              
+              const hdSigmaEmail = "hd.sigma@k-state.edu";
+              const hdSigma = await storage.getUserByEmail(hdSigmaEmail);
+              if (hdSigma) {
+                  console.log("Updating existing Sigma Chi house director password...");
+                  await db.update(users).set({ password: testPassword }).where(eq(users.id, hdSigma.id));
+              } else {
+                  console.log("Seeding Sigma Chi house director...");
+                  await storage.createUser({
+                      name: "House Director Sigma Chi",
+                      email: hdSigmaEmail,
+                      password: testPassword,
+                      role: "house_director",
+                      fraternity: "Sigma Chi"
                   } as any);
               }
           }
