@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, menus, menuItems, feedback, requests, chefTasks, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask } from "@shared/schema";
+import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 import session from "express-session";
@@ -47,6 +47,16 @@ export interface IStorage {
   createChefTask(task: InsertChefTask): Promise<ChefTask>;
   updateChefTask(id: number, updates: Partial<ChefTask>): Promise<ChefTask>;
   deleteChefTask(id: number): Promise<void>;
+
+  // Menu Critiques (House Directors)
+  getCritiques(fraternity?: string): Promise<(MenuCritique & { houseDirector: User; menu: Menu })[]>;
+  getCritiquesByHouseDirector(houseDirectorId: number): Promise<(MenuCritique & { menu: Menu })[]>;
+  getCritique(id: number): Promise<(MenuCritique & { houseDirector: User; menu: Menu }) | undefined>;
+  createCritique(critique: InsertMenuCritique): Promise<MenuCritique>;
+  acknowledgeCritiqueByChef(id: number): Promise<MenuCritique>;
+  acknowledgeCritiqueByAdmin(id: number): Promise<MenuCritique>;
+  getHouseDirectors(): Promise<User[]>;
+  getHouseDirectorByFraternity(fraternity: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -260,6 +270,88 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChefTask(id: number): Promise<void> {
     await db.delete(chefTasks).where(eq(chefTasks.id, id));
+  }
+
+  // Menu Critiques (House Directors)
+  async getCritiques(fraternity?: string): Promise<(MenuCritique & { houseDirector: User; menu: Menu })[]> {
+    let conditions = [];
+    if (fraternity) conditions.push(eq(menuCritiques.fraternity, fraternity as any));
+    
+    let query = db.select().from(menuCritiques);
+    if (conditions.length > 0) {
+      // @ts-ignore
+      query = query.where(and(...conditions));
+    }
+    
+    const critiques = await query.orderBy(desc(menuCritiques.createdAt));
+    const result = [];
+    for (const critique of critiques) {
+      const [houseDirector] = await db.select().from(users).where(eq(users.id, critique.houseDirectorId));
+      const [menu] = await db.select().from(menus).where(eq(menus.id, critique.menuId));
+      if (houseDirector && menu) {
+        result.push({ ...critique, houseDirector, menu });
+      }
+    }
+    return result;
+  }
+
+  async getCritiquesByHouseDirector(houseDirectorId: number): Promise<(MenuCritique & { menu: Menu })[]> {
+    const critiques = await db.select().from(menuCritiques)
+      .where(eq(menuCritiques.houseDirectorId, houseDirectorId))
+      .orderBy(desc(menuCritiques.createdAt));
+    
+    const result = [];
+    for (const critique of critiques) {
+      const [menu] = await db.select().from(menus).where(eq(menus.id, critique.menuId));
+      if (menu) {
+        result.push({ ...critique, menu });
+      }
+    }
+    return result;
+  }
+
+  async getCritique(id: number): Promise<(MenuCritique & { houseDirector: User; menu: Menu }) | undefined> {
+    const [critique] = await db.select().from(menuCritiques).where(eq(menuCritiques.id, id));
+    if (!critique) return undefined;
+    
+    const [houseDirector] = await db.select().from(users).where(eq(users.id, critique.houseDirectorId));
+    const [menu] = await db.select().from(menus).where(eq(menus.id, critique.menuId));
+    
+    if (!houseDirector || !menu) return undefined;
+    return { ...critique, houseDirector, menu };
+  }
+
+  async createCritique(critique: InsertMenuCritique): Promise<MenuCritique> {
+    const [created] = await db.insert(menuCritiques).values(critique).returning();
+    return created;
+  }
+
+  async acknowledgeCritiqueByChef(id: number): Promise<MenuCritique> {
+    const now = new Date().toISOString().split('T')[0];
+    const [updated] = await db.update(menuCritiques)
+      .set({ acknowledgedByChef: true, acknowledgedByChefAt: now, status: 'acknowledged' as any })
+      .where(eq(menuCritiques.id, id))
+      .returning();
+    return updated;
+  }
+
+  async acknowledgeCritiqueByAdmin(id: number): Promise<MenuCritique> {
+    const now = new Date().toISOString().split('T')[0];
+    const [updated] = await db.update(menuCritiques)
+      .set({ acknowledgedByAdmin: true, acknowledgedByAdminAt: now, status: 'acknowledged' as any })
+      .where(eq(menuCritiques.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getHouseDirectors(): Promise<User[]> {
+    return db.select().from(users).where(eq(users.role, "house_director"));
+  }
+
+  async getHouseDirectorByFraternity(fraternity: string): Promise<User | undefined> {
+    const [hd] = await db.select().from(users)
+      .where(and(eq(users.role, "house_director"), eq(users.fraternity, fraternity as any)));
+    return hd;
   }
 }
 
