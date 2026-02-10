@@ -315,8 +315,6 @@ export default function ChefDashboard() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [editWeekOf, setEditWeekOf] = useState("");
   const [editMenuItems, setEditMenuItems] = useState<any[]>([]);
-  const [estimatingIndex, setEstimatingIndex] = useState<number | null>(null);
-  const [editEstimatingIndex, setEditEstimatingIndex] = useState<number | null>(null);
 
   const initializeMenu = () => {
     const items = [];
@@ -363,82 +361,6 @@ export default function ChefDashboard() {
     const newItems = [...editMenuItems];
     newItems[index] = { ...newItems[index], [field]: value };
     setEditMenuItems(newItems);
-  };
-
-  const estimateMacros = async (index: number) => {
-    const item = menuItems[index];
-    if (!item || !item.description) return;
-    
-    setEstimatingIndex(index);
-    try {
-      const res = await fetch("/api/estimate-macros", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: item.description,
-          side1: item.side1,
-          side2: item.side2,
-          side3: item.side3,
-        }),
-        credentials: "include",
-      });
-      
-      if (!res.ok) throw new Error("Failed to estimate");
-      
-      const macros = await res.json();
-      const newItems = [...menuItems];
-      newItems[index] = {
-        ...newItems[index],
-        calories: macros.calories,
-        carbs: macros.carbs,
-        fats: macros.fats,
-        protein: macros.protein,
-        sugar: macros.sugar,
-      };
-      setMenuItems(newItems);
-    } catch (error) {
-      console.error("Failed to estimate macros:", error);
-    } finally {
-      setEstimatingIndex(null);
-    }
-  };
-
-  const estimateEditMacros = async (index: number) => {
-    const item = editMenuItems[index];
-    if (!item.description) return;
-    
-    setEditEstimatingIndex(index);
-    try {
-      const res = await fetch("/api/estimate-macros", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: item.description,
-          side1: item.side1,
-          side2: item.side2,
-          side3: item.side3,
-        }),
-        credentials: "include",
-      });
-      
-      if (!res.ok) throw new Error("Failed to estimate");
-      
-      const macros = await res.json();
-      const newItems = [...editMenuItems];
-      newItems[index] = {
-        ...newItems[index],
-        calories: macros.calories,
-        carbs: macros.carbs,
-        fats: macros.fats,
-        protein: macros.protein,
-        sugar: macros.sugar,
-      };
-      setEditMenuItems(newItems);
-    } catch (error) {
-      console.error("Failed to estimate macros:", error);
-    } finally {
-      setEditEstimatingIndex(null);
-    }
   };
 
   const handleCreateMenu = () => {
@@ -649,7 +571,7 @@ export default function ChefDashboard() {
     );
   };
 
-  const renderMenuForm = (items: any[], onChange: (idx: number, field: string, value: any) => void, onEstimate: (idx: number) => void, estimatingIdx: number | null) => (
+  const renderMenuForm = (items: any[], onChange: (idx: number, field: string, value: any) => void) => (
     <Tabs defaultValue="Monday" className="w-full">
       <TabsList className="grid grid-cols-5 mb-6">
         {DAYS.map(day => (
@@ -666,20 +588,10 @@ export default function ChefDashboard() {
               <Card key={idx} className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-semibold text-lg">{item.meal}</h4>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEstimate(idx)}
-                    disabled={!item.description || estimatingIdx === idx}
-                    data-testid={`button-estimate-macros-${idx}`}
-                  >
-                    {estimatingIdx === idx ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Estimating...</>
-                    ) : (
-                      <><Sparkles className="w-4 h-4 mr-2" /> Auto-Estimate Macros</>
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Macros auto-estimated on save</span>
+                  </div>
                 </div>
                 
                 <div className="grid gap-4">
@@ -720,59 +632,6 @@ export default function ChefDashboard() {
                         value={item.side3}
                         onChange={(e) => onChange(idx, "side3", e.target.value)}
                         data-testid={`input-side3-${idx}`}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-5 gap-2">
-                    <div>
-                      <Label className="text-xs">Calories</Label>
-                      <Input
-                        type="number"
-                        value={item.calories}
-                        onChange={(e) => onChange(idx, "calories", Number(e.target.value))}
-                        className="text-sm"
-                        data-testid={`input-calories-${idx}`}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Protein (g)</Label>
-                      <Input
-                        type="number"
-                        value={item.protein}
-                        onChange={(e) => onChange(idx, "protein", Number(e.target.value))}
-                        className="text-sm"
-                        data-testid={`input-protein-${idx}`}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Carbs (g)</Label>
-                      <Input
-                        type="number"
-                        value={item.carbs}
-                        onChange={(e) => onChange(idx, "carbs", Number(e.target.value))}
-                        className="text-sm"
-                        data-testid={`input-carbs-${idx}`}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Fats (g)</Label>
-                      <Input
-                        type="number"
-                        value={item.fats}
-                        onChange={(e) => onChange(idx, "fats", Number(e.target.value))}
-                        className="text-sm"
-                        data-testid={`input-fats-${idx}`}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Sugar (g)</Label>
-                      <Input
-                        type="number"
-                        value={item.sugar}
-                        onChange={(e) => onChange(idx, "sugar", Number(e.target.value))}
-                        className="text-sm"
-                        data-testid={`input-sugar-${idx}`}
                       />
                     </div>
                   </div>
@@ -834,7 +693,7 @@ export default function ChefDashboard() {
                           />
                         </div>
 
-                        {renderMenuForm(menuItems, handleItemChange, estimateMacros, estimatingIndex)}
+                        {renderMenuForm(menuItems, handleItemChange)}
                       </div>
                       
                       <DialogFooter>
@@ -1394,7 +1253,7 @@ export default function ChefDashboard() {
               />
             </div>
 
-            {renderMenuForm(editMenuItems, handleEditItemChange, estimateEditMacros, editEstimatingIndex)}
+            {renderMenuForm(editMenuItems, handleEditItemChange)}
           </div>
           
           <DialogFooter>

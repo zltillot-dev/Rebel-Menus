@@ -16,6 +16,56 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+async function estimateMacrosForItem(item: { description: string; side1?: string; side2?: string; side3?: string }): Promise<{ calories: number; protein: number; carbs: number; fats: number; sugar: number }> {
+  const foodItems = [item.description, item.side1, item.side2, item.side3].filter(Boolean).join(", ");
+  
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `You are a nutritionist assistant. Given a meal description, estimate the nutritional information for a typical serving. Return ONLY a JSON object with these fields: calories (number), protein (number in grams), carbs (number in grams), fats (number in grams), sugar (number in grams). Be reasonable with estimates for typical fraternity house portion sizes (generous but not excessive). Return only valid JSON, no markdown or explanation.`
+      },
+      {
+        role: "user",
+        content: `Estimate the nutritional information for this meal: ${foodItems}`
+      }
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 200,
+  });
+  
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("No response from AI");
+  
+  const macros = JSON.parse(content);
+  return {
+    calories: Math.min(Math.max(Math.round(Number(macros.calories) || 0), 0), 3000),
+    protein: Math.min(Math.max(Math.round(Number(macros.protein) || 0), 0), 200),
+    carbs: Math.min(Math.max(Math.round(Number(macros.carbs) || 0), 0), 500),
+    fats: Math.min(Math.max(Math.round(Number(macros.fats) || 0), 0), 200),
+    sugar: Math.min(Math.max(Math.round(Number(macros.sugar) || 0), 0), 200),
+  };
+}
+
+async function autoEstimateItems(items: any[]): Promise<any[]> {
+  const results = await Promise.all(
+    items.map(async (item) => {
+      if (!item.description) return item;
+      const needsEstimation = !item.calories && !item.carbs && !item.fats && !item.protein && !item.sugar;
+      if (!needsEstimation) return item;
+      try {
+        const macros = await estimateMacrosForItem(item);
+        return { ...item, ...macros };
+      } catch (err) {
+        console.error(`[Auto-Estimate] Failed for "${item.description}":`, (err as any)?.message || err);
+        return item;
+      }
+    })
+  );
+  return results;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -85,7 +135,8 @@ export async function registerRoutes(
         fraternity
       });
       
-      const menu = await storage.createMenu(validatedMenu, items);
+      const estimatedItems = await autoEstimateItems(items);
+      const menu = await storage.createMenu(validatedMenu, estimatedItems);
       
       // Send SMS notifications for new menu submission (if status is pending)
       if ((req.user as any).role === 'chef' && validatedMenu.status === 'pending') {
@@ -188,7 +239,8 @@ export async function registerRoutes(
         menuData.status = 'pending';
       }
       
-      const menu = await storage.updateMenu(menuId, menuData, items);
+      const estimatedItems = items ? await autoEstimateItems(items) : items;
+      const menu = await storage.updateMenu(menuId, menuData, estimatedItems);
       return res.json(menu);
     } catch (e) {
       return res.status(400).json({ message: "Invalid input" });
@@ -657,40 +709,7 @@ export async function registerRoutes(
     }
     
     try {
-      const foodItems = [description, side1, side2, side3].filter(Boolean).join(", ");
-      
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `You are a nutritionist assistant. Given a meal description, estimate the nutritional information for a typical serving. Return ONLY a JSON object with these fields: calories (number), protein (number in grams), carbs (number in grams), fats (number in grams), sugar (number in grams). Be reasonable with estimates for typical fraternity house portion sizes (generous but not excessive). Return only valid JSON, no markdown or explanation.`
-          },
-          {
-            role: "user",
-            content: `Estimate the nutritional information for this meal: ${foodItems}`
-          }
-        ],
-        response_format: { type: "json_object" },
-        max_tokens: 200,
-      });
-      
-      const content = response.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error("No response from AI");
-      }
-      
-      const macros = JSON.parse(content);
-      
-      // Ensure all fields are numbers and within reasonable bounds
-      const result = {
-        calories: Math.min(Math.max(Math.round(Number(macros.calories) || 0), 0), 3000),
-        protein: Math.min(Math.max(Math.round(Number(macros.protein) || 0), 0), 200),
-        carbs: Math.min(Math.max(Math.round(Number(macros.carbs) || 0), 0), 500),
-        fats: Math.min(Math.max(Math.round(Number(macros.fats) || 0), 0), 200),
-        sugar: Math.min(Math.max(Math.round(Number(macros.sugar) || 0), 0), 200),
-      };
-      
+      const result = await estimateMacrosForItem({ description, side1, side2, side3 });
       return res.json(result);
     } catch (error) {
       console.error("Error estimating macros:", error);
