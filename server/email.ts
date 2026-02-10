@@ -78,10 +78,14 @@ export async function sendWelcomeEmail(toEmail: string, name: string, tempPasswo
       `,
     };
 
+    console.log(`[Email] Sending welcome email from ${fromEmail} to ${toEmail}`);
     await client.send(msg);
     console.log(`[Email] Welcome email sent to ${toEmail}`);
-  } catch (error) {
-    console.error(`[Email] Failed to send welcome email to ${toEmail}:`, error);
+  } catch (error: any) {
+    if (error?.response?.body) {
+      console.error(`[Email] SendGrid error body:`, JSON.stringify(error.response.body, null, 2));
+    }
+    console.error(`[Email] Failed to send welcome email to ${toEmail}:`, error?.message || error);
     throw error;
   }
 }
