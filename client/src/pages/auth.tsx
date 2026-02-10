@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import logoImg from "@assets/rebelcehfs_1770767284846.png";
 
 // Auth schemas
 const loginSchema = z.object({
@@ -73,13 +74,10 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Left: Branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541544744870-0840428e938e?q=80&w=2053&auto=format&fit=crop')] opacity-10 bg-cover bg-center mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-blue-900/90" />
-        
-        <div className="relative z-10 text-center text-primary-foreground max-w-lg">
-          <h1 className="text-6xl font-display font-bold mb-6 tracking-tight">REBEL CHEFS</h1>
-          <p className="text-xl text-primary-foreground/80 font-light leading-relaxed">
+      <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-black relative overflow-hidden">
+        <div className="relative z-10 text-center max-w-lg flex flex-col items-center gap-6">
+          <img src={logoImg} alt="Rebel Chefs" className="w-80 h-auto" data-testid="img-logo-desktop" />
+          <p className="text-xl text-white/70 font-light leading-relaxed">
             Premium dining management for fraternities. View weekly menus, track macros, and manage meal requests with ease.
           </p>
         </div>
@@ -88,8 +86,8 @@ export default function AuthPage() {
       {/* Right: Auth Forms */}
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-8">
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl font-display font-bold text-primary tracking-tight">REBEL CHEFS</h1>
+          <div className="lg:hidden flex justify-center mb-8">
+            <img src={logoImg} alt="Rebel Chefs" className="w-48 h-auto" data-testid="img-logo-mobile" />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
