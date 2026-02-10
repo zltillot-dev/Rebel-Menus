@@ -718,9 +718,8 @@ export async function registerRoutes(
     const userId = (req.user as any).id;
     const userRole = (req.user as any).role;
     
-    // Only chefs can update their profile through this endpoint
-    if (userRole !== 'chef') {
-      return res.status(403).send("Forbidden - only chefs can update their profile");
+    if (!['chef', 'admin', 'house_director'].includes(userRole)) {
+      return res.status(403).send("Forbidden");
     }
     
     const parseResult = profileUpdateSchema.safeParse(req.body);
