@@ -103,7 +103,7 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   
   const createHouseDirectorMutation = useMutation({
-    mutationFn: async (data: { name: string; email: string; password: string; fraternity: string; phoneNumber?: string }) => {
+    mutationFn: async (data: { name: string; email: string; fraternity: string; phoneNumber?: string }) => {
       const res = await fetch('/api/admin/house-directors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +161,6 @@ export default function AdminDashboard() {
   const [createHDOpen, setCreateHDOpen] = useState(false);
   const [hdName, setHDName] = useState("");
   const [hdEmail, setHDEmail] = useState("");
-  const [hdPassword, setHDPassword] = useState("");
   const [hdFraternity, setHDFraternity] = useState("Delta Tau Delta");
   const [hdPhone, setHDPhone] = useState("");
   const [viewHDDialogOpen, setViewHDDialogOpen] = useState(false);
@@ -826,7 +825,7 @@ export default function AdminDashboard() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add House Director</DialogTitle>
-                      <DialogDescription>Create a house director profile for a fraternity.</DialogDescription>
+                      <DialogDescription>Create a house director profile. A temporary password will be generated automatically and sent via email.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
@@ -848,17 +847,6 @@ export default function AdminDashboard() {
                           onChange={(e) => setHDEmail(e.target.value)}
                           placeholder="john@university.edu"
                           data-testid="input-hd-email"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="hd-password">Password</Label>
-                        <Input 
-                          id="hd-password"
-                          type="password"
-                          value={hdPassword} 
-                          onChange={(e) => setHDPassword(e.target.value)}
-                          placeholder="At least 6 characters"
-                          data-testid="input-hd-password"
                         />
                       </div>
                       <div className="space-y-2">
@@ -889,24 +877,23 @@ export default function AdminDashboard() {
                     <DialogFooter>
                       <Button
                         onClick={() => {
-                          if (!hdName || !hdEmail || !hdPassword || !hdFraternity) return;
+                          if (!hdName || !hdEmail || !hdFraternity) return;
                           createHouseDirectorMutation.mutate({
                             name: hdName,
                             email: hdEmail,
-                            password: hdPassword,
                             fraternity: hdFraternity,
                             phoneNumber: hdPhone || undefined,
                           }, {
                             onSuccess: () => {
+                              toast({ title: "House director created", description: "A welcome email with login credentials has been sent." });
                               setCreateHDOpen(false);
                               setHDName("");
                               setHDEmail("");
-                              setHDPassword("");
                               setHDPhone("");
                             }
                           });
                         }}
-                        disabled={createHouseDirectorMutation.isPending || !hdName || !hdEmail || !hdPassword}
+                        disabled={createHouseDirectorMutation.isPending || !hdName || !hdEmail}
                         data-testid="button-submit-hd"
                       >
                         {createHouseDirectorMutation.isPending ? (

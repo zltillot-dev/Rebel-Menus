@@ -72,3 +72,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Communication
 - **Twilio**: For SMS notifications.
+- **SendGrid via Replit Integrations**: For transactional emails (house director welcome emails).
+
+### Email
+- **Welcome Emails**: When an admin creates a house director account, a welcome email is automatically sent via SendGrid with their login credentials.
+- **Auto-generated Passwords**: House director temporary passwords follow the pattern: first initial + last initial + "HD" + fraternity abbreviation (e.g., "JMHDDTD" for Jennifer Manske at Delta Tau Delta). Fraternity abbreviations: DTD = Delta Tau Delta, SIGMACHI = Sigma Chi.
+- **Email Module**: `server/email.ts` contains SendGrid integration and password generation logic.

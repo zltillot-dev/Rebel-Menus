@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import OpenAI from "openai";
 import { sendSMS } from "./twilio";
+import { generateTempPassword, sendWelcomeEmail } from "./email";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -1070,19 +1071,19 @@ export async function registerRoutes(
     }
     
     try {
-      const { name, email, password, fraternity, phoneNumber } = req.body;
+      const { name, email, fraternity, phoneNumber } = req.body;
       
-      if (!name || !email || !password || !fraternity) {
-        return res.status(400).json({ message: "Name, email, password, and fraternity are required" });
+      if (!name || !email || !fraternity) {
+        return res.status(400).json({ message: "Name, email, and fraternity are required" });
       }
       
-      // Check if email already exists
       const existing = await storage.getUserByEmail(email);
       if (existing) {
         return res.status(400).json({ message: "Email already exists" });
       }
       
-      const hashedPassword = await hashPassword(password);
+      const tempPassword = generateTempPassword(name, fraternity);
+      const hashedPassword = await hashPassword(tempPassword);
       const user = await storage.createUser({
         name,
         email,
@@ -1092,7 +1093,10 @@ export async function registerRoutes(
         phoneNumber: phoneNumber || null
       } as any);
       
-      // Don't return password
+      sendWelcomeEmail(email, name, tempPassword, fraternity).catch(err => {
+        console.error("[Email] Welcome email failed but user was created:", err);
+      });
+      
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
     } catch (error) {
