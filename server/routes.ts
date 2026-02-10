@@ -1101,6 +1101,66 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/admin/house-directors/:id", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const hdId = parseInt(req.params.id);
+      if (isNaN(hdId)) {
+        return res.status(400).json({ message: "Invalid house director ID" });
+      }
+
+      const hdUpdateSchema = z.object({
+        name: z.string().min(2).optional(),
+        email: z.string().email().optional(),
+        password: z.string().min(6).optional(),
+        phoneNumber: z.string().optional(),
+      });
+
+      const parseResult = hdUpdateSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ message: "Invalid input", errors: parseResult.error.flatten().fieldErrors });
+      }
+
+      const targetUser = await storage.getUser(hdId);
+      if (!targetUser || targetUser.role !== 'house_director') {
+        return res.status(404).json({ message: "House director not found" });
+      }
+
+      const { name, email, password, phoneNumber } = parseResult.data;
+      const updates: Partial<{ name: string; email: string; password: string }> = {};
+
+      if (name) updates.name = name;
+      if (email && email !== targetUser.email) {
+        const existing = await storage.getUserByEmail(email);
+        if (existing && existing.id !== hdId) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+        updates.email = email;
+      }
+      if (password) {
+        updates.password = await hashPassword(password);
+      }
+
+      let updatedUser = targetUser;
+      if (Object.keys(updates).length > 0) {
+        updatedUser = await storage.updateUser(hdId, updates);
+      }
+
+      if (phoneNumber !== undefined) {
+        updatedUser = await storage.updateUserPhone(hdId, phoneNumber || "");
+      }
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating house director:", error);
+      res.status(400).json({ message: "Failed to update house director" });
+    }
+  });
+
   // Manual trigger for late plate SMS (for testing - admin only)
   app.post("/api/admin/trigger-late-plate-sms", async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') {

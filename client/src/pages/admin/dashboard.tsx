@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2, ClipboardList, Home, Settings } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2, ClipboardList, Home, Settings, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO, startOfWeek, subWeeks } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
@@ -166,6 +166,13 @@ export default function AdminDashboard() {
   const [hdPhone, setHDPhone] = useState("");
   const [viewHDDialogOpen, setViewHDDialogOpen] = useState(false);
 
+  const [editHDOpen, setEditHDOpen] = useState(false);
+  const [editingHD, setEditingHD] = useState<any>(null);
+  const [editHDName, setEditHDName] = useState("");
+  const [editHDEmail, setEditHDEmail] = useState("");
+  const [editHDPassword, setEditHDPassword] = useState("");
+  const [editHDPhone, setEditHDPhone] = useState("");
+
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
@@ -215,6 +222,44 @@ export default function AdminDashboard() {
       return;
     }
     updateProfileMutation.mutate(updates);
+  };
+
+  const updateHDMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/admin/house-directors/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "House director updated", description: "Profile has been saved." });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/house-directors'] });
+      setEditHDOpen(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update", description: error.message || "Please try again.", variant: "destructive" });
+    }
+  });
+
+  const openEditHD = (hd: any) => {
+    setEditingHD(hd);
+    setEditHDName(hd.name || "");
+    setEditHDEmail(hd.email || "");
+    setEditHDPassword("");
+    setEditHDPhone(hd.phoneNumber || "");
+    setEditHDOpen(true);
+  };
+
+  const handleEditHD = () => {
+    if (!editingHD) return;
+    const data: any = {};
+    if (editHDName && editHDName !== editingHD.name) data.name = editHDName;
+    if (editHDEmail && editHDEmail !== editingHD.email) data.email = editHDEmail;
+    if (editHDPassword) data.password = editHDPassword;
+    if (editHDPhone !== (editingHD.phoneNumber || "")) data.phoneNumber = editHDPhone;
+    if (Object.keys(data).length === 0) {
+      toast({ title: "No changes", description: "No changes were made." });
+      return;
+    }
+    updateHDMutation.mutate({ id: editingHD.id, data });
   };
 
   const form = useForm({
@@ -893,12 +938,17 @@ export default function AdminDashboard() {
                   {houseDirectors.map((hd: any) => (
                     <Card key={hd.id} data-testid={`hd-card-${hd.id}`}>
                       <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <div>
                             <CardTitle className="text-lg">{hd.name}</CardTitle>
                             <CardDescription>{hd.email}</CardDescription>
                           </div>
-                          <Badge variant="secondary">{hd.fraternity}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{hd.fraternity}</Badge>
+                            <Button size="icon" variant="ghost" data-testid={`button-edit-hd-${hd.id}`} onClick={() => openEditHD(hd)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -1573,6 +1623,64 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
                 {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editHDOpen} onOpenChange={setEditHDOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit House Director</DialogTitle>
+              <DialogDescription>
+                Update the house director's profile information.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editHDName}
+                  onChange={(e) => setEditHDName(e.target.value)}
+                  data-testid="input-edit-hd-name"
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={editHDEmail}
+                  onChange={(e) => setEditHDEmail(e.target.value)}
+                  data-testid="input-edit-hd-email"
+                />
+              </div>
+              <div>
+                <Label>Phone Number</Label>
+                <Input
+                  type="tel"
+                  value={editHDPhone}
+                  onChange={(e) => setEditHDPhone(e.target.value)}
+                  data-testid="input-edit-hd-phone"
+                />
+              </div>
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Reset Password</h4>
+                <div>
+                  <Label>New Password (leave blank to keep current)</Label>
+                  <Input
+                    type="password"
+                    value={editHDPassword}
+                    onChange={(e) => setEditHDPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    data-testid="input-edit-hd-password"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditHDOpen(false)} data-testid="button-cancel-edit-hd">Cancel</Button>
+              <Button onClick={handleEditHD} disabled={updateHDMutation.isPending} data-testid="button-save-edit-hd">
+                {updateHDMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </DialogContent>
