@@ -923,14 +923,14 @@ export default function AdminDashboard() {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {houseDirectors.map((hd: any) => (
-                    <Card key={hd.id} data-testid={`hd-card-${hd.id}`}>
+                    <Card key={hd.id} data-testid={`hd-card-${hd.id}`} className="relative overflow-visible">
                       <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <CardTitle className="text-lg">{hd.name}</CardTitle>
-                            <CardDescription>{hd.email}</CardDescription>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-lg truncate">{hd.name}</CardTitle>
+                            <CardDescription className="truncate">{hd.email}</CardDescription>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 shrink-0">
                             <Badge variant="secondary">{hd.fraternity}</Badge>
                             <Button size="icon" variant="ghost" data-testid={`button-edit-hd-${hd.id}`} onClick={() => openEditHD(hd)}>
                               <Pencil className="w-4 h-4" />
