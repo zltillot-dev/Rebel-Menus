@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMenus } from "@/hooks/use-menus";
 import { Sidebar } from "@/components/Sidebar";
@@ -9,7 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar, ClipboardList, Send, Loader2, FileText, Download, FileDown } from "lucide-react";
+import { Calendar, ClipboardList, Send, Loader2, FileText, Download, FileDown, Settings } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
 import { exportMenuToPDF } from "@/lib/pdf-export";
@@ -44,6 +45,57 @@ export default function HouseDirectorDashboard() {
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [critiqueText, setCritiqueText] = useState("");
   const [suggestedEdits, setSuggestedEdits] = useState("");
+
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    if (profileDialogOpen && user) {
+      setProfileName(user.name || "");
+      setProfileEmail(user.email || "");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [profileDialogOpen, user]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+      const res = await apiRequest("PATCH", "/api/user/profile", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Profile updated", description: "Your account details have been saved." });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      setProfileDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update profile", description: error.message || "Please try again.", variant: "destructive" });
+    }
+  });
+
+  const handleProfileUpdate = () => {
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", description: "Please make sure your new password and confirmation match.", variant: "destructive" });
+      return;
+    }
+    const updates: { name?: string; email?: string; currentPassword?: string; newPassword?: string } = {};
+    if (profileName && profileName !== user?.name) updates.name = profileName;
+    if (profileEmail && profileEmail !== user?.email) updates.email = profileEmail;
+    if (newPassword && currentPassword) {
+      updates.currentPassword = currentPassword;
+      updates.newPassword = newPassword;
+    }
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "No changes", description: "No changes were made to your profile." });
+      return;
+    }
+    updateProfileMutation.mutate(updates);
+  };
   
   const createCritiqueMutation = useMutation({
     mutationFn: async (data: { menuId: number; critiqueText: string; suggestedEdits: string }) => {
@@ -232,9 +284,15 @@ export default function HouseDirectorDashboard() {
       
       <main className="flex-1 md:ml-64">
         <div className="p-4 md:p-8 pt-16 md:pt-8">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold">House Director Dashboard</h1>
-            <p className="text-muted-foreground mt-1">{user?.fraternity}</p>
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">House Director Dashboard</h1>
+              <p className="text-muted-foreground mt-1">{user?.fraternity}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+              <Settings className="w-4 h-4 mr-2" />
+              Account Settings
+            </Button>
           </div>
 
           <Tabs defaultValue="menus" className="space-y-6">
@@ -381,6 +439,74 @@ export default function HouseDirectorDashboard() {
                   Submit Critique
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Account Settings</DialogTitle>
+            <DialogDescription>
+              Update your profile information and password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                data-testid="input-profile-name"
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={profileEmail}
+                onChange={(e) => setProfileEmail(e.target.value)}
+                data-testid="input-profile-email"
+              />
+            </div>
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-2">Change Password</h4>
+              <div className="space-y-2">
+                <div>
+                  <Label>Current Password</Label>
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    data-testid="input-current-password"
+                  />
+                </div>
+                <div>
+                  <Label>New Password</Label>
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    data-testid="input-new-password"
+                  />
+                </div>
+                <div>
+                  <Label>Confirm New Password</Label>
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    data-testid="input-confirm-password"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
+              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

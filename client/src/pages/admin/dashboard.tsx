@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useMenus, useUpdateMenuStatus, useDeleteMenu } from "@/hooks/use-menus";
 import { useChefs, useCreateChef, useDeleteChef, useAllChefTasks, useCreateChefTask, useDeleteChefTask } from "@/hooks/use-admin";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -15,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2, ClipboardList, Home } from "lucide-react";
+import { CheckCircle, XCircle, Clock, UserPlus, FileText, Eye, MessageSquare, Trash2, Calendar, ListTodo, Plus, Star, Loader2, ClipboardList, Home, Settings } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO, startOfWeek, subWeeks } from "date-fns";
 import { FRATERNITIES, DAYS } from "@shared/schema";
@@ -32,6 +34,8 @@ const createChefSchema = insertUserSchema.extend({
 });
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { data: menus } = useMenus();
   const { data: chefs, isLoading: isLoadingChefs } = useChefs();
   const { data: allTasks, isLoading: isLoadingTasks } = useAllChefTasks();
@@ -162,6 +166,57 @@ export default function AdminDashboard() {
   const [hdPhone, setHDPhone] = useState("");
   const [viewHDDialogOpen, setViewHDDialogOpen] = useState(false);
 
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    if (profileDialogOpen && user) {
+      setProfileName(user.name || "");
+      setProfileEmail(user.email || "");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [profileDialogOpen, user]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+      const res = await apiRequest("PATCH", "/api/user/profile", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Profile updated", description: "Your account details have been saved." });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      setProfileDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update profile", description: error.message || "Please try again.", variant: "destructive" });
+    }
+  });
+
+  const handleProfileUpdate = () => {
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", description: "Please make sure your new password and confirmation match.", variant: "destructive" });
+      return;
+    }
+    const updates: { name?: string; email?: string; currentPassword?: string; newPassword?: string } = {};
+    if (profileName && profileName !== user?.name) updates.name = profileName;
+    if (profileEmail && profileEmail !== user?.email) updates.email = profileEmail;
+    if (newPassword && currentPassword) {
+      updates.currentPassword = currentPassword;
+      updates.newPassword = newPassword;
+    }
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "No changes", description: "No changes were made to your profile." });
+      return;
+    }
+    updateProfileMutation.mutate(updates);
+  };
+
   const form = useForm({
     resolver: zodResolver(createChefSchema),
     defaultValues: {
@@ -215,9 +270,15 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
       <main className="flex-1 p-4 pt-16 md:pt-8 md:ml-64 md:p-8">
-        <header className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-display font-bold">Admin Dashboard</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Manage chefs and approve weekly menus</p>
+        <header className="mb-6 md:mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-bold">Admin Dashboard</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Manage chefs and approve weekly menus</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+            <Settings className="w-4 h-4 mr-2" />
+            Account Settings
+          </Button>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
@@ -1445,6 +1506,74 @@ export default function AdminDashboard() {
             </ScrollArea>
             <DialogFooter>
               <Button variant="outline" onClick={() => setLatePlatesDialogOpen(false)} data-testid="button-close-lateplates-dialog">Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Account Settings</DialogTitle>
+              <DialogDescription>
+                Update your profile information and password.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  data-testid="input-profile-name"
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  data-testid="input-profile-email"
+                />
+              </div>
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Change Password</h4>
+                <div className="space-y-2">
+                  <div>
+                    <Label>Current Password</Label>
+                    <Input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      data-testid="input-current-password"
+                    />
+                  </div>
+                  <div>
+                    <Label>New Password</Label>
+                    <Input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      data-testid="input-new-password"
+                    />
+                  </div>
+                  <div>
+                    <Label>Confirm New Password</Label>
+                    <Input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      data-testid="input-confirm-password"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
+                {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
