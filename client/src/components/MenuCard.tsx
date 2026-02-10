@@ -23,6 +23,14 @@ export function MenuCard({ day, items, onFeedbackClick, menuId }: MenuCardProps)
     </div>
   );
 
+  const hasMacros = (item: MenuItem) => {
+    return (item.calories && item.calories > 0) || 
+           (item.carbs && item.carbs > 0) || 
+           ((item as any).fats && (item as any).fats > 0) || 
+           (item.protein && item.protein > 0) || 
+           (item.sugar && item.sugar > 0);
+  };
+
   const MealSection = ({ title, meals }: { title: string, meals: MenuItem[] }) => (
     <div className="mb-6 last:mb-0">
       <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">{title}</h4>
@@ -34,10 +42,12 @@ export function MenuCard({ day, items, onFeedbackClick, menuId }: MenuCardProps)
             <div key={item.id} className="group">
               <div className="flex justify-between items-start mb-1">
                 <p className="font-medium text-foreground text-lg leading-tight">{item.description}</p>
-                <div className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
-                  <Flame className="w-3 h-3" />
-                  {item.calories} kcal
-                </div>
+                {item.calories && item.calories > 0 ? (
+                  <div className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-950 px-2 py-1 rounded-full shrink-0">
+                    <Flame className="w-3 h-3" />
+                    {item.calories} kcal
+                  </div>
+                ) : null}
               </div>
               
               {((item as any).side1 || (item as any).side2 || (item as any).side3) && (
@@ -54,12 +64,16 @@ export function MenuCard({ day, items, onFeedbackClick, menuId }: MenuCardProps)
                 </div>
               )}
               
-              <div className="flex gap-3 mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                <MacroBadge icon={Wheat} value={item.carbs} label="Carbs" color="text-blue-500" />
-                <MacroBadge icon={Zap} value={item.protein} label="Protein" color="text-red-500" />
-                <MacroBadge icon={Droplets} value={item.fats} label="Fats" color="text-yellow-500" />
-                <MacroBadge icon={Candy} value={item.sugar} label="Sugar" color="text-pink-500" />
-              </div>
+              {hasMacros(item) ? (
+                <div className="flex gap-3 mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <MacroBadge icon={Wheat} value={item.carbs} label="Carbs" color="text-blue-500" />
+                  <MacroBadge icon={Zap} value={item.protein} label="Protein" color="text-red-500" />
+                  <MacroBadge icon={Droplets} value={item.fats} label="Fats" color="text-yellow-500" />
+                  <MacroBadge icon={Candy} value={item.sugar} label="Sugar" color="text-pink-500" />
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2 italic">Nutritional info not yet estimated</p>
+              )}
             </div>
           ))}
         </div>
