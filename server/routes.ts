@@ -1263,6 +1263,23 @@ export async function registerRoutes(
                   } as any);
               }
               
+              // Seed Sigma Chi test user account
+              const sigmaUserEmail = "testuser@k-state.edu";
+              const sigmaTestUser = await storage.getUserByEmail(sigmaUserEmail);
+              if (sigmaTestUser) {
+                  console.log("Updating existing Sigma Chi test user password...");
+                  await db.update(users).set({ password: testPassword }).where(eq(users.id, sigmaTestUser.id));
+              } else {
+                  console.log("Seeding Sigma Chi test user...");
+                  await storage.createUser({
+                      name: "Test Member SC",
+                      email: sigmaUserEmail,
+                      password: testPassword,
+                      role: "user",
+                      fraternity: "Sigma Chi"
+                  } as any);
+              }
+
               // Seed test house director accounts
               const hdDtdEmail = "hd.dtd@olemiss.edu";
               const hdDtd = await storage.getUserByEmail(hdDtdEmail);
