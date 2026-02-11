@@ -1268,13 +1268,13 @@ export async function registerRoutes(
               const sigmaTestUser = await storage.getUserByEmail(sigmaUserEmail);
               if (sigmaTestUser) {
                   console.log("Updating existing Sigma Chi test user password...");
-                  await db.update(users).set({ password: testPassword }).where(eq(users.id, sigmaTestUser.id));
+                  await db.update(users).set({ password: adminPassword }).where(eq(users.id, sigmaTestUser.id));
               } else {
                   console.log("Seeding Sigma Chi test user...");
                   await storage.createUser({
                       name: "Test Member SC",
                       email: sigmaUserEmail,
-                      password: testPassword,
+                      password: adminPassword,
                       role: "user",
                       fraternity: "Sigma Chi"
                   } as any);
