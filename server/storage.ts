@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique } from "@shared/schema";
+import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, menuWorkflowHistory, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique, type MenuWorkflowHistory, type InsertMenuWorkflowHistory } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 import session from "express-session";
@@ -26,6 +26,9 @@ export interface IStorage {
   updateMenuStatus(id: number, status: string, adminNotes?: string): Promise<Menu>;
   updateMenu(id: number, menu: InsertMenu, items: any[]): Promise<Menu & { items: MenuItem[] }>;
   deleteMenu(id: number): Promise<void>;
+  createMenuWorkflowHistory(entry: InsertMenuWorkflowHistory): Promise<MenuWorkflowHistory>;
+  getMenuWorkflowHistory(menuId: number): Promise<MenuWorkflowHistory[]>;
+  getMenuWorkflowHistoryForMenus(menuIds: number[]): Promise<Record<number, MenuWorkflowHistory[]>>;
 
   // Feedback
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -177,10 +180,32 @@ export class DatabaseStorage implements IStorage {
   async deleteMenu(id: number): Promise<void> {
     // Delete feedback first (foreign key constraint)
     await db.delete(feedback).where(eq(feedback.menuId, id));
+    await db.delete(menuWorkflowHistory).where(eq(menuWorkflowHistory.menuId, id));
     // Delete menu items (foreign key constraint)
     await db.delete(menuItems).where(eq(menuItems.menuId, id));
     // Delete the menu
     await db.delete(menus).where(eq(menus.id, id));
+  }
+
+  async createMenuWorkflowHistory(entry: InsertMenuWorkflowHistory): Promise<MenuWorkflowHistory> {
+    const [created] = await db.insert(menuWorkflowHistory).values(entry).returning();
+    return created;
+  }
+
+  async getMenuWorkflowHistory(menuId: number): Promise<MenuWorkflowHistory[]> {
+    return db.select().from(menuWorkflowHistory)
+      .where(eq(menuWorkflowHistory.menuId, menuId))
+      .orderBy(desc(menuWorkflowHistory.createdAt), desc(menuWorkflowHistory.id));
+  }
+
+  async getMenuWorkflowHistoryForMenus(menuIds: number[]): Promise<Record<number, MenuWorkflowHistory[]>> {
+    const historyByMenu: Record<number, MenuWorkflowHistory[]> = {};
+
+    for (const menuId of menuIds) {
+      historyByMenu[menuId] = await this.getMenuWorkflowHistory(menuId);
+    }
+
+    return historyByMenu;
   }
 
   async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {

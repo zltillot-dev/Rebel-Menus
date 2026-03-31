@@ -20,7 +20,14 @@ const loginSchema = z.object({
 });
 
 const registerSchema = insertUserSchema.extend({
-  email: z.string().email("Please enter a valid email (@olemiss.edu or @k-state.edu)"),
+  name: z.string().trim().min(2, "Please enter your full name"),
+  email: z.string()
+    .trim()
+    .email("Please enter a valid school email")
+    .refine((value) => value.endsWith("@olemiss.edu") || value.endsWith("@k-state.edu"), {
+      message: "Use your @olemiss.edu or @k-state.edu email",
+    }),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -164,7 +171,7 @@ export default function AuthPage() {
               <Card className="border-none shadow-none">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle className="text-2xl font-bold">Get started</CardTitle>
-                  <CardDescription>Create an account to view your fraternity's menu</CardDescription>
+                  <CardDescription>Create an account with your supported school email to access your house menu</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <form onSubmit={registerForm.handleSubmit((data) => {
@@ -180,7 +187,7 @@ export default function AuthPage() {
                     <div className="space-y-2">
                       <Label>School Email</Label>
                       <Input placeholder="name@olemiss.edu" className="h-11" {...registerForm.register("email")} />
-                      <p className="text-xs text-muted-foreground">Must use .edu email to verify fraternity affiliation</p>
+                      <p className="text-xs text-muted-foreground">Supported domains: @olemiss.edu and @k-state.edu</p>
                       {registerForm.formState.errors.email && <p className="text-sm text-destructive">{registerForm.formState.errors.email.message}</p>}
                     </div>
 

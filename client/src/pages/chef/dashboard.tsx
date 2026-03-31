@@ -15,18 +15,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Calendar as CalendarIcon, FileEdit, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle, ClipboardList, FileDown } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, AlertCircle, Send, Pencil, Trash2, Sparkles, Loader2, Clock, User, Phone, Settings, UserCog, RefreshCcw, Lightbulb, MessageSquare, Star, ChefHat, ChevronDown, ChevronRight, CheckSquare, ListTodo, CheckCircle, XCircle, FileDown, ArrowRight, ClipboardCheck } from "lucide-react";
 import { exportMenuToPDF } from "@/lib/pdf-export";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { format, startOfWeek, addWeeks, parseISO, isSameDay, isToday, isBefore, isAfter } from "date-fns";
+import { format, startOfWeek, addWeeks, parseISO, isSameDay, isBefore, isAfter } from "date-fns";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ChefDashboard() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const isManageMenusView = location === "/chef/menus";
   
   const { user } = useAuth();
@@ -68,7 +68,7 @@ export default function ChefDashboard() {
   }, [menus, notificationsEnabled, notifyMenuApproved, notifyMenuRejected]);
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateMenuStatus();
   const { mutate: updateMenu, isPending: isUpdatingMenu } = useUpdateMenu();
-  const { mutate: deleteMenu, isPending: isDeleting } = useDeleteMenu();
+  const { mutate: deleteMenu } = useDeleteMenu();
   
   const [createOpen, setCreateOpen] = useState(false);
   const [editMenu, setEditMenu] = useState<any>(null);
@@ -87,33 +87,6 @@ export default function ChefDashboard() {
   const [substitutionsOpen, setSubstitutionsOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [critiquesOpen, setCritiquesOpen] = useState(false);
-  
-  const { data: critiques, isLoading: isLoadingCritiques } = useQuery<any[]>({
-    queryKey: ['/api/critiques'],
-    enabled: !!user,
-  });
-  
-  const acknowledgeCritiqueMutation = useMutation({
-    mutationFn: async (critiqueId: number) => {
-      const res = await fetch(`/api/critiques/${critiqueId}/acknowledge-chef`, {
-        method: 'PATCH',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to acknowledge critique');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/critiques'] });
-      toast({ title: "Acknowledged", description: "Critique has been acknowledged." });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to acknowledge critique", variant: "destructive" });
-    },
-  });
-  
-  const unacknowledgedCritiques = critiques?.filter((c: any) => !c.acknowledgedByChef) || [];
-  const acknowledgedCritiques = critiques?.filter((c: any) => c.acknowledgedByChef) || [];
 
   useEffect(() => {
     if (user?.phoneNumber) {
@@ -247,6 +220,7 @@ export default function ChefDashboard() {
   }, [menus, currentWeekStart]);
 
   const menusNeedingRevision = menus?.filter(m => m.status === 'needs_revision') || [];
+  const pendingMenus = menus?.filter(m => m.status === 'pending') || [];
 
   const latePlatesByMealService = useMemo(() => {
     if (!latePlates) return {};
@@ -310,6 +284,116 @@ export default function ChefDashboard() {
   const unreadFeedback = useMemo(() => {
     return chefFeedback?.filter((fb: any) => !fb.isRead).length || 0;
   }, [chefFeedback]);
+
+  const incompleteTasks = chefTasks?.filter((t: any) => !t.isCompleted) || [];
+  const completedTasks = chefTasks?.filter((t: any) => t.isCompleted) || [];
+
+  const totalUnreadInbox = unreadSubstitutions + unreadSuggestions + unreadFeedback;
+  const totalMealSlots = useMemo(() => DAYS.length + (DAYS.length - 1), []);
+
+  const getMenuFilledCount = (items: any[]) => items.filter((item) => item.description?.trim()).length;
+
+  const menuDraftProgress = useMemo(() => {
+    const completed = getMenuFilledCount(menuItems);
+    return { completed, remaining: Math.max(totalMealSlots - completed, 0) };
+  }, [menuItems, totalMealSlots]);
+
+  const editMenuProgress = useMemo(() => {
+    const completed = getMenuFilledCount(editMenuItems);
+    return { completed, remaining: Math.max(totalMealSlots - completed, 0) };
+  }, [editMenuItems, totalMealSlots]);
+
+  const getStatusMeta = (status: string) => {
+    switch (status) {
+      case "approved":
+        return {
+          label: "Approved",
+          badgeClass: "bg-green-100 text-green-800",
+          summary: "Posted and visible to members.",
+          action: "No action needed.",
+        };
+      case "pending":
+        return {
+          label: "Submitted",
+          badgeClass: "bg-yellow-100 text-yellow-800",
+          summary: "Waiting on admin review.",
+          action: "Hold until admin responds.",
+        };
+      case "needs_revision":
+        return {
+          label: "Needs Revision",
+          badgeClass: "bg-amber-100 text-amber-800",
+          summary: "Admin sent this back for edits.",
+          action: "Open it, fix notes, and resubmit.",
+        };
+      default:
+        return {
+          label: "Draft",
+          badgeClass: "bg-slate-100 text-slate-800",
+          summary: "Not yet submitted.",
+          action: "Finish meals and submit for approval.",
+        };
+    }
+  };
+
+  const sortedIncompleteTasks = useMemo(() => {
+    const priorityWeight: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    return [...incompleteTasks].sort((a: any, b: any) => {
+      const priorityDiff = (priorityWeight[a.priority] ?? 3) - (priorityWeight[b.priority] ?? 3);
+      if (priorityDiff !== 0) return priorityDiff;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return 0;
+    });
+  }, [incompleteTasks]);
+
+  const sortedFeedback = useMemo(() => {
+    return [...(chefFeedback || [])].sort((a: any, b: any) => Number(a.isRead) - Number(b.isRead));
+  }, [chefFeedback]);
+
+  const sortedSubstitutions = useMemo(() => {
+    return [...substitutions].sort((a: any, b: any) => {
+      if (a.status === "pending" && b.status !== "pending") return -1;
+      if (a.status !== "pending" && b.status === "pending") return 1;
+      return Number(a.isRead) - Number(b.isRead);
+    });
+  }, [substitutions]);
+
+  const sortedSuggestions = useMemo(() => {
+    return [...menuSuggestions].sort((a: any, b: any) => Number(a.isRead) - Number(b.isRead));
+  }, [menuSuggestions]);
+
+  const nextActionMenu = menusNeedingRevision[0] || pendingMenus[0] || currentWeekMenu || futureMenus[0] || null;
+
+  const nextActionSummary = useMemo(() => {
+    if (menusNeedingRevision.length > 0) {
+      return {
+        title: "Revision needed",
+        description: `${menusNeedingRevision.length} menu${menusNeedingRevision.length === 1 ? "" : "s"} waiting on edits from you.`,
+        cta: "Open menus",
+      };
+    }
+    if (!currentWeekMenu) {
+      return {
+        title: "No current-week menu",
+        description: "Create or submit a menu so this week is covered.",
+        cta: "Create menu",
+      };
+    }
+    if (pendingMenus.length > 0) {
+      return {
+        title: "Awaiting review",
+        description: `${pendingMenus.length} submitted menu${pendingMenus.length === 1 ? "" : "s"} currently with admin.`,
+        cta: "Review status",
+      };
+    }
+    return {
+      title: "Kitchen is caught up",
+      description: "Use this dashboard to manage tasks, inbox items, and today's late plates.",
+      cta: "Manage menus",
+    };
+  }, [currentWeekMenu, menusNeedingRevision, pendingMenus]);
 
   const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -457,16 +541,10 @@ export default function ChefDashboard() {
     updateTask({ id: taskId, isCompleted });
   };
 
-  const incompleteTasks = chefTasks?.filter((t: any) => !t.isCompleted) || [];
-  const completedTasks = chefTasks?.filter((t: any) => t.isCompleted) || [];
-
   const renderMenuCard = (menu: any, showActions = false) => {
-    const statusColors: Record<string, string> = {
-      approved: "bg-green-100 text-green-800",
-      pending: "bg-yellow-100 text-yellow-800",
-      needs_revision: "bg-red-100 text-red-800",
-      draft: "bg-gray-100 text-gray-800",
-    };
+    const statusMeta = getStatusMeta(menu.status);
+    const filledCount = getMenuFilledCount(menu.items || []);
+    const latestHistory = menu.workflowHistory?.[0];
 
     return (
       <Card key={menu.id} className={menu.status === 'needs_revision' ? "border-amber-300 bg-amber-50/50" : ""}>
@@ -474,8 +552,9 @@ export default function ChefDashboard() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <CardTitle className="text-lg">Week of {format(parseISO(menu.weekOf), "MMM d, yyyy")}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge className={statusColors[menu.status] || ""}>{menu.status}</Badge>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge className={statusMeta.badgeClass}>{statusMeta.label}</Badge>
+                <Badge variant="outline">{filledCount}/{totalMealSlots} meals planned</Badge>
                 <Button 
                   size="sm" 
                   variant="ghost"
@@ -504,37 +583,51 @@ export default function ChefDashboard() {
                   PDF
                 </Button>
               </div>
+              <p className="mt-2 text-sm text-muted-foreground">{statusMeta.summary}</p>
+              <p className="text-xs text-muted-foreground">{statusMeta.action}</p>
             </div>
             {showActions && (menu.status === 'pending' || menu.status === 'needs_revision') && (
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => handleStartEdit(menu)} data-testid={`button-edit-menu-${menu.id}`}>
                   <Pencil className="w-4 h-4 mr-1" /> Edit
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="destructive" data-testid={`button-delete-menu-${menu.id}`}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Menu?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete this menu and all its items. This cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(menu.id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                {menu.status === "draft" && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive" data-testid={`button-delete-menu-${menu.id}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Draft Menu?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Only draft menus can be deleted. Submitted menus are preserved to keep operational history intact.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(menu.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             )}
           </div>
           {menu.adminNotes && (
-            <div className="mt-2 p-2 bg-amber-100 rounded-md text-sm">
-              <strong>Admin Notes:</strong> {menu.adminNotes}
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+              <div className="mb-1 flex items-center gap-2 font-medium text-amber-900">
+                <AlertCircle className="h-4 w-4" />
+                Admin revision notes
+              </div>
+              <p className="text-amber-900/90">{menu.adminNotes}</p>
+            </div>
+          )}
+          {latestHistory && (
+            <div className="mt-3 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+              Last workflow update: {latestHistory.action.replace(/_/g, " ")} on {format(new Date(latestHistory.createdAt), "MMM d 'at' h:mm a")}
+              {latestHistory.notes ? ` • ${latestHistory.notes}` : ""}
             </div>
           )}
         </CardHeader>
@@ -677,7 +770,7 @@ export default function ChefDashboard() {
                       <DialogHeader>
                         <DialogTitle>Create Weekly Menu</DialogTitle>
                         <DialogDescription>
-                          Enter meals for the week. Each meal includes a main protein/item plus optional sides.
+                          Build the full week in one pass, then send it to admin for approval when it is ready.
                         </DialogDescription>
                       </DialogHeader>
                       
@@ -691,6 +784,19 @@ export default function ChefDashboard() {
                             className="w-full sm:w-64"
                             data-testid="input-week-of"
                           />
+                          <p className="text-xs text-muted-foreground mt-2">Choose the Monday for the service week you are planning.</p>
+                        </div>
+
+                        <div className="mb-6 rounded-xl border bg-muted/30 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-medium">Menu progress</div>
+                              <div className="text-sm text-muted-foreground">
+                                {menuDraftProgress.completed} of {totalMealSlots} meal slots filled
+                              </div>
+                            </div>
+                            <Badge variant="outline">{menuDraftProgress.remaining} left</Badge>
+                          </div>
                         </div>
 
                         {renderMenuForm(menuItems, handleItemChange)}
@@ -711,6 +817,63 @@ export default function ChefDashboard() {
             {!isManageMenusView ? (
               /* DASHBOARD VIEW */
               <div className="space-y-6">
+                <Card className="border-primary/20 bg-gradient-to-br from-background via-background to-primary/5">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                      <ChefHat className="h-5 w-5" />
+                      Daily Workspace
+                    </CardTitle>
+                    <CardDescription>
+                      Start with what needs action now, then clear the inbox.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                      <div className="rounded-xl border bg-card p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Revision</div>
+                        <div className="mt-1 text-2xl font-semibold">{menusNeedingRevision.length}</div>
+                        <div className="text-xs text-muted-foreground">menus need edits</div>
+                      </div>
+                      <div className="rounded-xl border bg-card p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Submitted</div>
+                        <div className="mt-1 text-2xl font-semibold">{pendingMenus.length}</div>
+                        <div className="text-xs text-muted-foreground">awaiting admin</div>
+                      </div>
+                      <div className="rounded-xl border bg-card p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Tasks</div>
+                        <div className="mt-1 text-2xl font-semibold">{incompleteTasks.length}</div>
+                        <div className="text-xs text-muted-foreground">open reminders</div>
+                      </div>
+                      <div className="rounded-xl border bg-card p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Late Plates</div>
+                        <div className="mt-1 text-2xl font-semibold">{Object.keys(todaysLatePlates).length}</div>
+                        <div className="text-xs text-muted-foreground">today's services</div>
+                      </div>
+                      <div className="rounded-xl border bg-card p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Inbox</div>
+                        <div className="mt-1 text-2xl font-semibold">{totalUnreadInbox}</div>
+                        <div className="text-xs text-muted-foreground">unread items</div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{nextActionSummary.title}</div>
+                        <div className="text-sm text-muted-foreground">{nextActionSummary.description}</div>
+                        {nextActionMenu && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            Focus menu: week of {format(parseISO(nextActionMenu.weekOf), "MMMM d, yyyy")}
+                          </div>
+                        )}
+                      </div>
+                      <Button onClick={() => setLocation("/chef/menus")} data-testid="button-next-action">
+                        {nextActionSummary.cta}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Current Week's Menu */}
                 <Card>
                   <CardHeader>
@@ -723,11 +886,19 @@ export default function ChefDashboard() {
                   <CardContent>
                     {currentWeekMenu ? (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Badge className={currentWeekMenu.status === 'approved' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
-                            {currentWeekMenu.status}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className={getStatusMeta(currentWeekMenu.status).badgeClass}>
+                            {getStatusMeta(currentWeekMenu.status).label}
                           </Badge>
+                          <Badge variant="outline">{getMenuFilledCount(currentWeekMenu.items || [])}/{totalMealSlots} meals planned</Badge>
+                          <span className="text-sm text-muted-foreground">{getStatusMeta(currentWeekMenu.status).action}</span>
                         </div>
+                        {currentWeekMenu.adminNotes && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                            <div className="mb-1 font-medium text-amber-900">Admin notes</div>
+                            <p className="text-amber-900/90">{currentWeekMenu.adminNotes}</p>
+                          </div>
+                        )}
                         {currentWeekMenu.items && currentWeekMenu.items.length > 0 ? (
                           <div className="grid md:grid-cols-5 gap-4">
                             {DAYS.map(day => {
@@ -757,12 +928,23 @@ export default function ChefDashboard() {
                         ) : (
                           <p className="text-muted-foreground">No items in this menu</p>
                         )}
+                        <div className="flex flex-wrap gap-2">
+                          <Button variant="outline" onClick={() => setLocation("/chef/menus")}>
+                            Manage Menus
+                          </Button>
+                          {currentWeekMenu.status === "needs_revision" && (
+                            <Button onClick={() => setLocation("/chef/menus")}>
+                              Fix and Resubmit
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <CalendarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p>No menu for this week yet.</p>
-                        <Button className="mt-4" onClick={() => window.location.href = '/chef/menus'}>
+                        <p className="text-sm mt-1">Create it once, submit it, and track approval from Manage Menus.</p>
+                        <Button className="mt-4" onClick={() => setLocation('/chef/menus')}>
                           Create Menu
                         </Button>
                       </div>
@@ -791,11 +973,11 @@ export default function ChefDashboard() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {incompleteTasks.length > 0 && (
+                        {sortedIncompleteTasks.length > 0 && (
                           <div>
                             <h4 className="font-medium mb-2">To Do</h4>
                             <div className="space-y-2">
-                              {incompleteTasks.map((task: any) => (
+                              {sortedIncompleteTasks.map((task: any) => (
                                 <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg" data-testid={`task-${task.id}`}>
                                   <Checkbox
                                     checked={task.isCompleted}
@@ -805,9 +987,9 @@ export default function ChefDashboard() {
                                   <div className="flex-1">
                                     <div className="font-medium">{task.title}</div>
                                     {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
-                                    <div className="flex gap-2 mt-1">
+                                    <div className="flex flex-wrap gap-2 mt-1">
                                       <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
-                                        {task.priority}
+                                        {task.priority} priority
                                       </Badge>
                                       {task.dueDate && (
                                         <Badge variant="outline" className="text-xs">
@@ -882,9 +1064,10 @@ export default function ChefDashboard() {
                                 const isTodays = isSameDay(parseISO(dateStr), new Date());
                                 return (
                                   <div key={key} className={`p-3 rounded-lg ${isTodays ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50'}`}>
-                                    <div className="font-medium text-sm mb-2">
+                                    <div className="font-medium text-sm mb-2 flex flex-wrap items-center gap-2">
                                       {format(parseISO(dateStr), "EEEE, MMM d")} - {mealType}
                                       {isTodays && <Badge className="ml-2" variant="default">Today</Badge>}
+                                      <Badge variant="outline">{plates.length} request{plates.length === 1 ? "" : "s"}</Badge>
                                     </div>
                                     <div className="space-y-1">
                                       {plates.map((plate: any) => (
@@ -899,6 +1082,9 @@ export default function ChefDashboard() {
                               })}
                             </div>
                           )}
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            Late plates are grouped by service so you can prep each pickup window quickly.
+                          </p>
                         </CardContent>
                       </CollapsibleContent>
                     </Card>
@@ -930,7 +1116,7 @@ export default function ChefDashboard() {
                             <p className="text-muted-foreground text-sm">No substitution requests</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
-                              {substitutions.map((req: any) => (
+                              {sortedSubstitutions.map((req: any) => (
                                 <div key={req.id} className={`p-3 rounded-lg ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`substitution-item-${req.id}`}>
                                   <div className="flex items-start gap-3">
                                     <Checkbox
@@ -948,6 +1134,11 @@ export default function ChefDashboard() {
                                         )}
                                       </div>
                                       <p className="text-sm text-muted-foreground">{req.details}</p>
+                                      {(req.mealDay || req.mealType) && (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                          {req.mealDay || "Meal date not provided"} {req.mealType || ""}
+                                        </p>
+                                      )}
                                       {req.status === 'pending' && (
                                         <div className="flex gap-2 mt-2">
                                           <Button 
@@ -1019,7 +1210,7 @@ export default function ChefDashboard() {
                             <p className="text-muted-foreground text-sm">No menu suggestions</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
-                              {menuSuggestions.map((req: any) => (
+                              {sortedSuggestions.map((req: any) => (
                                 <div key={req.id} className={`p-3 rounded-lg flex items-start gap-3 ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`suggestion-item-${req.id}`}>
                                   <Checkbox
                                     checked={req.isRead || false}
@@ -1065,7 +1256,7 @@ export default function ChefDashboard() {
                             <p className="text-muted-foreground text-sm">No feedback yet</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
-                              {chefFeedback.map((fb: any) => (
+                              {sortedFeedback.map((fb: any) => (
                                 <div key={fb.id} className={`p-3 rounded-lg flex items-start gap-3 ${fb.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`feedback-item-${fb.id}`}>
                                   <Checkbox
                                     checked={fb.isRead || false}
@@ -1083,91 +1274,16 @@ export default function ChefDashboard() {
                                     </div>
                                     {fb.comment && <p className="text-sm">{fb.comment}</p>}
                                     <div className="text-xs text-muted-foreground mt-1">
-                                      {fb.isAnonymous ? 'Anonymous' : fb.userName || fb.userEmail}
+                                      {fb.userName || "Anonymous"}
                                     </div>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           )}
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Card>
-                  </Collapsible>
-                  
-                  {/* House Director Critiques */}
-                  <Collapsible open={critiquesOpen} onOpenChange={setCritiquesOpen}>
-                    <Card>
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50">
-                          <CardTitle className="flex items-center justify-between">
-                            <span className="flex items-center gap-2">
-                              <ClipboardList className="w-5 h-5" />
-                              HD Critiques
-                              {unacknowledgedCritiques.length > 0 && <Badge variant="destructive">{unacknowledgedCritiques.length}</Badge>}
-                              {critiques && critiques.length > 0 && unacknowledgedCritiques.length === 0 && <Badge variant="outline">{critiques.length}</Badge>}
-                            </span>
-                            {critiquesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </CardTitle>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <CardContent>
-                          {isLoadingCritiques ? (
-                            <div className="flex justify-center py-4">
-                              <Loader2 className="w-6 h-6 animate-spin" />
-                            </div>
-                          ) : !critiques || critiques.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No critiques from house director</p>
-                          ) : (
-                            <div className="space-y-3 max-h-64 overflow-y-auto">
-                              {critiques.map((critique: any) => {
-                                const menu = menus?.find((m: any) => m.id === critique.menuId);
-                                return (
-                                  <div key={critique.id} className={`p-3 rounded-lg ${critique.acknowledgedByChef ? 'bg-muted/30 opacity-60' : 'bg-muted/50 border-l-4 border-amber-500'}`} data-testid={`critique-item-${critique.id}`}>
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <span className="text-xs font-medium">
-                                            {menu ? format(parseISO(menu.weekOf), "MMM d, yyyy") : `Menu #${critique.menuId}`}
-                                          </span>
-                                          {critique.acknowledgedByChef ? (
-                                            <Badge variant="outline" className="text-xs">Acknowledged</Badge>
-                                          ) : (
-                                            <Badge variant="destructive" className="text-xs">Needs Acknowledgment</Badge>
-                                          )}
-                                        </div>
-                                        {critique.critiqueText && (
-                                          <p className="text-sm mb-1"><strong>Critique:</strong> {critique.critiqueText}</p>
-                                        )}
-                                        {critique.suggestedEdits && (
-                                          <p className="text-sm text-muted-foreground"><strong>Suggested Edits:</strong> {critique.suggestedEdits}</p>
-                                        )}
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                          Submitted {format(parseISO(critique.createdAt), "MMM d 'at' h:mm a")}
-                                        </p>
-                                      </div>
-                                      {!critique.acknowledgedByChef && (
-                                        <Button
-                                          size="sm"
-                                          onClick={() => acknowledgeCritiqueMutation.mutate(critique.id)}
-                                          disabled={acknowledgeCritiqueMutation.isPending}
-                                          data-testid={`button-acknowledge-critique-${critique.id}`}
-                                        >
-                                          {acknowledgeCritiqueMutation.isPending ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                          ) : (
-                                            <CheckCircle className="w-4 h-4" />
-                                          )}
-                                          <span className="ml-1 hidden sm:inline">Acknowledge</span>
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            Member identity is hidden from chefs. Only admins can view who submitted feedback.
+                          </p>
                         </CardContent>
                       </CollapsibleContent>
                     </Card>
@@ -1184,6 +1300,9 @@ export default function ChefDashboard() {
                       <AlertCircle className="w-5 h-5" />
                       Needs Revision ({menusNeedingRevision.length})
                     </h2>
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      Fix these first. Admin notes are shown inside each menu card.
+                    </p>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {menusNeedingRevision.map((menu: any) => renderMenuCard(menu, true))}
                     </div>
@@ -1251,6 +1370,27 @@ export default function ChefDashboard() {
                 className="w-full sm:w-64"
                 data-testid="input-edit-week-of"
               />
+            </div>
+
+            <div className="mb-6 rounded-xl border bg-muted/30 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium">Edit progress</div>
+                  <div className="text-sm text-muted-foreground">
+                    {editMenuProgress.completed} of {totalMealSlots} meal slots filled
+                  </div>
+                </div>
+                <Badge variant="outline">{editMenuProgress.remaining} left</Badge>
+              </div>
+              {editMenu?.adminNotes && (
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium text-amber-900">
+                    <ClipboardCheck className="h-4 w-4" />
+                    Admin notes to resolve
+                  </div>
+                  <p className="text-amber-900/90">{editMenu.adminNotes}</p>
+                </div>
+              )}
             </div>
 
             {renderMenuForm(editMenuItems, handleEditItemChange)}

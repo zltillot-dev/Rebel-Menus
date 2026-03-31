@@ -351,7 +351,9 @@ export default function AdminDashboard() {
                   {pendingMenus.length === 0 ? (
                     <Card className="bg-muted/30 border-dashed">
                       <CardContent className="py-8 text-center text-muted-foreground">
-                        No menus pending approval
+                        <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                        <p className="font-medium text-foreground">No menus pending approval</p>
+                        <p className="text-sm mt-1">New chef submissions will appear here as soon as they are sent for review.</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -392,7 +394,7 @@ export default function AdminDashboard() {
                                 disabled={isUpdating}
                                 data-testid={`button-approve-menu-${menu.id}`}
                               >
-                                <CheckCircle className="w-4 h-4 mr-2" /> Approve
+                                {isUpdating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} Approve
                               </Button>
                               <Button 
                                 variant="outline" 
@@ -403,27 +405,29 @@ export default function AdminDashboard() {
                                 <MessageSquare className="w-4 h-4 mr-2" /> Request Changes
                               </Button>
                             </div>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-menu-${menu.id}`}>
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Menu
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Menu</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this menu? This will also delete all associated feedback. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {menu.status === "draft" && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-menu-${menu.id}`}>
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete Draft
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Draft Menu</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Only draft menus can be deleted. Submitted menus are retained to preserve operational history.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </CardContent>
                         </Card>
                       ))}
@@ -436,7 +440,9 @@ export default function AdminDashboard() {
                   {!menus || menus.length === 0 ? (
                     <Card className="bg-muted/30 border-dashed">
                       <CardContent className="py-8 text-center text-muted-foreground">
-                        No menus created yet
+                        <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                        <p className="font-medium text-foreground">No menus created yet</p>
+                        <p className="text-sm mt-1">Published, pending, and revision-needed menus will all appear here.</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -471,27 +477,29 @@ export default function AdminDashboard() {
                             >
                               <Eye className="w-4 h-4 mr-2" /> View Full Menu
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-all-menu-${menu.id}`}>
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Menu
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Menu</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this menu? This will also delete all associated feedback. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {menu.status === "draft" && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm" className="w-full" data-testid={`button-delete-all-menu-${menu.id}`}>
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete Draft
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Draft Menu</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Only draft menus can be deleted. Submitted menus are retained to preserve operational history.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </CardContent>
                         </Card>
                       ))}
@@ -958,7 +966,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <ClipboardList className="w-5 h-5 text-primary" />
-                  Menu Critiques
+                  House Director Notes
                   {unacknowledgedCritiques.length > 0 && (
                     <Badge variant="destructive">{unacknowledgedCritiques.length} pending</Badge>
                   )}
@@ -972,7 +980,7 @@ export default function AdminDashboard() {
               ) : !critiques || critiques.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
-                    No critiques from house directors yet.
+                    No house director notes yet.
                   </CardContent>
                 </Card>
               ) : (
@@ -994,7 +1002,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center gap-2">
                               {critique.acknowledgedByAdmin ? (
                                 <Badge variant="outline">
-                                  <CheckCircle className="w-3 h-3 mr-1" /> Acknowledged
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Reviewed
                                 </Badge>
                               ) : (
                                 <Button
@@ -1008,7 +1016,7 @@ export default function AdminDashboard() {
                                   ) : (
                                     <>
                                       <CheckCircle className="w-4 h-4 mr-1" />
-                                      Acknowledge
+                                      Mark Reviewed
                                     </>
                                   )}
                                 </Button>
@@ -1019,7 +1027,7 @@ export default function AdminDashboard() {
                         <CardContent>
                           {critique.critiqueText && (
                             <div className="mb-2">
-                              <p className="text-sm font-medium">Critique:</p>
+                              <p className="text-sm font-medium">Note:</p>
                               <p className="text-sm text-muted-foreground">{critique.critiqueText}</p>
                             </div>
                           )}
@@ -1029,9 +1037,8 @@ export default function AdminDashboard() {
                               <p className="text-sm text-muted-foreground">{critique.suggestedEdits}</p>
                             </div>
                           )}
-                          <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
-                            <span>Chef: {critique.acknowledgedByChef ? "Acknowledged" : "Pending"}</span>
-                            <span>Admin: {critique.acknowledgedByAdmin ? "Acknowledged" : "Pending"}</span>
+                          <div className="mt-3 text-xs text-muted-foreground">
+                            Admin review: {critique.acknowledgedByAdmin ? "Reviewed" : "Pending"}
                           </div>
                         </CardContent>
                       </Card>

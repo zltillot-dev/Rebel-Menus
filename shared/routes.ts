@@ -2,10 +2,20 @@ import { z } from 'zod';
 import { 
   insertUserSchema, insertMenuSchema, insertMenuItemSchema, insertFeedbackSchema, insertRequestSchema, insertChefTaskSchema,
   users, menus, menuItems, feedback, requests, chefTasks,
+  ROLES, FRATERNITIES,
   type InsertMenu, type InsertMenuItem, type InsertFeedback, type InsertRequest, type InsertChefTask
 } from './schema';
 
 export * from './schema';
+
+export const publicUserSchema = z.object({
+  id: z.number(),
+  email: z.string().email(),
+  role: z.enum(ROLES),
+  name: z.string(),
+  fraternity: z.enum(FRATERNITIES).nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+});
 
 export const errorSchemas = {
   validation: z.object({
@@ -33,7 +43,7 @@ export const api = {
         password: z.string(),
       }),
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: publicUserSchema,
         401: errorSchemas.unauthorized,
       },
     },
@@ -49,7 +59,7 @@ export const api = {
       path: '/api/register',
       input: insertUserSchema,
       responses: {
-        201: z.custom<typeof users.$inferSelect>(),
+        201: publicUserSchema,
         400: errorSchemas.validation,
       },
     },
@@ -57,7 +67,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/user',
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: publicUserSchema,
         401: errorSchemas.unauthorized,
       },
     },
@@ -152,7 +162,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/requests',
       responses: {
-        200: z.array(z.custom<typeof requests.$inferSelect & { user: typeof users.$inferSelect }>()),
+        200: z.array(z.custom<typeof requests.$inferSelect & { user: z.infer<typeof publicUserSchema> }>()),
       },
     },
     delete: {
@@ -202,14 +212,14 @@ export const api = {
       path: '/api/admin/chefs',
       input: insertUserSchema,
       responses: {
-        201: z.custom<typeof users.$inferSelect>(),
+        201: publicUserSchema,
       },
     },
     listChefs: {
       method: 'GET' as const,
       path: '/api/admin/chefs',
       responses: {
-        200: z.array(z.custom<typeof users.$inferSelect>()),
+        200: z.array(publicUserSchema),
       },
     },
     deleteChef: {
@@ -225,7 +235,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/admin/chef-tasks',
       responses: {
-        200: z.array(z.custom<typeof chefTasks.$inferSelect & { chef: typeof users.$inferSelect }>()),
+        200: z.array(z.custom<typeof chefTasks.$inferSelect & { chef: z.infer<typeof publicUserSchema> }>()),
       },
     },
     createChefTask: {

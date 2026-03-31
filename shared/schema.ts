@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, date, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, date, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -9,6 +9,7 @@ export const FRATERNITIES = ["Delta Tau Delta", "Sigma Chi"] as const;
 export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const;
 export const MEAL_TYPES = ["Lunch", "Dinner"] as const;
 export const MENU_STATUS = ["draft", "pending", "approved", "needs_revision"] as const;
+export const MENU_WORKFLOW_ACTIONS = ["submitted", "revision_requested", "approved_posted"] as const;
 export const REQUEST_TYPES = ["late_plate", "substitution", "menu_suggestion", "future_request"] as const;
 export const CRITIQUE_STATUS = ["pending", "acknowledged"] as const;
 
@@ -46,6 +47,16 @@ export const menuItems = pgTable("menu_items", {
   fats: integer("fats"),
   protein: integer("protein"),
   sugar: integer("sugar"),
+});
+
+export const menuWorkflowHistory = pgTable("menu_workflow_history", {
+  id: serial("id").primaryKey(),
+  menuId: integer("menu_id").notNull().references(() => menus.id),
+  action: text("action", { enum: MENU_WORKFLOW_ACTIONS }).notNull(),
+  actorUserId: integer("actor_user_id").notNull().references(() => users.id),
+  actorRole: text("actor_role", { enum: ROLES }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const feedback = pgTable("feedback", {
@@ -124,6 +135,7 @@ export const menusRelations = relations(menus, ({ one, many }) => ({
   }),
   items: many(menuItems),
   feedback: many(feedback),
+  workflowHistory: many(menuWorkflowHistory),
 }));
 
 export const menuItemsRelations = relations(menuItems, ({ one }) => ({
@@ -162,6 +174,17 @@ export const menuCritiquesRelations = relations(menuCritiques, ({ one }) => ({
   }),
 }));
 
+export const menuWorkflowHistoryRelations = relations(menuWorkflowHistory, ({ one }) => ({
+  menu: one(menus, {
+    fields: [menuWorkflowHistory.menuId],
+    references: [menus.id],
+  }),
+  actor: one(users, {
+    fields: [menuWorkflowHistory.actorUserId],
+    references: [users.id],
+  }),
+}));
+
 // Schemas & Types
 export const insertUserSchema = createInsertSchema(users);
 export const insertMenuSchema = createInsertSchema(menus);
@@ -170,6 +193,7 @@ export const insertFeedbackSchema = createInsertSchema(feedback);
 export const insertRequestSchema = createInsertSchema(requests);
 export const insertChefTaskSchema = createInsertSchema(chefTasks).omit({ id: true, createdAt: true });
 export const insertMenuCritiqueSchema = createInsertSchema(menuCritiques).omit({ id: true, createdAt: true });
+export const insertMenuWorkflowHistorySchema = createInsertSchema(menuWorkflowHistory).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -179,6 +203,7 @@ export type Feedback = typeof feedback.$inferSelect;
 export type Request = typeof requests.$inferSelect;
 export type ChefTask = typeof chefTasks.$inferSelect;
 export type MenuCritique = typeof menuCritiques.$inferSelect;
+export type MenuWorkflowHistory = typeof menuWorkflowHistory.$inferSelect;
 
 export type InsertMenu = z.infer<typeof insertMenuSchema>;
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
@@ -186,3 +211,4 @@ export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type InsertRequest = z.infer<typeof insertRequestSchema>;
 export type InsertChefTask = z.infer<typeof insertChefTaskSchema>;
 export type InsertMenuCritique = z.infer<typeof insertMenuCritiqueSchema>;
+export type InsertMenuWorkflowHistory = z.infer<typeof insertMenuWorkflowHistorySchema>;

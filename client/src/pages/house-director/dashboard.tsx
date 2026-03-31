@@ -25,7 +25,6 @@ interface Critique {
   critiqueText: string | null;
   suggestedEdits: string | null;
   status: string;
-  acknowledgedByChef: boolean;
   acknowledgedByAdmin: boolean;
   createdAt: string;
 }
@@ -110,14 +109,14 @@ export default function HouseDirectorDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/critiques'] });
-      toast({ title: "Critique submitted", description: "Your critique has been sent to the chef and admin." });
+      toast({ title: "Note submitted", description: "Your note has been sent to the admin only." });
       setCritiqueModalOpen(false);
       setCritiqueText("");
       setSuggestedEdits("");
       setSelectedMenuId(null);
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to submit critique", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to submit note", variant: "destructive" });
     },
   });
   
@@ -148,7 +147,7 @@ export default function HouseDirectorDashboard() {
   const handleSubmitCritique = () => {
     if (!selectedMenuId) return;
     if (!critiqueText.trim() && !suggestedEdits.trim()) {
-      toast({ title: "Error", description: "Please provide a critique or suggested edits", variant: "destructive" });
+      toast({ title: "Error", description: "Please provide a note or suggested edits", variant: "destructive" });
       return;
     }
     createCritiqueMutation.mutate({
@@ -159,16 +158,10 @@ export default function HouseDirectorDashboard() {
   };
   
   const getStatusBadge = (critique: Critique) => {
-    if (critique.acknowledgedByChef && critique.acknowledgedByAdmin) {
-      return <Badge variant="default" className="bg-green-600">Fully Acknowledged</Badge>;
-    }
-    if (critique.acknowledgedByChef) {
-      return <Badge variant="secondary">Chef Acknowledged</Badge>;
-    }
     if (critique.acknowledgedByAdmin) {
-      return <Badge variant="secondary">Admin Acknowledged</Badge>;
+      return <Badge variant="secondary">Reviewed by Admin</Badge>;
     }
-    return <Badge variant="outline">Pending</Badge>;
+    return <Badge variant="outline">Awaiting Admin Review</Badge>;
   };
   
   const MenuSection = ({ title, menuList, icon: Icon }: { title: string; menuList: any[]; icon: any }) => (
@@ -208,8 +201,8 @@ export default function HouseDirectorDashboard() {
                       data-testid={`button-critique-menu-${menu.id}`}
                     >
                       <ClipboardList className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:inline">Submit Critique</span>
-                      <span className="sm:hidden">Critique</span>
+                      <span className="hidden sm:inline">Send Admin Note</span>
+                      <span className="sm:hidden">Note</span>
                     </Button>
                     <Button 
                       size="sm" 
@@ -303,7 +296,7 @@ export default function HouseDirectorDashboard() {
               </TabsTrigger>
               <TabsTrigger value="my-critiques" data-testid="tab-critiques">
                 <ClipboardList className="w-4 h-4 mr-2" />
-                My Critiques
+                My Notes
               </TabsTrigger>
             </TabsList>
 
@@ -336,7 +329,7 @@ export default function HouseDirectorDashboard() {
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <div>
                               <CardTitle className="text-base">
-                                Critique for {menu ? format(parseISO(menu.weekOf), "MMMM d, yyyy") : `Menu #${critique.menuId}`}
+                                Note for {menu ? format(parseISO(menu.weekOf), "MMMM d, yyyy") : `Menu #${critique.menuId}`}
                               </CardTitle>
                               <CardDescription>
                                 Submitted {format(parseISO(critique.createdAt), "MMM d, yyyy 'at' h:mm a")}
@@ -348,7 +341,7 @@ export default function HouseDirectorDashboard() {
                         <CardContent className="space-y-3">
                           {critique.critiqueText && (
                             <div>
-                              <Label className="text-xs text-muted-foreground">Critique</Label>
+                              <Label className="text-xs text-muted-foreground">Note</Label>
                               <p className="text-sm mt-1">{critique.critiqueText}</p>
                             </div>
                           )}
@@ -358,10 +351,8 @@ export default function HouseDirectorDashboard() {
                               <p className="text-sm mt-1">{critique.suggestedEdits}</p>
                             </div>
                           )}
-                          <div className="flex gap-2 pt-2 text-xs text-muted-foreground">
-                            <span>Chef: {critique.acknowledgedByChef ? "Acknowledged" : "Pending"}</span>
-                            <span>|</span>
-                            <span>Admin: {critique.acknowledgedByAdmin ? "Acknowledged" : "Pending"}</span>
+                          <div className="pt-2 text-xs text-muted-foreground">
+                            Admin review: {critique.acknowledgedByAdmin ? "Reviewed" : "Pending"}
                           </div>
                         </CardContent>
                       </Card>
@@ -372,9 +363,9 @@ export default function HouseDirectorDashboard() {
                 <Card>
                   <CardContent className="py-12 text-center">
                     <ClipboardList className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No critiques submitted yet</p>
+                    <p className="text-muted-foreground">No notes submitted yet</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      View menus and submit critiques from the Menus tab
+                      View menus and send admin notes from the Menus tab
                     </p>
                   </CardContent>
                 </Card>
@@ -387,18 +378,18 @@ export default function HouseDirectorDashboard() {
       <Dialog open={critiqueModalOpen} onOpenChange={setCritiqueModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Submit Menu Critique</DialogTitle>
+            <DialogTitle>Send Note to Admin</DialogTitle>
             <DialogDescription>
-              Provide feedback and suggested edits for this menu. The chef and admin will be notified.
+              Provide notes or suggested edits for this menu. These notes go only to the admin. Chefs cannot see or acknowledge them.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="critique">Critique / Feedback</Label>
+              <Label htmlFor="critique">Note / Feedback</Label>
               <Textarea
                 id="critique"
-                placeholder="Share your thoughts on this menu..."
+                placeholder="Share your notes for the admin..."
                 value={critiqueText}
                 onChange={(e) => setCritiqueText(e.target.value)}
                 rows={3}
@@ -410,7 +401,7 @@ export default function HouseDirectorDashboard() {
               <Label htmlFor="suggested-edits">Suggested Edits</Label>
               <Textarea
                 id="suggested-edits"
-                placeholder="Suggest specific changes to the menu..."
+                placeholder="Suggest specific changes for admin review..."
                 value={suggestedEdits}
                 onChange={(e) => setSuggestedEdits(e.target.value)}
                 rows={3}
@@ -436,7 +427,7 @@ export default function HouseDirectorDashboard() {
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Submit Critique
+                  Submit Note
                 </>
               )}
             </Button>

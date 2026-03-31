@@ -137,7 +137,16 @@ export function useDeleteMenu() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to delete menu");
+      if (!res.ok) {
+        let message = "Failed to delete menu";
+        try {
+          const errorData = await res.json();
+          message = errorData.message || message;
+        } catch {
+          // Ignore JSON parse errors and keep fallback message.
+        }
+        throw new Error(message);
+      }
       return api.menus.delete.responses[200].parse(await res.json());
     },
     onSuccess: () => {

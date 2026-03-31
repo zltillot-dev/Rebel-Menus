@@ -9,20 +9,27 @@ import { MenuCard } from "@/components/MenuCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, RefreshCcw, Star, Calendar, MessageSquare, FileText, AlertCircle, Trash2, Lightbulb } from "lucide-react";
+import { Clock, RefreshCcw, Star, Calendar, FileText, AlertCircle, Trash2, Lightbulb, Loader2, ArrowRight, UtensilsCrossed, CheckCircle2, X, ShieldCheck } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DAYS, MEAL_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfWeek, addDays, isAfter, isBefore, setHours, setMinutes, getDay, isToday, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isBefore, setHours, setMinutes, getDay } from "date-fns";
+import type { LucideIcon } from "lucide-react";
+
+type UserRequestType = "late_plate" | "substitution" | "menu_suggestion";
+
+interface InlineMessage {
+  title: string;
+  description: string;
+}
 
 export default function UserDashboard() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { data: menus, isLoading } = useMenus({ status: 'approved', fraternity: user?.fraternity || undefined });
   const { data: userRequests, isLoading: isLoadingRequests } = useRequests();
@@ -82,11 +89,12 @@ export default function UserDashboard() {
   }, [menus, notificationsEnabled, notifyNewMenu]);
   
   const [requestModalOpen, setRequestModalOpen] = useState(false);
-  const [requestType, setRequestType] = useState<"late_plate" | "substitution" | "menu_suggestion" | "future_request">("late_plate");
+  const [requestType, setRequestType] = useState<UserRequestType>("late_plate");
   const [requestDetails, setRequestDetails] = useState("");
   const [selectedMealDay, setSelectedMealDay] = useState<string>("");
   const [selectedMealType, setSelectedMealType] = useState<"Lunch" | "Dinner" | "">("");
   const { toast } = useToast();
+  const [inlineMessage, setInlineMessage] = useState<InlineMessage | null>(null);
   
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
@@ -95,11 +103,46 @@ export default function UserDashboard() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
+  useEffect(() => {
+    if (!inlineMessage) return;
+
+    const timeout = window.setTimeout(() => {
+      setInlineMessage(null);
+    }, 4500);
+
+    return () => window.clearTimeout(timeout);
+  }, [inlineMessage]);
+
   // Filter requests to only show user's own
   const myRequests = userRequests?.filter((r: any) => r.userId === user?.id) || [];
   
   // Filter feedback to only show user's own
   const myFeedback = userFeedback?.filter((f: any) => f.userId === user?.id) || [];
+  const requestTypeOptions: {
+    type: UserRequestType;
+    title: string;
+    description: string;
+    icon: LucideIcon;
+  }[] = [
+    {
+      type: "late_plate",
+      title: "Late plate",
+      description: "Reserve a meal for later pickup before the cutoff.",
+      icon: Clock,
+    },
+    {
+      type: "substitution",
+      title: "Substitution",
+      description: "Ask for a change based on allergies or dietary needs.",
+      icon: RefreshCcw,
+    },
+    {
+      type: "menu_suggestion",
+      title: "Meal suggestion",
+      description: "Send a future meal idea directly to the chef.",
+      icon: Lightbulb,
+    },
+  ];
 
   // Generate available meal options for late plate requests
   // Shows meals for the current week (Mon-Fri) that haven't passed their cutoff time
@@ -155,12 +198,55 @@ export default function UserDashboard() {
     return mealType === "Lunch" ? "12:45 PM" : "5:45 PM";
   };
 
-  // Get current menu (most recent approved menu for this week)
-  // Simplified logic: just grab the first one returned
-  const currentMenu = menus?.[0];
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const currentWeekKey = format(currentWeekStart, "yyyy-MM-dd");
+  const sortedMenus = useMemo(() => {
+    return [...(menus || [])].sort((a, b) => new Date(a.weekOf).getTime() - new Date(b.weekOf).getTime());
+  }, [menus]);
+
+  const currentMenu = useMemo(() => {
+    if (sortedMenus.length === 0) return null;
+
+    const exactCurrentWeek = sortedMenus.find((menu) => format(new Date(menu.weekOf), "yyyy-MM-dd") === currentWeekKey);
+    if (exactCurrentWeek) return exactCurrentWeek;
+
+    const upcomingMenu = sortedMenus.find((menu) => new Date(menu.weekOf) > currentWeekStart);
+    if (upcomingMenu) return upcomingMenu;
+
+    return sortedMenus[sortedMenus.length - 1];
+  }, [currentWeekKey, currentWeekStart, sortedMenus]);
   
   // Determine current view based on location
   const currentView = location === '/requests' ? 'requests' : location === '/feedback' ? 'feedback' : 'menu';
+  const selectedFeedbackMenu = menus?.find((menu) => menu.id === selectedMenuId) || currentMenu;
+
+  const getRequestStatusBadge = (status: string) => {
+    if (status === "approved") {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Approved</Badge>;
+    }
+
+    if (status === "rejected" || status === "denied") {
+      return <Badge variant="destructive">Not approved</Badge>;
+    }
+
+    return <Badge variant="secondary">Pending review</Badge>;
+  };
+
+  const getRequestSummary = (request: any) => {
+    if (request.type === "late_plate" && request.mealDay && request.mealType) {
+      return `${format(new Date(request.mealDay), "EEEE, MMM d")} · ${request.mealType}`;
+    }
+
+    if (request.type === "substitution") {
+      return "Sent to the chef for review";
+    }
+
+    if (request.type === "menu_suggestion") {
+      return "Saved as a future menu idea";
+    }
+
+    return "Request details";
+  };
 
   const handleRequestSubmit = () => {
     if (!user) return;
@@ -193,7 +279,7 @@ export default function UserDashboard() {
       createRequest({
         userId: user.id,
         type: requestType,
-        details: requestDetails,
+        details: requestDetails.trim(),
         status: "pending",
         date: new Date().toISOString(),
         mealDay: selectedMealDay,
@@ -205,6 +291,10 @@ export default function UserDashboard() {
           setRequestDetails("");
           setSelectedMealDay("");
           setSelectedMealType("");
+          setInlineMessage({
+            title: "Late plate request sent",
+            description: `You're set for ${selectedOption.label}. You can track the request from the Requests screen.`,
+          });
           toast({
             title: "Late Plate Request Submitted",
             description: `Your request for ${selectedOption.label} has been submitted.`
@@ -216,7 +306,7 @@ export default function UserDashboard() {
       createRequest({
         userId: user.id,
         type: requestType,
-        details: requestDetails,
+        details: requestDetails.trim(),
         status: "pending",
         date: new Date().toISOString(),
         fraternity: user.fraternity || undefined,
@@ -225,6 +315,12 @@ export default function UserDashboard() {
           setRequestModalOpen(false);
           setRequestDetails("");
           const typeLabel = requestType === 'substitution' ? 'Substitution' : 'Menu Suggestion';
+          setInlineMessage({
+            title: `${typeLabel} sent`,
+            description: requestType === "substitution"
+              ? "The chef has your request and can review it from the kitchen dashboard."
+              : "Your idea was sent to the chef for future menu planning.",
+          });
           toast({
             title: `${typeLabel} Submitted`,
             description: `Your ${typeLabel.toLowerCase()} has been sent to the chef.`
@@ -251,6 +347,10 @@ export default function UserDashboard() {
         setRating(5);
         setFeedbackMealDay("");
         setFeedbackMealType("");
+        setInlineMessage({
+          title: "Feedback recorded",
+          description: `Thanks for rating ${feedbackMealDay} ${feedbackMealType}. Your input helps the chef improve the menu.`,
+        });
         toast({
           title: "Feedback Submitted",
           description: `Your rating for ${feedbackMealDay} ${feedbackMealType} has been recorded.`
@@ -267,53 +367,86 @@ export default function UserDashboard() {
     setRequestModalOpen(true);
   };
 
-  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const weekRange = `${format(currentWeekStart, "MMM d")} - ${format(addDays(currentWeekStart, 4), "MMM d, yyyy")}`;
+  const menuContextLabel = !currentMenu
+    ? `Week of ${weekRange}`
+    : format(new Date(currentMenu.weekOf), "yyyy-MM-dd") === currentWeekKey
+    ? "This week's menu"
+    : new Date(currentMenu.weekOf) > currentWeekStart
+    ? "Next available menu"
+    : "Most recent published menu";
+
+  const canSubmitRequest = requestType === "late_plate"
+    ? Boolean(selectedMealDay && selectedMealType)
+    : requestDetails.trim().length > 0;
+
+  const weeklyMenuByDay = useMemo(() => {
+    if (!currentMenu) return [];
+    return DAYS.map((day) => ({
+      day,
+      items: currentMenu.items.filter((item) => item.day === day),
+    }));
+  }, [currentMenu]);
+
+  const todayName = format(new Date(), "EEEE");
+  const todaysMenu = weeklyMenuByDay.find((entry) => entry.day === todayName && entry.items.length > 0) || null;
+  const firstAvailableMeal = availableMealOptions[0] || null;
+  const totalMealsThisWeek = currentMenu?.items.length || 0;
+
+  const handleOpenLatePlate = () => {
+    setRequestType("late_plate");
+    setRequestDetails("");
+    if (firstAvailableMeal) {
+      setSelectedMealDay(format(firstAvailableMeal.date, "yyyy-MM-dd"));
+      setSelectedMealType(firstAvailableMeal.mealType);
+    } else {
+      setSelectedMealDay("");
+      setSelectedMealType("");
+    }
+    setRequestModalOpen(true);
+  };
+
+  const handleOpenFeedback = (menuId?: number, day?: string, mealType?: "Lunch" | "Dinner") => {
+    setSelectedMenuId(menuId || currentMenu?.id || null);
+    setFeedbackMealDay(day || "");
+    setFeedbackMealType(mealType || "");
+    setComment("");
+    setRating(5);
+    setFeedbackModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Sidebar />
       
       <main className="p-4 pt-16 md:pt-8 md:ml-64 md:p-8 max-w-7xl mx-auto">
+        {inlineMessage ? (
+          <Alert className="relative mb-6 border-green-200 bg-green-50 text-green-950 shadow-sm transition-all">
+            <CheckCircle2 className="h-4 w-4 text-green-700" />
+            <div className="pr-8">
+              <AlertTitle>{inlineMessage.title}</AlertTitle>
+              <AlertDescription>{inlineMessage.description}</AlertDescription>
+            </div>
+            <button
+              type="button"
+              onClick={() => setInlineMessage(null)}
+              className="absolute right-3 top-3 rounded-full p-1 text-green-700/80 transition-colors hover:bg-green-100 hover:text-green-900"
+              aria-label="Dismiss message"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </Alert>
+        ) : null}
+
         {/* Header - only show for menu view */}
         {currentView === 'menu' && (
-          <header className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+          <header className="mb-6 md:mb-8">
             <div>
               <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground">Weekly Menu</h2>
               <p className="text-muted-foreground mt-1 md:mt-2 flex items-center gap-2 text-sm md:text-base">
                 <Calendar className="w-4 h-4" />
-                Week of {currentMenu ? format(new Date(currentMenu.weekOf), "MMMM d, yyyy") : weekRange}
+                {menuContextLabel}: {currentMenu ? format(new Date(currentMenu.weekOf), "MMMM d, yyyy") : weekRange}
               </p>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 md:gap-3">
-              <Button 
-                onClick={() => openRequestModal("late_plate")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
-                size="sm"
-                data-testid="button-late-plate"
-              >
-                <Clock className="w-4 h-4 mr-1 md:mr-2 text-primary" />
-                <span className="hidden xs:inline">Late</span> Plate
-              </Button>
-              <Button 
-                onClick={() => openRequestModal("substitution")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
-                size="sm"
-                data-testid="button-substitution"
-              >
-                <RefreshCcw className="w-4 h-4 mr-1 md:mr-2 text-primary" />
-                Sub
-              </Button>
-              <Button 
-                onClick={() => openRequestModal("menu_suggestion")}
-                className="bg-white text-foreground border border-border hover:bg-muted shadow-sm text-sm"
-                size="sm"
-                data-testid="button-menu-suggestion"
-              >
-                <Lightbulb className="w-4 h-4 mr-1 md:mr-2 text-primary" />
-                Suggest
-              </Button>
             </div>
           </header>
         )}
@@ -322,48 +455,133 @@ export default function UserDashboard() {
         {currentView === 'menu' && (
           <>
             {isLoading ? (
-              <div className="h-96 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-3">
+                  {[1, 2, 3].map((card) => (
+                    <Card key={card} className="border-border/80">
+                      <CardContent className="space-y-3 p-4">
+                        <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+                        <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-muted/20 text-muted-foreground">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <p className="text-sm font-medium">Loading the latest published menu...</p>
+                  <p className="text-xs text-muted-foreground">This usually takes just a moment.</p>
+                </div>
               </div>
             ) : !currentMenu ? (
               <div className="bg-muted/30 rounded-2xl p-12 text-center border border-border border-dashed">
-                <h3 className="text-xl font-medium mb-2">No Menu Published Yet</h3>
-                <p className="text-muted-foreground">Check back later for this week's meals.</p>
+                <Calendar className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <h3 className="text-xl font-medium mb-2">No menu has been published yet</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">Your house menu will appear here as soon as it is approved and posted.</p>
               </div>
             ) : (
-              <Tabs defaultValue="Monday" className="w-full">
-                <TabsList className="grid grid-cols-5 w-full mb-4 md:mb-8 h-10 md:h-12 bg-muted/50 p-1">
-                  {DAYS.map((day) => (
-                    <TabsTrigger 
-                      key={day} 
-                      value={day}
-                      className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium text-xs md:text-sm px-1 md:px-3"
-                    >
-                      <span className="hidden sm:inline">{day}</span>
-                      <span className="sm:hidden">{day.slice(0, 3)}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Next available action</p>
+                      <p className="text-base font-semibold">
+                        {firstAvailableMeal ? `Late plate for ${firstAvailableMeal.day} ${firstAvailableMeal.mealType}` : "Browse the week"}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Today</p>
+                      <p className="text-base font-semibold">{todaysMenu ? `${todaysMenu.day} has ${todaysMenu.items.length} meal${todaysMenu.items.length === 1 ? "" : "s"}` : "Check the weekly menu below"}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">This week</p>
+                      <p className="text-base font-semibold">{totalMealsThisWeek} published meals</p>
+                    </CardContent>
+                  </Card>
+                </div>
 
-                {DAYS.map((day) => {
-                  const dayItems = currentMenu.items.filter(item => item.day === day);
-                  return (
-                    <TabsContent key={day} value={day} className="mt-0">
-                      <div className="grid md:grid-cols-1 gap-6">
-                        <MenuCard 
-                          day={day} 
-                          items={dayItems} 
-                          menuId={currentMenu.id}
-                          onFeedbackClick={(id) => {
-                            setSelectedMenuId(id);
-                            setFeedbackModalOpen(true);
-                          }}
-                        />
+                <Card className="border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 shadow-sm">
+                  <CardContent className="p-4 md:p-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Quick actions</p>
+                        <h3 className="text-lg font-semibold">See your meals, then act fast</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Request a late plate, ask for a substitution, or rate a meal from here.
+                        </p>
                       </div>
-                    </TabsContent>
-                  );
-                })}
-              </Tabs>
+                      <div className="grid gap-2 sm:grid-cols-3 md:w-auto">
+                        <Button onClick={handleOpenLatePlate} className="justify-between shadow-sm transition-all duration-200 active:scale-[0.99]">
+                          Late plate
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => openRequestModal("substitution")} className="justify-between transition-all duration-200 active:scale-[0.99]">
+                          Substitution
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => openRequestModal("menu_suggestion")} className="justify-between transition-all duration-200 active:scale-[0.99]">
+                          Suggest meal
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    {firstAvailableMeal ? (
+                      <div className="mt-4 rounded-xl border bg-background/80 p-3 text-sm shadow-sm">
+                        <span className="font-medium">Next late plate:</span> {firstAvailableMeal.label}
+                      </div>
+                    ) : null}
+                    <div className="mt-3 flex items-start gap-2 rounded-xl bg-background/70 p-3 text-sm text-muted-foreground">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <p>Everything here is for your house only. Only admins can see who sent feedback.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {todaysMenu ? (
+                  <Card className="border-border/80">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2">
+                        <UtensilsCrossed className="h-4 w-4 text-primary" />
+                        <h3 className="font-semibold">Today&apos;s meals</h3>
+                      </div>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        {todaysMenu.items.map((item) => (
+                          <div key={item.id} className="rounded-xl border bg-muted/20 p-3 shadow-sm transition-colors duration-200 hover:bg-muted/30">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-primary">{item.meal}</p>
+                                <p className="text-base font-semibold leading-tight">{item.description}</p>
+                              </div>
+                              {item.calories ? <Badge variant="outline">{item.calories} kcal</Badge> : null}
+                            </div>
+                            {(item.side1 || item.side2 || item.side3) && (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                {[item.side1, item.side2, item.side3].filter(Boolean).join(" • ")}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
+
+                <div className="space-y-4">
+                  {weeklyMenuByDay.map(({ day, items }) => (
+                    <MenuCard
+                      key={day}
+                      day={day}
+                      items={items}
+                      menuId={currentMenu.id}
+                      isToday={day === todayName}
+                      onFeedbackClick={handleOpenFeedback}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
@@ -374,24 +592,43 @@ export default function UserDashboard() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold">My Requests</h2>
-                <p className="text-sm text-muted-foreground">View and manage your requests</p>
+                <p className="text-sm text-muted-foreground">Track requests and send a new one from this screen.</p>
               </div>
-              <Button onClick={() => setRequestModalOpen(true)} size="sm" data-testid="button-new-request">
-                <MessageSquare className="w-4 h-4 mr-2" /> New Request
-              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {requestTypeOptions.map(({ type, title, description, icon: Icon }) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  className="h-auto items-start justify-start rounded-2xl p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+                  onClick={() => openRequestModal(type)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-foreground">{title}</div>
+                      <div className="mt-1 text-xs text-muted-foreground whitespace-normal">{description}</div>
+                    </div>
+                  </div>
+                </Button>
+              ))}
             </div>
             
             {isLoadingRequests ? (
-              <div className="h-48 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              <div className="h-48 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm">Loading your requests...</p>
               </div>
             ) : myRequests.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Requests Yet</h3>
-                  <p className="text-muted-foreground mb-4">You haven't submitted any requests yet.</p>
-                  <Button onClick={() => setRequestModalOpen(true)}>Submit Your First Request</Button>
+                  <p className="text-muted-foreground mb-4">Need a late plate or substitution? Start here.</p>
+                  <Button onClick={handleOpenLatePlate} className="shadow-sm transition-all duration-200 active:scale-[0.99]">Submit Your First Request</Button>
                 </CardContent>
               </Card>
             ) : (
@@ -420,18 +657,13 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={
-                            request.status === 'approved' ? 'default' :
-                            request.status === 'denied' ? 'destructive' : 'secondary'
-                          }>
-                            {request.status}
-                          </Badge>
+                          {getRequestStatusBadge(request.status)}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="text-muted-foreground"
+                                className="text-muted-foreground transition-colors hover:bg-muted"
                                 data-testid={`button-delete-request-${request.id}`}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -460,7 +692,8 @@ export default function UserDashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">{request.details}</p>
+                      <p className="text-sm font-medium text-foreground mb-2">{getRequestSummary(request)}</p>
+                      <p className="text-sm text-muted-foreground">{request.details || "No extra details provided."}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -475,20 +708,22 @@ export default function UserDashboard() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold">My Feedback</h2>
-                <p className="text-sm text-muted-foreground">Your submitted meal ratings</p>
+                <p className="text-sm text-muted-foreground">See past ratings or return to the weekly menu to leave feedback.</p>
               </div>
             </div>
             
             {isLoadingFeedback ? (
-              <div className="h-48 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              <div className="h-48 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm">Loading your feedback history...</p>
               </div>
             ) : myFeedback.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Star className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Feedback Yet</h3>
-                  <p className="text-muted-foreground">You haven't submitted any feedback yet. Rate a meal from the weekly menu!</p>
+                  <p className="text-muted-foreground mb-4">After you try a meal, you can rate it in a few seconds from the weekly menu.</p>
+                  <Button onClick={() => setLocation("/")} className="shadow-sm transition-all duration-200 active:scale-[0.99]">Go to Weekly Menu</Button>
                 </CardContent>
               </Card>
             ) : (
@@ -498,7 +733,7 @@ export default function UserDashboard() {
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-base">Menu #{fb.menuId}</CardTitle>
+                          <CardTitle className="text-base">{fb.mealDay} {fb.mealType}</CardTitle>
                           <p className="text-xs text-muted-foreground">
                             {fb.createdAt ? format(new Date(fb.createdAt), "MMM d, yyyy") : "Recently"}
                           </p>
@@ -515,6 +750,7 @@ export default function UserDashboard() {
                     </CardHeader>
                     {fb.comment && (
                       <CardContent>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Your comment</p>
                         <p className="text-sm text-muted-foreground">{fb.comment}</p>
                       </CardContent>
                     )}
@@ -538,10 +774,10 @@ export default function UserDashboard() {
               </DialogTitle>
               <DialogDescription>
                 {requestType === "late_plate" 
-                  ? "Select the meal you need a late plate for. Cutoff is 12:45 PM for lunch and 5:45 PM for dinner."
+                  ? "Choose a meal for your late plate. Cutoff is 12:45 PM for lunch and 5:45 PM for dinner."
                   : requestType === "substitution"
-                  ? "Provide details for your substitution request (e.g., allergies, dietary restrictions). This will be sent to the chef."
-                  : "Suggest a dish or meal idea for future menus. Your suggestion will be sent to the chef."
+                  ? "Share any allergy or dietary details. This goes directly to the chef."
+                  : "Share a dish or meal idea for a future menu. This goes directly to the chef."
                 }
               </DialogDescription>
             </DialogHeader>
@@ -558,37 +794,56 @@ export default function UserDashboard() {
                       </p>
                     </div>
                   ) : (
-                    <Select
-                      value={selectedMealDay && selectedMealType ? `${selectedMealDay}|${selectedMealType}` : ""}
-                      onValueChange={(value) => {
-                        const [day, type] = value.split("|");
-                        setSelectedMealDay(day);
-                        setSelectedMealType(type as "Lunch" | "Dinner");
-                      }}
-                    >
-                      <SelectTrigger data-testid="select-meal-trigger">
-                        <SelectValue placeholder="Choose a meal..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableMealOptions.map((option) => (
-                          <SelectItem 
-                            key={`${format(option.date, "yyyy-MM-dd")}|${option.mealType}`}
-                            value={`${format(option.date, "yyyy-MM-dd")}|${option.mealType}`}
+                    <div className="grid gap-2">
+                      {availableMealOptions.map((option) => {
+                        const value = `${format(option.date, "yyyy-MM-dd")}|${option.mealType}`;
+                        const isSelected = selectedMealDay && selectedMealType
+                          ? value === `${selectedMealDay}|${selectedMealType}`
+                          : false;
+
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMealDay(format(option.date, "yyyy-MM-dd"));
+                              setSelectedMealType(option.mealType);
+                            }}
+                            className={`rounded-xl border px-4 py-3 text-left shadow-sm transition-all duration-200 active:scale-[0.99] ${
+                              isSelected
+                                ? "border-primary bg-primary/10 text-foreground ring-2 ring-primary/20"
+                                : "border-border bg-background hover:border-primary/30 hover:bg-muted/50"
+                            }`}
                             data-testid={`select-item-${format(option.date, "yyyy-MM-dd")}-${option.mealType}`}
                           >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Submit before {getCutoffTimeDisplay(option.mealType)}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                   {selectedMealType && (
                     <p className="text-xs text-muted-foreground">
                       Request must be submitted before {getCutoffTimeDisplay(selectedMealType)}
                     </p>
                   )}
+                  {!selectedMealType && availableMealOptions.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Tap a meal to continue. The next available option is shown first.
+                    </p>
+                  ) : null}
                 </div>
               )}
+              {requestType !== "late_plate" ? (
+                <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+                  {requestType === "substitution"
+                    ? "Be specific so the chef can act quickly. Include allergies, dietary restrictions, or the replacement you need."
+                    : "Keep it short and specific. Dish ideas and favorite meals work best."}
+                </div>
+              ) : null}
               <div className="space-y-2">
                 <Label>
                   {requestType === "late_plate" 
@@ -610,16 +865,32 @@ export default function UserDashboard() {
                   className="min-h-[100px]"
                   data-testid="input-request-details"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {requestType === "late_plate"
+                    ? "Optional details help the kitchen plan pickup."
+                    : "Your request goes straight to the kitchen team."}
+                </p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setRequestModalOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setRequestModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99]">Cancel</Button>
               <Button 
                 onClick={handleRequestSubmit} 
-                disabled={isRequesting || (requestType === "late_plate" ? (!selectedMealDay || !selectedMealType) : !requestDetails)}
+                disabled={isRequesting || !canSubmitRequest}
+                className="w-full sm:w-auto sm:min-w-[170px] shadow-sm transition-all duration-200 active:scale-[0.99]"
                 data-testid="button-submit-request"
               >
-                {isRequesting ? "Submitting..." : "Submit Request"}
+                {isRequesting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                )
+                  : requestType === "late_plate"
+                  ? "Send Late Plate Request"
+                  : requestType === "substitution"
+                  ? "Send to Chef"
+                  : "Submit Suggestion"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -631,12 +902,25 @@ export default function UserDashboard() {
             <DialogHeader>
               <DialogTitle>Rate a Meal</DialogTitle>
               <DialogDescription>
-                Select the specific meal you'd like to rate and let the chefs know what you thought.
+                Choose the meal you'd like to rate. Only admins can see who submitted feedback.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
+              {selectedFeedbackMenu ? (
+                <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+                  Rating menu for the week of {format(new Date(selectedFeedbackMenu.weekOf), "MMMM d, yyyy")}.
+                </div>
+              ) : null}
+              {(feedbackMealDay || feedbackMealType) ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+                  <span className="font-medium text-foreground">Selected meal:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {[feedbackMealDay, feedbackMealType].filter(Boolean).join(" ")}
+                  </span>
+                </div>
+              ) : null}
               {/* Meal Selection */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Day</Label>
                   <Select value={feedbackMealDay} onValueChange={setFeedbackMealDay}>
@@ -675,8 +959,9 @@ export default function UserDashboard() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button 
                       key={star}
+                      type="button"
                       onClick={() => setRating(star)}
-                      className="focus:outline-none transition-transform hover:scale-110"
+                      className="rounded-full p-1 focus:outline-none transition-transform duration-150 hover:scale-110 active:scale-95"
                       data-testid={`button-rating-${star}`}
                     >
                       <Star 
@@ -685,6 +970,9 @@ export default function UserDashboard() {
                     </button>
                   ))}
                 </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Quick ratings help improve future meals.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -695,16 +983,25 @@ export default function UserDashboard() {
                   onChange={(e) => setComment(e.target.value)}
                   data-testid="textarea-feedback-comment"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Keep comments short. Focus on what worked or what should change.
+                </p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setFeedbackModalOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setFeedbackModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99]">Cancel</Button>
               <Button 
                 onClick={handleFeedbackSubmit} 
                 disabled={isFeedbacking || !feedbackMealDay || !feedbackMealType}
+                className="w-full sm:w-auto sm:min-w-[150px] shadow-sm transition-all duration-200 active:scale-[0.99]"
                 data-testid="button-submit-feedback"
               >
-                {isFeedbacking ? "Submitting..." : "Submit Feedback"}
+                {isFeedbacking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : "Submit Feedback"}
               </Button>
             </DialogFooter>
           </DialogContent>

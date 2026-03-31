@@ -4,13 +4,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { 
   LayoutDashboard, 
-  ChefHat, 
   UtensilsCrossed, 
   CalendarDays, 
   MessageSquarePlus, 
   LogOut,
   Users,
-  Settings,
   Menu,
   X,
   Bell,
@@ -27,14 +25,7 @@ export function Sidebar() {
   const { permission, isSupported, isGranted, isRequesting, requestPermission } = useNotifications();
 
   if (!user) return null;
-
-  const fraternityColors = {
-    "Delta Tau Delta": "from-purple-600 to-amber-400",
-    "Sigma Chi": "from-blue-600 to-amber-400",
-    null: "from-primary to-primary/60"
-  };
-
-  const gradient = fraternityColors[user.fraternity as keyof typeof fraternityColors] || fraternityColors.null;
+  const roleLabel = user.role === "house_director" ? "House Director" : user.role.replace("_", " ");
 
   const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const isActive = location === href;
@@ -43,7 +34,7 @@ export function Sidebar() {
         <Button 
           variant={isActive ? "default" : "ghost"}
           className={cn(
-            "w-full justify-start gap-3 px-4 py-3 h-auto",
+            "w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl",
             isActive && "shadow-lg shadow-primary/20"
           )}
           onClick={() => setMobileOpen(false)}
@@ -64,6 +55,9 @@ export function Sidebar() {
             <h1 className="font-display font-bold text-2xl tracking-tight">REBEL CHEFS</h1>
             <p className="text-xs text-muted-foreground mt-1">
               {user.fraternity || "Admin Portal"}
+            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80 mt-2">
+              {roleLabel}
             </p>
           </div>
           <Button 
@@ -117,7 +111,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+            <p className="text-xs text-muted-foreground capitalize">{roleLabel}</p>
           </div>
         </div>
         
@@ -170,7 +164,7 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden bg-card/95 border border-border shadow-sm"
         onClick={() => setMobileOpen(true)}
         data-testid="button-open-sidebar"
       >
