@@ -1,6 +1,6 @@
 import { db, pool } from "./db";
 import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, menuWorkflowHistory, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique, type MenuWorkflowHistory, type InsertMenuWorkflowHistory } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -122,13 +122,16 @@ export class DatabaseStorage implements IStorage {
     }
 
     const menuList = await query.orderBy(desc(menus.weekOf));
-    
-    const result = [];
-    for (const menu of menuList) {
-      const items = await db.select().from(menuItems).where(eq(menuItems.menuId, menu.id));
-      result.push({ ...menu, items });
+    if (menuList.length === 0) return [];
+    const menuIds = menuList.map(m => m.id);
+    const allItems = await db.select().from(menuItems).where(inArray(menuItems.menuId, menuIds));
+    const itemsByMenu = new Map<number, typeof allItems>();
+    for (const item of allItems) {
+      const arr = itemsByMenu.get(item.menuId) ?? [];
+      arr.push(item);
+      itemsByMenu.set(item.menuId, arr);
     }
-    return result;
+    return menuList.map(menu => ({ ...menu, items: itemsByMenu.get(menu.id) ?? [] }));
   }
 
   async getMenu(id: number): Promise<(Menu & { items: MenuItem[] }) | undefined> {
@@ -200,11 +203,14 @@ export class DatabaseStorage implements IStorage {
 
   async getMenuWorkflowHistoryForMenus(menuIds: number[]): Promise<Record<number, MenuWorkflowHistory[]>> {
     const historyByMenu: Record<number, MenuWorkflowHistory[]> = {};
-
-    for (const menuId of menuIds) {
-      historyByMenu[menuId] = await this.getMenuWorkflowHistory(menuId);
+    if (menuIds.length === 0) return historyByMenu;
+    const rows = await db.select().from(menuWorkflowHistory)
+      .where(inArray(menuWorkflowHistory.menuId, menuIds))
+      .orderBy(desc(menuWorkflowHistory.createdAt), desc(menuWorkflowHistory.id));
+    for (const row of rows) {
+      if (!historyByMenu[row.menuId]) historyByMenu[row.menuId] = [];
+      historyByMenu[row.menuId].push(row);
     }
-
     return historyByMenu;
   }
 
@@ -236,18 +242,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRequests(userId?: number): Promise<(Request & { user: User })[]> {
-    // In a real app, we'd join. Drizzle's query builder or relations are better here.
-    // For simplicity in this fast implementation, we'll fetch and map manually or use relations if I set them up fully in db.ts queries
-    // Let's just do a basic join logic
-    const reqs = await db.select().from(requests);
-    const result = [];
-    for (const r of reqs) {
-      const [u] = await db.select().from(users).where(eq(users.id, r.userId));
-      if (!userId || r.userId === userId) {
-        result.push({ ...r, user: u });
-      }
-    }
-    return result;
+    const conditions = userId ? [eq(requests.userId, userId)] : [];
+    const reqs = conditions.length > 0
+      ? await db.select().from(requests).where(conditions[0])
+      : await db.select().from(requests);
+
+    if (reqs.length === 0) return [];
+
+    const userIds = Array.from(new Set(reqs.map(r => r.userId)));
+    const userList = await db.select().from(users).where(inArray(users.id, userIds));
+    const userMap = new Map(userList.map(u => [u.id, u]));
+
+    return reqs
+      .filter(r => userMap.has(r.userId)) // skip orphaned requests (BUG-009 defense in depth)
+      .map(r => ({ ...r, user: userMap.get(r.userId)! }));
   }
 
   async getRequest(id: number): Promise<Request | undefined> {

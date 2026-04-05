@@ -56,7 +56,7 @@ export function showNotification(type: NotificationType, options: Partial<Notifi
 
   const title = options.title || notificationTitles[type];
   const notificationBody = options.body || '';
-  const notificationIcon = options.icon || '/pwa-icon-192.png';
+  const notificationIcon = options.icon || '/icons/icon-192x192.png';
   const notificationTag = options.tag || type;
 
   try {
