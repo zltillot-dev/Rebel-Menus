@@ -219,11 +219,22 @@ export async function registerRoutes(
       });
     }
     
+    // Attach chef name to all menus
+    const menusWithChefName = await Promise.all(
+      menus.map(async (menu: any) => {
+        if (menu.chefId) {
+          const chef = await storage.getUser(menu.chefId);
+          return { ...menu, chefName: chef?.name || null };
+        }
+        return { ...menu, chefName: null };
+      })
+    );
+
     if (userRole === "admin" || userRole === "chef") {
-      return res.json(await attachWorkflowHistoryToMenus(menus));
+      return res.json(await attachWorkflowHistoryToMenus(menusWithChefName));
     }
 
-    res.json(menus);
+    res.json(menusWithChefName);
   });
 
   app.get(api.menus.get.path, async (req, res) => {
@@ -464,6 +475,14 @@ export async function registerRoutes(
       return res.json(feedback.map(({ userId, ...item }) => ({ ...item, userId: null })));
     }
 
+    // House directors see feedback for their fraternity, anonymized
+    if (userRole === "house_director" && userFraternity) {
+      const allMenus = await storage.getMenus(userFraternity);
+      const allowedMenuIds = new Set(allMenus.map((menu) => menu.id));
+      const feedback = (await storage.getFeedback()).filter((item) => allowedMenuIds.has(item.menuId));
+      return res.json(feedback.map(({ userId, ...item }) => ({ ...item, userId: null })));
+    }
+
     return res.status(403).json({ message: "Forbidden" });
   });
 
@@ -555,17 +574,17 @@ export async function registerRoutes(
     const userRole = (req.user as any).role;
     const userFraternity = (req.user as any).fraternity;
     
-    if (userRole !== 'chef' && userRole !== 'admin') {
+    if (userRole !== 'chef' && userRole !== 'admin' && userRole !== 'house_director') {
       return res.status(403).send("Forbidden");
     }
-    
+
     const allRequests = await storage.getRequests();
-    
+
     // Filter to late plate requests only
     let latePlates = allRequests.filter(r => r.type === 'late_plate');
-    
-    // Chefs only see their fraternity's late plates
-    if (userRole === 'chef' && userFraternity) {
+
+    // Chefs and house directors only see their fraternity's late plates
+    if ((userRole === 'chef' || userRole === 'house_director') && userFraternity) {
       latePlates = latePlates.filter(r => r.fraternity === userFraternity);
     }
     
@@ -1070,6 +1089,159 @@ export async function registerRoutes(
     }
     await storage.deleteChefTask(Number(req.params.id));
     res.json({ message: "Task deleted successfully" });
+  });
+
+  // ==================== HD Headcount Reporting ====================
+
+  app.post("/api/hd/headcount", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'house_director') {
+      return res.status(403).json({ message: "Only house directors can submit headcounts" });
+    }
+
+    const userId = (req.user as any).id;
+    const userFraternity = (req.user as any).fraternity;
+
+    const { mealDate, mealType, headcount } = req.body;
+    if (!mealDate || !mealType || headcount == null || headcount < 0) {
+      return res.status(400).json({ message: "mealDate, mealType, and headcount are required" });
+    }
+
+    const created = await storage.createHdHeadcount({
+      houseDirectorId: userId,
+      fraternity: userFraternity,
+      mealDate,
+      mealType,
+      headcount: Number(headcount),
+    });
+    res.status(201).json(created);
+  });
+
+  app.get("/api/hd/headcounts", async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+
+    if (userRole === 'house_director' && userFraternity) {
+      return res.json(await storage.getHdHeadcounts(userFraternity));
+    }
+    if (userRole === 'admin') {
+      const fraternity = req.query.fraternity as string | undefined;
+      if (fraternity) return res.json(await storage.getHdHeadcounts(fraternity));
+      // Return all for admin - get both fraternities
+      const dtd = await storage.getHdHeadcounts("Delta Tau Delta");
+      const sc = await storage.getHdHeadcounts("Sigma Chi");
+      return res.json([...dtd, ...sc]);
+    }
+    return res.status(403).json({ message: "Forbidden" });
+  });
+
+  // ==================== HD Meal Reviews ====================
+
+  app.post("/api/hd/meal-review", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'house_director') {
+      return res.status(403).json({ message: "Only house directors can submit meal reviews" });
+    }
+
+    const userId = (req.user as any).id;
+    const userFraternity = (req.user as any).fraternity;
+
+    const { menuId, mealDay, mealType, qualityRating, quantityRating, timeliness, comment } = req.body;
+
+    if (!menuId || !mealDay || !mealType || !qualityRating || !quantityRating || !timeliness) {
+      return res.status(400).json({ message: "All rating fields are required" });
+    }
+    if (qualityRating < 1 || qualityRating > 5) {
+      return res.status(400).json({ message: "Quality rating must be 1-5" });
+    }
+    if (comment && comment.length > 100) {
+      return res.status(400).json({ message: "Comment must be 100 characters or less" });
+    }
+
+    // Verify menu exists and belongs to HD's fraternity
+    const menu = await storage.getMenu(Number(menuId));
+    if (!menu) return res.status(404).json({ message: "Menu not found" });
+    if (menu.fraternity !== userFraternity) {
+      return res.status(403).json({ message: "Can only review menus for your fraternity" });
+    }
+
+    const created = await storage.createHdMealReview({
+      houseDirectorId: userId,
+      fraternity: userFraternity,
+      menuId: Number(menuId),
+      mealDay,
+      mealType,
+      qualityRating: Number(qualityRating),
+      quantityRating,
+      timeliness,
+      comment: comment || null,
+    });
+    res.status(201).json(created);
+  });
+
+  app.get("/api/hd/meal-reviews", async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+
+    if (userRole === 'house_director' && userFraternity) {
+      return res.json(await storage.getHdMealReviews(userFraternity));
+    }
+    if (userRole === 'admin') {
+      const fraternity = req.query.fraternity as string | undefined;
+      if (fraternity) return res.json(await storage.getHdMealReviews(fraternity));
+      const dtd = await storage.getHdMealReviews("Delta Tau Delta");
+      const sc = await storage.getHdMealReviews("Sigma Chi");
+      return res.json([...dtd, ...sc]);
+    }
+    return res.status(403).json({ message: "Forbidden" });
+  });
+
+  // ==================== HD Event Requests ====================
+
+  app.post("/api/hd/event-request", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'house_director') {
+      return res.status(403).json({ message: "Only house directors can submit event requests" });
+    }
+
+    const userId = (req.user as any).id;
+    const userFraternity = (req.user as any).fraternity;
+
+    const { eventType, eventDate, expectedHeadcount, adjustedMealTime } = req.body;
+
+    if (!eventType || !eventDate || !expectedHeadcount) {
+      return res.status(400).json({ message: "eventType, eventDate, and expectedHeadcount are required" });
+    }
+
+    const created = await storage.createHdEventRequest({
+      houseDirectorId: userId,
+      fraternity: userFraternity,
+      eventType,
+      eventDate,
+      expectedHeadcount,
+      adjustedMealTime: adjustedMealTime || "No Change",
+    });
+    res.status(201).json(created);
+  });
+
+  app.get("/api/hd/event-requests", async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const userRole = (req.user as any).role;
+    const userFraternity = (req.user as any).fraternity;
+
+    if (userRole === 'house_director' && userFraternity) {
+      return res.json(await storage.getHdEventRequests(userFraternity));
+    }
+    if (userRole === 'admin') {
+      const fraternity = req.query.fraternity as string | undefined;
+      if (fraternity) return res.json(await storage.getHdEventRequests(fraternity));
+      const dtd = await storage.getHdEventRequests("Delta Tau Delta");
+      const sc = await storage.getHdEventRequests("Sigma Chi");
+      return res.json([...dtd, ...sc]);
+    }
+    return res.status(403).json({ message: "Forbidden" });
   });
 
   // ==================== Menu Critiques (House Directors) ====================

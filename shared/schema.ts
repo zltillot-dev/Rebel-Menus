@@ -12,6 +12,12 @@ export const MENU_STATUS = ["draft", "pending", "approved", "needs_revision"] as
 export const MENU_WORKFLOW_ACTIONS = ["submitted", "revision_requested", "approved_posted"] as const;
 export const REQUEST_TYPES = ["late_plate", "substitution", "menu_suggestion", "future_request"] as const;
 export const CRITIQUE_STATUS = ["pending", "acknowledged"] as const;
+export const HEADCOUNT_MEAL_TYPES = ["Lunch", "Dinner", "Both"] as const;
+export const QUANTITY_OPTIONS = ["Too Little", "Just Right", "Too Much"] as const;
+export const TIMELINESS_OPTIONS = ["On Time", "Late"] as const;
+export const EVENT_TYPES = ["Formal Dinner", "Philanthropy Event", "Rush Event", "Homecoming", "Parents Weekend", "Other"] as const;
+export const EVENT_HEADCOUNT_OPTIONS = ["10-25", "25-50", "50-75", "75-100", "100+"] as const;
+export const ADJUSTED_MEAL_TIME_OPTIONS = ["No Change", "30 min early", "1 hour early", "30 min late", "1 hour late"] as const;
 
 // Tables
 export const users = pgTable("users", {
@@ -112,6 +118,45 @@ export const menuCritiques = pgTable("menu_critiques", {
   createdAt: date("created_at").defaultNow(),
 });
 
+// House Director: Headcount Reporting
+export const hdHeadcounts = pgTable("hd_headcounts", {
+  id: serial("id").primaryKey(),
+  houseDirectorId: integer("house_director_id").notNull().references(() => users.id),
+  fraternity: text("fraternity", { enum: FRATERNITIES }).notNull(),
+  mealDate: date("meal_date").notNull(),
+  mealType: text("meal_type", { enum: HEADCOUNT_MEAL_TYPES }).notNull(),
+  headcount: integer("headcount").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// House Director: Meal Reviews
+export const hdMealReviews = pgTable("hd_meal_reviews", {
+  id: serial("id").primaryKey(),
+  houseDirectorId: integer("house_director_id").notNull().references(() => users.id),
+  menuId: integer("menu_id").notNull().references(() => menus.id),
+  fraternity: text("fraternity", { enum: FRATERNITIES }).notNull(),
+  mealDay: text("meal_day", { enum: DAYS }).notNull(),
+  mealType: text("meal_type", { enum: MEAL_TYPES }).notNull(),
+  qualityRating: integer("quality_rating").notNull(), // 1-5 stars
+  quantityRating: text("quantity_rating", { enum: QUANTITY_OPTIONS }).notNull(),
+  timeliness: text("timeliness", { enum: TIMELINESS_OPTIONS }).notNull(),
+  comment: text("comment"), // optional, max 100 chars
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// House Director: Event/Special Meal Requests
+export const hdEventRequests = pgTable("hd_event_requests", {
+  id: serial("id").primaryKey(),
+  houseDirectorId: integer("house_director_id").notNull().references(() => users.id),
+  fraternity: text("fraternity", { enum: FRATERNITIES }).notNull(),
+  eventType: text("event_type", { enum: EVENT_TYPES }).notNull(),
+  eventDate: date("event_date").notNull(),
+  expectedHeadcount: text("expected_headcount", { enum: EVENT_HEADCOUNT_OPTIONS }).notNull(),
+  adjustedMealTime: text("adjusted_meal_time", { enum: ADJUSTED_MEAL_TIME_OPTIONS }).default("No Change"),
+  status: text("status").default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   menus: many(menus),
@@ -119,6 +164,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   requests: many(requests),
   tasks: many(chefTasks),
   critiques: many(menuCritiques),
+  hdHeadcounts: many(hdHeadcounts),
+  hdMealReviews: many(hdMealReviews),
+  hdEventRequests: many(hdEventRequests),
 }));
 
 export const chefTasksRelations = relations(chefTasks, ({ one }) => ({
@@ -185,6 +233,31 @@ export const menuWorkflowHistoryRelations = relations(menuWorkflowHistory, ({ on
   }),
 }));
 
+export const hdHeadcountsRelations = relations(hdHeadcounts, ({ one }) => ({
+  houseDirector: one(users, {
+    fields: [hdHeadcounts.houseDirectorId],
+    references: [users.id],
+  }),
+}));
+
+export const hdMealReviewsRelations = relations(hdMealReviews, ({ one }) => ({
+  houseDirector: one(users, {
+    fields: [hdMealReviews.houseDirectorId],
+    references: [users.id],
+  }),
+  menu: one(menus, {
+    fields: [hdMealReviews.menuId],
+    references: [menus.id],
+  }),
+}));
+
+export const hdEventRequestsRelations = relations(hdEventRequests, ({ one }) => ({
+  houseDirector: one(users, {
+    fields: [hdEventRequests.houseDirectorId],
+    references: [users.id],
+  }),
+}));
+
 // Schemas & Types
 export const insertUserSchema = createInsertSchema(users);
 export const insertMenuSchema = createInsertSchema(menus);
@@ -194,6 +267,9 @@ export const insertRequestSchema = createInsertSchema(requests);
 export const insertChefTaskSchema = createInsertSchema(chefTasks).omit({ id: true, createdAt: true });
 export const insertMenuCritiqueSchema = createInsertSchema(menuCritiques).omit({ id: true, createdAt: true });
 export const insertMenuWorkflowHistorySchema = createInsertSchema(menuWorkflowHistory).omit({ id: true, createdAt: true });
+export const insertHdHeadcountSchema = createInsertSchema(hdHeadcounts).omit({ id: true, createdAt: true });
+export const insertHdMealReviewSchema = createInsertSchema(hdMealReviews).omit({ id: true, createdAt: true });
+export const insertHdEventRequestSchema = createInsertSchema(hdEventRequests).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -212,3 +288,9 @@ export type InsertRequest = z.infer<typeof insertRequestSchema>;
 export type InsertChefTask = z.infer<typeof insertChefTaskSchema>;
 export type InsertMenuCritique = z.infer<typeof insertMenuCritiqueSchema>;
 export type InsertMenuWorkflowHistory = z.infer<typeof insertMenuWorkflowHistorySchema>;
+export type HdHeadcount = typeof hdHeadcounts.$inferSelect;
+export type HdMealReview = typeof hdMealReviews.$inferSelect;
+export type HdEventRequest = typeof hdEventRequests.$inferSelect;
+export type InsertHdHeadcount = z.infer<typeof insertHdHeadcountSchema>;
+export type InsertHdMealReview = z.infer<typeof insertHdMealReviewSchema>;
+export type InsertHdEventRequest = z.infer<typeof insertHdEventRequestSchema>;

@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, menuWorkflowHistory, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique, type MenuWorkflowHistory, type InsertMenuWorkflowHistory } from "@shared/schema";
+import { users, menus, menuItems, feedback, requests, chefTasks, menuCritiques, menuWorkflowHistory, hdHeadcounts, hdMealReviews, hdEventRequests, type User, type InsertUser, type Menu, type InsertMenu, type MenuItem, type Feedback, type Request, type InsertRequest, type InsertFeedback, type ChefTask, type InsertChefTask, type MenuCritique, type InsertMenuCritique, type MenuWorkflowHistory, type InsertMenuWorkflowHistory, type HdHeadcount, type InsertHdHeadcount, type HdMealReview, type InsertHdMealReview, type HdEventRequest, type InsertHdEventRequest } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 import session from "express-session";
@@ -60,6 +60,18 @@ export interface IStorage {
   acknowledgeCritiqueByAdmin(id: number): Promise<MenuCritique>;
   getHouseDirectors(): Promise<User[]>;
   getHouseDirectorByFraternity(fraternity: string): Promise<User | undefined>;
+
+  // HD Headcounts
+  createHdHeadcount(headcount: InsertHdHeadcount): Promise<HdHeadcount>;
+  getHdHeadcounts(fraternity: string): Promise<HdHeadcount[]>;
+
+  // HD Meal Reviews
+  createHdMealReview(review: InsertHdMealReview): Promise<HdMealReview>;
+  getHdMealReviews(fraternity: string): Promise<HdMealReview[]>;
+
+  // HD Event Requests
+  createHdEventRequest(request: InsertHdEventRequest): Promise<HdEventRequest>;
+  getHdEventRequests(fraternity: string): Promise<HdEventRequest[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -377,6 +389,42 @@ export class DatabaseStorage implements IStorage {
     const [hd] = await db.select().from(users)
       .where(and(eq(users.role, "house_director"), eq(users.fraternity, fraternity as any)));
     return hd;
+  }
+
+  // HD Headcounts
+  async createHdHeadcount(headcount: InsertHdHeadcount): Promise<HdHeadcount> {
+    const [created] = await db.insert(hdHeadcounts).values(headcount).returning();
+    return created;
+  }
+
+  async getHdHeadcounts(fraternity: string): Promise<HdHeadcount[]> {
+    return db.select().from(hdHeadcounts)
+      .where(eq(hdHeadcounts.fraternity, fraternity as any))
+      .orderBy(desc(hdHeadcounts.createdAt));
+  }
+
+  // HD Meal Reviews
+  async createHdMealReview(review: InsertHdMealReview): Promise<HdMealReview> {
+    const [created] = await db.insert(hdMealReviews).values(review).returning();
+    return created;
+  }
+
+  async getHdMealReviews(fraternity: string): Promise<HdMealReview[]> {
+    return db.select().from(hdMealReviews)
+      .where(eq(hdMealReviews.fraternity, fraternity as any))
+      .orderBy(desc(hdMealReviews.createdAt));
+  }
+
+  // HD Event Requests
+  async createHdEventRequest(request: InsertHdEventRequest): Promise<HdEventRequest> {
+    const [created] = await db.insert(hdEventRequests).values(request).returning();
+    return created;
+  }
+
+  async getHdEventRequests(fraternity: string): Promise<HdEventRequest[]> {
+    return db.select().from(hdEventRequests)
+      .where(eq(hdEventRequests.fraternity, fraternity as any))
+      .orderBy(desc(hdEventRequests.createdAt));
   }
 }
 
