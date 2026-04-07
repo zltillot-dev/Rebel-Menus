@@ -314,12 +314,12 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
       <main className="flex-1 p-4 pt-16 md:pt-8 md:ml-64 md:p-8">
-        <header className="mb-6 md:mb-8 flex flex-wrap items-start justify-between gap-4">
+        <header className="mb-8 md:mb-10 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold">Admin Dashboard</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Manage chefs and approve weekly menus</p>
+            <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">Admin Dashboard</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1">Manage chefs and approve weekly menus</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+          <Button variant="outline" size="sm" className="border-border hover:bg-neutral-100 font-medium" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
             <Settings className="w-4 h-4 mr-2" />
             Account Settings
           </Button>
@@ -332,7 +332,7 @@ export default function AdminDashboard() {
             {/* Menu Management */}
             <section>
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" />
+                <Calendar className="w-5 h-5 text-amber-500" />
                 Menu Management
               </h2>
               
@@ -368,7 +368,7 @@ export default function AdminDashboard() {
                                   {menu.fraternity} • {menu.items.length} items
                                 </CardDescription>
                               </div>
-                              <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 font-semibold">
                                 Pending Review
                               </Badge>
                             </div>
@@ -383,8 +383,8 @@ export default function AdminDashboard() {
                               <Eye className="w-4 h-4 mr-2" /> View Full Menu
                             </Button>
                             <div className="flex gap-3">
-                              <Button 
-                                className="flex-1 bg-green-600"
+                              <Button
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
                                 onClick={() => {
                                   updateStatus({ id: menu.id, status: 'approved' });
                                   if (notificationsEnabled) {
@@ -513,12 +513,12 @@ export default function AdminDashboard() {
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-primary" />
+                  <UserPlus className="w-5 h-5 text-amber-500" />
                   Manage Chefs
                 </h2>
                 <Dialog open={createChefOpen} onOpenChange={setCreateChefOpen}>
                   <DialogTrigger asChild>
-                    <Button>Add New Chef</Button>
+                    <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm">Add New Chef</Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -570,7 +570,7 @@ export default function AdminDashboard() {
                     <CardHeader className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-600 font-bold">
                             {chef.name.charAt(0)}
                           </div>
                           <div>
@@ -628,12 +628,12 @@ export default function AdminDashboard() {
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <ListTodo className="w-5 h-5 text-primary" />
+                  <ListTodo className="w-5 h-5 text-amber-500" />
                   Chef Tasks & Reminders
                 </h2>
                 <Dialog open={createTaskOpen} onOpenChange={setCreateTaskOpen}>
                   <DialogTrigger asChild>
-                    <Button data-testid="button-add-task">
+                    <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm" data-testid="button-add-task">
                       <Plus className="w-4 h-4 mr-2" /> Add Task
                     </Button>
                   </DialogTrigger>
@@ -739,7 +739,7 @@ export default function AdminDashboard() {
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                              <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-600 font-bold text-sm">
                                 {chef.name.charAt(0)}
                               </div>
                               <div>
@@ -821,12 +821,12 @@ export default function AdminDashboard() {
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Home className="w-5 h-5 text-primary" />
+                  <Home className="w-5 h-5 text-amber-500" />
                   House Directors
                 </h2>
                 <Dialog open={createHDOpen} onOpenChange={setCreateHDOpen}>
                   <DialogTrigger asChild>
-                    <Button data-testid="button-add-house-director">
+                    <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm" data-testid="button-add-house-director">
                       <Plus className="w-4 h-4 mr-2" /> Add House Director
                     </Button>
                   </DialogTrigger>
@@ -965,7 +965,7 @@ export default function AdminDashboard() {
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-primary" />
+                  <ClipboardList className="w-5 h-5 text-amber-500" />
                   House Director Notes
                   {unacknowledgedCritiques.length > 0 && (
                     <Badge variant="destructive">{unacknowledgedCritiques.length} pending</Badge>
@@ -1051,19 +1051,19 @@ export default function AdminDashboard() {
 
           {/* Sidebar Stats */}
           <div className="space-y-6">
-            <Card className="bg-primary text-primary-foreground border-none">
+            <Card className="bg-neutral-900 text-white border-none shadow-xl">
               <CardHeader>
-                <CardTitle className="text-lg">System Status</CardTitle>
+                <CardTitle className="text-lg text-white font-bold">System Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-primary-foreground/80">Active Chefs</span>
-                  <span className="font-bold text-2xl">{activeChefs.length}</span>
+                  <span className="text-neutral-400">Active Chefs</span>
+                  <span className="font-black text-2xl text-amber-400">{activeChefs.length}</span>
                 </div>
-                <div className="h-px bg-primary-foreground/20" />
+                <div className="h-px bg-white/10" />
                 <div className="flex justify-between items-center">
-                  <span className="text-primary-foreground/80">Pending Menus</span>
-                  <span className="font-bold text-2xl">{pendingMenus.length}</span>
+                  <span className="text-neutral-400">Pending Menus</span>
+                  <span className="font-black text-2xl text-amber-400">{pendingMenus.length}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1153,8 +1153,8 @@ export default function AdminDashboard() {
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setViewMenu(null)} data-testid="button-close-view-menu">Close</Button>
-              <Button 
-                className="bg-green-600"
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
                 onClick={() => {
                   updateStatus({ id: viewMenu.id, status: 'approved' });
                   if (notificationsEnabled) {
@@ -1241,7 +1241,7 @@ export default function AdminDashboard() {
             {viewChef && (
               <div className="space-y-4 py-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-600 font-bold text-2xl">
                     {viewChef.name?.charAt(0) || "?"}
                   </div>
                   <div>

@@ -191,7 +191,7 @@ export default function HouseDirectorDashboard() {
                     <CardDescription>{menu.fraternity}</CardDescription>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Badge variant={menu.status === 'approved' ? 'default' : 'secondary'}>
+                    <Badge className={menu.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold' : 'bg-amber-100 text-amber-800 border border-amber-200 font-semibold'}>
                       {menu.status}
                     </Badge>
                     <Button 
@@ -279,10 +279,10 @@ export default function HouseDirectorDashboard() {
         <div className="p-4 md:p-8 pt-16 md:pt-8">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">House Director Dashboard</h1>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight">House Director Dashboard</h1>
               <p className="text-muted-foreground mt-1">{user?.fraternity}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+            <Button variant="outline" size="sm" className="border-border hover:bg-neutral-100 font-medium" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
               <Settings className="w-4 h-4 mr-2" />
               Account Settings
             </Button>
@@ -414,7 +414,8 @@ export default function HouseDirectorDashboard() {
             <Button variant="outline" onClick={() => setCritiqueModalOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm"
               onClick={handleSubmitCritique}
               disabled={createCritiqueMutation.isPending}
               data-testid="button-submit-critique"

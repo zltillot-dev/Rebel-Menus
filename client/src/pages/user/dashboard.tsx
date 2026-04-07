@@ -222,14 +222,14 @@ export default function UserDashboard() {
 
   const getRequestStatusBadge = (status: string) => {
     if (status === "approved") {
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Approved</Badge>;
+      return <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold hover:bg-emerald-100">Approved</Badge>;
     }
 
     if (status === "rejected" || status === "denied") {
-      return <Badge variant="destructive">Not approved</Badge>;
+      return <Badge variant="destructive" className="font-semibold">Not approved</Badge>;
     }
 
-    return <Badge variant="secondary">Pending review</Badge>;
+    return <Badge variant="secondary" className="bg-amber-100 text-amber-800 border border-amber-200 font-semibold">Pending review</Badge>;
   };
 
   const getRequestSummary = (request: any) => {
@@ -442,7 +442,7 @@ export default function UserDashboard() {
         {currentView === 'menu' && (
           <header className="mb-6 md:mb-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground">Weekly Menu</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-black tracking-tight text-foreground">Weekly Menu</h2>
               <p className="text-muted-foreground mt-1 md:mt-2 flex items-center gap-2 text-sm md:text-base">
                 <Calendar className="w-4 h-4" />
                 {menuContextLabel}: {currentMenu ? format(new Date(currentMenu.weekOf), "MMMM d, yyyy") : weekRange}
@@ -467,7 +467,7 @@ export default function UserDashboard() {
                   ))}
                 </div>
                 <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-muted/20 text-muted-foreground">
-                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
                   <p className="text-sm font-medium">Loading the latest published menu...</p>
                   <p className="text-xs text-muted-foreground">This usually takes just a moment.</p>
                 </div>
@@ -481,29 +481,29 @@ export default function UserDashboard() {
             ) : (
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-3">
-                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <Card className="border-border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                     <CardContent className="p-4">
-                      <p className="text-sm text-muted-foreground">Next available action</p>
-                      <p className="text-base font-semibold">
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Next action</p>
+                      <p className="text-base font-bold mt-1">
                         {firstAvailableMeal ? `Late plate for ${firstAvailableMeal.day} ${firstAvailableMeal.mealType}` : "Browse the week"}
                       </p>
                     </CardContent>
                   </Card>
-                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <Card className="border-border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                     <CardContent className="p-4">
-                      <p className="text-sm text-muted-foreground">Today</p>
-                      <p className="text-base font-semibold">{todaysMenu ? `${todaysMenu.day} has ${todaysMenu.items.length} meal${todaysMenu.items.length === 1 ? "" : "s"}` : "Check the weekly menu below"}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Today</p>
+                      <p className="text-base font-bold mt-1">{todaysMenu ? `${todaysMenu.day} has ${todaysMenu.items.length} meal${todaysMenu.items.length === 1 ? "" : "s"}` : "Check the weekly menu below"}</p>
                     </CardContent>
                   </Card>
-                  <Card className="border-border/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <Card className="border-border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                     <CardContent className="p-4">
-                      <p className="text-sm text-muted-foreground">This week</p>
-                      <p className="text-base font-semibold">{totalMealsThisWeek} published meals</p>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">This week</p>
+                      <p className="text-base font-bold mt-1">{totalMealsThisWeek} published meals</p>
                     </CardContent>
                   </Card>
                 </div>
 
-                <Card className="border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 shadow-sm">
+                <Card className="border-amber-200/60 bg-gradient-to-br from-white via-white to-amber-50/40 shadow-sm">
                   <CardContent className="p-4 md:p-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
@@ -514,7 +514,7 @@ export default function UserDashboard() {
                         </p>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-3 md:w-auto">
-                        <Button onClick={handleOpenLatePlate} className="justify-between shadow-sm transition-all duration-200 active:scale-[0.99]">
+                        <Button onClick={handleOpenLatePlate} className="justify-between shadow-sm transition-all duration-200 active:scale-[0.99] bg-amber-500 hover:bg-amber-600 text-black font-semibold">
                           Late plate
                           <ArrowRight className="h-4 w-4" />
                         </Button>
@@ -534,7 +534,7 @@ export default function UserDashboard() {
                       </div>
                     ) : null}
                     <div className="mt-3 flex items-start gap-2 rounded-xl bg-background/70 p-3 text-sm text-muted-foreground">
-                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                       <p>Everything here is for your house only. Only admins can see who sent feedback.</p>
                     </div>
                   </CardContent>
@@ -544,7 +544,7 @@ export default function UserDashboard() {
                   <Card className="border-border/80">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2">
-                        <UtensilsCrossed className="h-4 w-4 text-primary" />
+                        <UtensilsCrossed className="h-4 w-4 text-amber-500" />
                         <h3 className="font-semibold">Today&apos;s meals</h3>
                       </div>
                       <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -552,7 +552,7 @@ export default function UserDashboard() {
                           <div key={item.id} className="rounded-xl border bg-muted/20 p-3 shadow-sm transition-colors duration-200 hover:bg-muted/30">
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <p className="text-sm font-medium text-primary">{item.meal}</p>
+                                <p className="text-sm font-semibold text-amber-600">{item.meal}</p>
                                 <p className="text-base font-semibold leading-tight">{item.description}</p>
                               </div>
                               {item.calories ? <Badge variant="outline">{item.calories} kcal</Badge> : null}
@@ -605,7 +605,7 @@ export default function UserDashboard() {
                   onClick={() => openRequestModal(type)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                    <div className="rounded-xl bg-amber-500/10 p-2 text-amber-600">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
@@ -619,7 +619,7 @@ export default function UserDashboard() {
             
             {isLoadingRequests ? (
               <div className="h-48 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
                 <p className="text-sm">Loading your requests...</p>
               </div>
             ) : myRequests.length === 0 ? (
@@ -628,7 +628,7 @@ export default function UserDashboard() {
                   <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Requests Yet</h3>
                   <p className="text-muted-foreground mb-4">Need a late plate or substitution? Start here.</p>
-                  <Button onClick={handleOpenLatePlate} className="shadow-sm transition-all duration-200 active:scale-[0.99]">Submit Your First Request</Button>
+                  <Button onClick={handleOpenLatePlate} className="shadow-sm transition-all duration-200 active:scale-[0.99] bg-amber-500 hover:bg-amber-600 text-black font-semibold">Submit Your First Request</Button>
                 </CardContent>
               </Card>
             ) : (
@@ -714,7 +714,7 @@ export default function UserDashboard() {
             
             {isLoadingFeedback ? (
               <div className="h-48 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
                 <p className="text-sm">Loading your feedback history...</p>
               </div>
             ) : myFeedback.length === 0 ? (
@@ -723,7 +723,7 @@ export default function UserDashboard() {
                   <Star className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Feedback Yet</h3>
                   <p className="text-muted-foreground mb-4">After you try a meal, you can rate it in a few seconds from the weekly menu.</p>
-                  <Button onClick={() => setLocation("/")} className="shadow-sm transition-all duration-200 active:scale-[0.99]">Go to Weekly Menu</Button>
+                  <Button onClick={() => setLocation("/")} className="shadow-sm transition-all duration-200 active:scale-[0.99] bg-amber-500 hover:bg-amber-600 text-black font-semibold">Go to Weekly Menu</Button>
                 </CardContent>
               </Card>
             ) : (
@@ -811,8 +811,8 @@ export default function UserDashboard() {
                             }}
                             className={`rounded-xl border px-4 py-3 text-left shadow-sm transition-all duration-200 active:scale-[0.99] ${
                               isSelected
-                                ? "border-primary bg-primary/10 text-foreground ring-2 ring-primary/20"
-                                : "border-border bg-background hover:border-primary/30 hover:bg-muted/50"
+                                ? "border-amber-400 bg-amber-50 text-foreground ring-2 ring-amber-300/30"
+                                : "border-border bg-background hover:border-amber-300/50 hover:bg-amber-50/30"
                             }`}
                             data-testid={`select-item-${format(option.date, "yyyy-MM-dd")}-${option.mealType}`}
                           >
@@ -912,7 +912,7 @@ export default function UserDashboard() {
                 </div>
               ) : null}
               {(feedbackMealDay || feedbackMealType) ? (
-                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+                <div className="rounded-xl border border-amber-300/40 bg-amber-50/50 p-3 text-sm">
                   <span className="font-medium text-foreground">Selected meal:</span>{" "}
                   <span className="text-muted-foreground">
                     {[feedbackMealDay, feedbackMealType].filter(Boolean).join(" ")}

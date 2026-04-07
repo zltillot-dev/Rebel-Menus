@@ -81,11 +81,16 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Left: Branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-black relative overflow-hidden">
-        <div className="relative z-10 text-center max-w-lg flex flex-col items-center gap-6">
+      <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-neutral-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(247,181,77,0.08),transparent_70%)]" />
+        <div className="relative z-10 text-center max-w-lg flex flex-col items-center gap-8">
           <img src={logoImg} alt="Rebel Chefs" className="w-80 h-auto" data-testid="img-logo-desktop" />
-          <p className="text-xl text-white/70 font-light leading-relaxed">
+          <div className="h-px w-16 bg-amber-500/60" />
+          <p className="text-lg text-neutral-400 font-light leading-relaxed tracking-wide">
             Premium dining management for fraternities. View weekly menus, track macros, and manage meal requests with ease.
+          </p>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-500/70 font-semibold">
+            Join the Resistance
           </p>
         </div>
       </div>
@@ -93,21 +98,22 @@ export default function AuthPage() {
       {/* Right: Auth Forms */}
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-8">
-          <div className="lg:hidden flex justify-center mb-8">
+          <div className="lg:hidden flex flex-col items-center mb-8">
             <img src={logoImg} alt="Rebel Chefs" className="w-48 h-auto" data-testid="img-logo-mobile" />
+            <div className="h-px w-12 bg-amber-500/40 mt-4" />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 h-12">
-              <TabsTrigger value="login" className="text-base font-medium">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="text-base font-medium">Create Account</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 h-12 bg-neutral-100 border border-border">
+              <TabsTrigger value="login" className="text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="register" className="text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Create Account</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card className="border-none shadow-none">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-                  <CardDescription>Enter your email to access your dashboard</CardDescription>
+                  <CardTitle className="text-2xl font-black tracking-tight">Welcome back</CardTitle>
+                  <CardDescription className="text-muted-foreground">Enter your email to access your dashboard</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <form onSubmit={loginForm.handleSubmit((data) => {
@@ -159,7 +165,7 @@ export default function AuthPage() {
                         Remember my email
                       </Label>
                     </div>
-                    <Button type="submit" className="w-full h-11 text-base" disabled={isLoggingIn} data-testid="button-login">
+                    <Button type="submit" className="w-full h-12 text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black shadow-sm" disabled={isLoggingIn} data-testid="button-login">
                       {isLoggingIn ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
@@ -170,8 +176,8 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card className="border-none shadow-none">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-2xl font-bold">Get started</CardTitle>
-                  <CardDescription>Create an account with your supported school email to access your house menu</CardDescription>
+                  <CardTitle className="text-2xl font-black tracking-tight">Get started</CardTitle>
+                  <CardDescription className="text-muted-foreground">Create an account with your supported school email to access your house menu</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <form onSubmit={registerForm.handleSubmit((data) => {
@@ -204,7 +210,7 @@ export default function AuthPage() {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full h-11 text-base" disabled={isRegistering}>
+                    <Button type="submit" className="w-full h-12 text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black shadow-sm" disabled={isRegistering}>
                       {isRegistering ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>

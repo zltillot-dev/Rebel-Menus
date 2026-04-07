@@ -9,55 +9,66 @@
   --font-display: 'Outfit', sans-serif;
   --font-mono: 'Fira Code', monospace;
 
-  /* Base Neutral Palette - Clean & Professional */
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
-  
-  /* Primary - Deep Collegiate Blue */
-  --primary: 224 64% 33%;
-  --primary-foreground: 210 40% 98%;
-  
-  /* Secondary - Soft Gold/Sand for accents */
-  --secondary: 43 96% 56%;
-  --secondary-foreground: 224 64% 33%;
-  
+  /* Base — crisp off-white, not tinted */
+  --background: 0 0% 97%;
+  --foreground: 0 0% 9%;
+
+  /* Primary — warm amber/gold, the Rebel Chefs signature */
+  --primary: 38 92% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary — charcoal for contrast elements */
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 0% 98%;
+
   /* UI Elements */
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
-  
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 38 92% 50%;
+  --accent-foreground: 0 0% 100%;
+
   /* Functional Colors */
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 224 64% 33%;
-  --radius: 0.75rem;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 89%;
+  --input: 0 0% 89%;
+  --ring: 38 92% 50%;
+  --radius: 0.625rem;
 
   /* Card Colors */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 0 0% 9%;
+
+  /* Sidebar — dark charcoal to create premium contrast */
+  --sidebar-bg: 0 0% 8%;
+  --sidebar-fg: 0 0% 92%;
+  --sidebar-muted: 0 0% 22%;
+  --sidebar-accent: 38 92% 50%;
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 11%;
-  --secondary: 43 96% 56%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 217 19% 27%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 217 19% 27%;
-  --accent-foreground: 210 40% 98%;
+  --background: 0 0% 7%;
+  --foreground: 0 0% 95%;
+  --primary: 38 90% 55%;
+  --primary-foreground: 0 0% 7%;
+  --secondary: 0 0% 85%;
+  --secondary-foreground: 0 0% 7%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 38 90% 55%;
+  --accent-foreground: 0 0% 7%;
   --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217 19% 27%;
-  --input: 217 19% 27%;
-  --ring: 217 91% 60%;
-  --card: 222 47% 13%;
-  --card-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 95%;
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 38 90% 55%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 95%;
+
+  --sidebar-bg: 0 0% 5%;
+  --sidebar-fg: 0 0% 92%;
+  --sidebar-muted: 0 0% 18%;
+  --sidebar-accent: 38 90% 55%;
 }
 
 @layer base {
@@ -74,26 +85,32 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white/90 backdrop-blur-xl border border-black/[0.06] shadow-lg shadow-black/[0.03];
   }
-  
+
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-200 ease-out hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-amber-600;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
+  @apply bg-black/10 rounded-full hover:bg-black/20 transition-colors;
+}
+
+/* Focus ring with amber accent */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }

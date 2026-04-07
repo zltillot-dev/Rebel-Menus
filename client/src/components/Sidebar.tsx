@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
-import { 
-  LayoutDashboard, 
-  UtensilsCrossed, 
-  CalendarDays, 
-  MessageSquarePlus, 
+import {
+  LayoutDashboard,
+  UtensilsCrossed,
+  CalendarDays,
+  MessageSquarePlus,
   LogOut,
   Users,
   Menu,
@@ -31,17 +31,17 @@ export function Sidebar() {
     const isActive = location === href;
     return (
       <Link href={href}>
-        <Button 
-          variant={isActive ? "default" : "ghost"}
+        <Button
+          variant="ghost"
           className={cn(
-            "w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl",
-            isActive && "shadow-lg shadow-primary/20"
+            "w-full justify-start gap-3 px-4 py-3 h-auto rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.08] transition-colors",
+            isActive && "bg-amber-500/15 text-amber-400 hover:bg-amber-500/20 hover:text-amber-400 font-semibold"
           )}
           onClick={() => setMobileOpen(false)}
           data-testid={`nav-item-${label.toLowerCase().replace(/\s+/g, '-')}`}
         >
-          <Icon className="w-5 h-5" />
-          <span className="font-medium">{label}</span>
+          <Icon className={cn("w-5 h-5", isActive && "text-amber-400")} />
+          <span className="font-medium text-sm">{label}</span>
         </Button>
       </Link>
     );
@@ -50,20 +50,21 @@ export function Sidebar() {
   const SidebarContent = () => (
     <>
       <div className="p-6">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-10 flex items-center justify-between">
           <div>
-            <h1 className="font-display font-bold text-2xl tracking-tight">REBEL CHEFS</h1>
-            <p className="text-xs text-muted-foreground mt-1">
+            <h1 className="font-display font-black text-2xl tracking-tight text-white">REBEL CHEFS</h1>
+            <div className="mt-1 h-0.5 w-12 bg-amber-500 rounded-full" />
+            <p className="text-[11px] text-neutral-500 mt-2">
               {user.fraternity || "Admin Portal"}
             </p>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80 mt-2">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-600 mt-1 font-semibold">
               {roleLabel}
             </p>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="md:hidden"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-neutral-400 hover:text-white hover:bg-white/10"
             onClick={() => setMobileOpen(false)}
             data-testid="button-close-sidebar"
           >
@@ -104,24 +105,24 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto p-6 border-t border-border">
+      <div className="mt-auto p-6 border-t border-white/[0.06]">
         <div className="flex items-center gap-3 mb-4 px-2">
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold text-sm">
+          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-black font-bold text-sm">
             {user.name.charAt(0)}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{roleLabel}</p>
+            <p className="text-sm font-medium truncate text-white">{user.name}</p>
+            <p className="text-[11px] text-neutral-500 capitalize">{roleLabel}</p>
           </div>
         </div>
-        
+
         {isSupported && (
-          <Button 
-            variant={isGranted ? "secondary" : permission === 'denied' ? "ghost" : "outline"}
+          <Button
+            variant="ghost"
             className={cn(
-              "w-full justify-start mb-2",
-              isGranted && "text-green-600",
-              permission === 'denied' && "opacity-50 cursor-not-allowed"
+              "w-full justify-start mb-2 text-neutral-400 hover:text-white hover:bg-white/[0.08]",
+              isGranted && "text-emerald-400 hover:text-emerald-400",
+              permission === 'denied' && "opacity-40 cursor-not-allowed"
             )}
             onClick={() => requestPermission()}
             disabled={isRequesting || permission === 'denied'}
@@ -145,10 +146,10 @@ export function Sidebar() {
             )}
           </Button>
         )}
-        
-        <Button 
+
+        <Button
           variant="ghost"
-          className="w-full justify-start text-destructive"
+          className="w-full justify-start text-red-400/80 hover:text-red-400 hover:bg-red-500/10"
           onClick={() => logout()}
           data-testid="button-logout"
         >
@@ -164,7 +165,7 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden bg-card/95 border border-border shadow-sm"
+        className="fixed top-4 left-4 z-50 md:hidden bg-neutral-900/95 text-white border border-white/10 shadow-lg hover:bg-neutral-800"
         onClick={() => setMobileOpen(true)}
         data-testid="button-open-sidebar"
       >
@@ -172,14 +173,14 @@ export function Sidebar() {
       </Button>
 
       {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <div className={cn(
-        "h-screen w-64 bg-card border-r border-border fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
+        "h-screen w-64 bg-neutral-900 border-r border-white/[0.06] fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
         "md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
