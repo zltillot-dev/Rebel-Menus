@@ -6,7 +6,7 @@ import { api } from "@shared/routes";
 import { insertMenuSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
-import { sendSMS } from "./twilio";
+import { sendSMS } from "./sms-gateway";
 import { generateTempPassword, sendWelcomeEmail } from "./email";
 
 const openai = new OpenAI({

@@ -2,7 +2,7 @@
 // Sends SMS to chefs at cutoff times (12:45 PM for lunch, 5:45 PM for dinner)
 
 import { storage } from './storage';
-import { sendSMS } from './twilio';
+import { sendSMS } from './sms-gateway';
 import { format } from 'date-fns';
 
 interface ScheduledJob {
