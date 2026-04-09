@@ -308,28 +308,28 @@ export default function ChefDashboard() {
       case "approved":
         return {
           label: "Approved",
-          badgeClass: "bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold",
+          badgeClass: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-sm uppercase tracking-wider font-bold text-[10px]",
           summary: "Posted and visible to members.",
           action: "No action needed.",
         };
       case "pending":
         return {
           label: "Submitted",
-          badgeClass: "bg-amber-100 text-amber-800 border border-amber-200 font-semibold",
+          badgeClass: "bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm uppercase tracking-wider font-bold text-[10px]",
           summary: "Waiting on admin review.",
           action: "Hold until admin responds.",
         };
       case "needs_revision":
         return {
           label: "Needs Revision",
-          badgeClass: "bg-red-50 text-red-700 border border-red-200 font-semibold",
+          badgeClass: "bg-red-500/10 text-red-400 border border-red-500/20 rounded-sm uppercase tracking-wider font-bold text-[10px]",
           summary: "Admin sent this back for edits.",
           action: "Open it, fix notes, and resubmit.",
         };
       default:
         return {
           label: "Draft",
-          badgeClass: "bg-neutral-100 text-neutral-700 border border-neutral-200 font-semibold",
+          badgeClass: "bg-neutral-500/10 text-neutral-400 border border-neutral-500/20 rounded-sm uppercase tracking-wider font-bold text-[10px]",
           summary: "Not yet submitted.",
           action: "Finish meals and submit for approval.",
         };
@@ -547,17 +547,18 @@ export default function ChefDashboard() {
     const latestHistory = menu.workflowHistory?.[0];
 
     return (
-      <Card key={menu.id} className={menu.status === 'needs_revision' ? "border-amber-300 bg-amber-50/50" : ""}>
-        <CardHeader className="pb-3">
+      <Card key={menu.id} className={`bg-[#111111] border rounded-sm ${menu.status === 'needs_revision' ? "border-amber-500/30" : "border-white/[0.06]"}`}>
+        <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-3">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <CardTitle className="text-lg">Week of {format(parseISO(menu.weekOf), "MMM d, yyyy")}</CardTitle>
+              <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-lg">Week of {format(parseISO(menu.weekOf), "MMM d, yyyy")}</CardTitle>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge className={statusMeta.badgeClass}>{statusMeta.label}</Badge>
-                <Badge variant="outline">{filledCount}/{totalMealSlots} meals planned</Badge>
-                <Button 
-                  size="sm" 
+                <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{filledCount}/{totalMealSlots} meals planned</Badge>
+                <Button
+                  size="sm"
                   variant="ghost"
+                  className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm"
                   onClick={() => exportMenuToPDF({
                     id: menu.id,
                     weekOf: menu.weekOf,
@@ -583,12 +584,12 @@ export default function ChefDashboard() {
                   PDF
                 </Button>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{statusMeta.summary}</p>
-              <p className="text-xs text-muted-foreground">{statusMeta.action}</p>
+              <p className="mt-2 text-sm text-neutral-500">{statusMeta.summary}</p>
+              <p className="text-xs text-neutral-500">{statusMeta.action}</p>
             </div>
             {showActions && (menu.status === 'pending' || menu.status === 'needs_revision') && (
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleStartEdit(menu)} data-testid={`button-edit-menu-${menu.id}`}>
+                <Button size="sm" variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => handleStartEdit(menu)} data-testid={`button-edit-menu-${menu.id}`}>
                   <Pencil className="w-4 h-4 mr-1" /> Edit
                 </Button>
                 {menu.status === "draft" && (
@@ -598,15 +599,15 @@ export default function ChefDashboard() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Draft Menu?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Draft Menu?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-neutral-400">
                           Only draft menus can be deleted. Submitted menus are preserved to keep operational history intact.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={() => handleDelete(menu.id)}>Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -616,16 +617,16 @@ export default function ChefDashboard() {
             )}
           </div>
           {menu.adminNotes && (
-            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-              <div className="mb-1 flex items-center gap-2 font-medium text-amber-900">
+            <div className="mt-3 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+              <div className="mb-1 flex items-center gap-2 font-medium text-amber-400">
                 <AlertCircle className="h-4 w-4" />
                 Admin revision notes
               </div>
-              <p className="text-amber-900/90">{menu.adminNotes}</p>
+              <p className="text-amber-400/90">{menu.adminNotes}</p>
             </div>
           )}
           {latestHistory && (
-            <div className="mt-3 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            <div className="mt-3 rounded-sm bg-white/[0.03] p-3 text-xs text-neutral-500">
               Last workflow update: {latestHistory.action.replace(/_/g, " ")} on {format(new Date(latestHistory.createdAt), "MMM d 'at' h:mm a")}
               {latestHistory.notes ? ` • ${latestHistory.notes}` : ""}
             </div>
@@ -638,16 +639,16 @@ export default function ChefDashboard() {
                 const dayItems = menu.items.filter((item: any) => item.day === day);
                 if (dayItems.length === 0) return null;
                 return (
-                  <div key={day} className="border-b pb-2 last:border-b-0">
-                    <div className="font-medium text-sm text-muted-foreground">{day}</div>
+                  <div key={day} className="border-b border-white/[0.06] pb-2 last:border-b-0">
+                    <div className="font-display font-bold text-sm text-neutral-500 uppercase tracking-wide">{day}</div>
                     {dayItems.map((item: any) => (
-                      <div key={`${item.day}-${item.meal}`} className="ml-2 text-sm">
-                        <span className="font-medium">{item.meal}:</span> {item.description}
+                      <div key={`${item.day}-${item.meal}`} className="ml-2 text-sm text-neutral-300">
+                        <span className="font-medium text-white">{item.meal}:</span> {item.description}
                         {(item.side1 || item.side2 || item.side3) && (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {item.side1 && <Badge variant="outline" className="text-xs">{item.side1}</Badge>}
-                            {item.side2 && <Badge variant="outline" className="text-xs">{item.side2}</Badge>}
-                            {item.side3 && <Badge variant="outline" className="text-xs">{item.side3}</Badge>}
+                            {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side1}</Badge>}
+                            {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side2}</Badge>}
+                            {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side3}</Badge>}
                           </div>
                         )}
                       </div>
@@ -657,7 +658,7 @@ export default function ChefDashboard() {
               })}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No items in this menu</p>
+            <p className="text-neutral-500 text-sm">No items in this menu</p>
           )}
         </CardContent>
       </Card>
@@ -666,9 +667,9 @@ export default function ChefDashboard() {
 
   const renderMenuForm = (items: any[], onChange: (idx: number, field: string, value: any) => void) => (
     <Tabs defaultValue="Monday" className="w-full">
-      <TabsList className="grid grid-cols-5 mb-6">
+      <TabsList className="h-10 bg-[#111111] border border-white/[0.06] rounded-sm p-0.5 grid grid-cols-5 mb-6">
         {DAYS.map(day => (
-          <TabsTrigger key={day} value={day} data-testid={`tab-day-${day}`}>{day}</TabsTrigger>
+          <TabsTrigger key={day} value={day} className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid={`tab-day-${day}`}>{day}</TabsTrigger>
         ))}
       </TabsList>
       
@@ -678,10 +679,10 @@ export default function ChefDashboard() {
             .map((item, idx) => ({ item, idx }))
             .filter(({ item }) => item.day === day)
             .map(({ item, idx }) => (
-              <Card key={idx} className="p-4">
+              <Card key={idx} className="bg-[#111111] border border-white/[0.06] rounded-sm p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-lg">{item.meal}</h4>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <h4 className="font-display font-bold uppercase tracking-wide text-white text-lg">{item.meal}</h4>
+                  <div className="flex items-center gap-1 text-xs text-neutral-500">
                     <Sparkles className="w-3 h-3" />
                     <span>Macros auto-estimated on save</span>
                   </div>
@@ -690,40 +691,44 @@ export default function ChefDashboard() {
                 <div className="grid gap-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <Label>Main Protein/Item</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Main Protein/Item</Label>
                       <Input
                         placeholder="e.g., Grilled Chicken"
                         value={item.description}
                         onChange={(e) => onChange(idx, "description", e.target.value)}
+                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                         data-testid={`input-description-${idx}`}
                       />
                     </div>
                     <div>
-                      <Label>Side 1</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Side 1</Label>
                       <Input
                         placeholder="e.g., Rice"
                         value={item.side1}
                         onChange={(e) => onChange(idx, "side1", e.target.value)}
+                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                         data-testid={`input-side1-${idx}`}
                       />
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <Label>Side 2</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Side 2</Label>
                       <Input
                         placeholder="e.g., Vegetables"
                         value={item.side2}
                         onChange={(e) => onChange(idx, "side2", e.target.value)}
+                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                         data-testid={`input-side2-${idx}`}
                       />
                     </div>
                     <div>
-                      <Label>Side 3 / Details</Label>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Side 3 / Details</Label>
                       <Input
                         placeholder="e.g., Gravy"
                         value={item.side3}
                         onChange={(e) => onChange(idx, "side3", e.target.value)}
+                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                         data-testid={`input-side3-${idx}`}
                       />
                     </div>
@@ -737,23 +742,23 @@ export default function ChefDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-background" data-testid="chef-dashboard">
+    <div className="flex min-h-screen bg-[#0A0A0A]" data-testid="chef-dashboard">
       <Sidebar />
-      <div className="flex-1 md:ml-64">
+      <div className="flex-1 pl-64 min-h-screen bg-[#0A0A0A]">
         <ScrollArea className="h-screen">
           <div className="p-4 pt-16 md:pt-6 md:p-6">
-            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <header className="pt-8 pb-6 px-8 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-xl md:text-2xl font-bold" data-testid="text-dashboard-title">
+                <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white" data-testid="text-dashboard-title">
                   {isManageMenusView ? "Manage Menus" : "Chef Dashboard"}
                 </h1>
-                <p className="text-muted-foreground text-sm">{user?.fraternity}</p>
+                <p className="text-neutral-500 text-sm">{user?.fraternity}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPhoneDialogOpen(true)} data-testid="button-sms-settings">
+                <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setPhoneDialogOpen(true)} data-testid="button-sms-settings">
                   <Phone className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">SMS</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+                <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
                   <UserCog className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">Account</span>
                 </Button>
                 {isManageMenusView && (
@@ -762,40 +767,40 @@ export default function ChefDashboard() {
                     if (open) initializeMenu();
                   }}>
                     <DialogTrigger asChild>
-                      <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm" data-testid="button-create-menu">
+                      <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" data-testid="button-create-menu">
                         <Plus className="w-4 h-4 mr-2" /> Create Menu
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Create Weekly Menu</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Create Weekly Menu</DialogTitle>
+                        <DialogDescription className="text-neutral-400">
                           Build the full week in one pass, then send it to admin for approval when it is ready.
                         </DialogDescription>
                       </DialogHeader>
                       
                       <div className="py-4">
                         <div className="mb-6">
-                          <Label>Week Of (Monday)</Label>
-                          <Input 
-                            type="date" 
-                            value={weekOf} 
-                            onChange={(e) => setWeekOf(e.target.value)} 
-                            className="w-full sm:w-64"
+                          <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Week Of (Monday)</Label>
+                          <Input
+                            type="date"
+                            value={weekOf}
+                            onChange={(e) => setWeekOf(e.target.value)}
+                            className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 w-full sm:w-64"
                             data-testid="input-week-of"
                           />
-                          <p className="text-xs text-muted-foreground mt-2">Choose the Monday for the service week you are planning.</p>
+                          <p className="text-xs text-neutral-500 mt-2">Choose the Monday for the service week you are planning.</p>
                         </div>
 
-                        <div className="mb-6 rounded-xl border bg-muted/30 p-4">
+                        <div className="mb-6 rounded-sm border border-white/[0.06] bg-[#161616] p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <div className="text-sm font-medium">Menu progress</div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-sm font-medium text-white">Menu progress</div>
+                              <div className="text-sm text-neutral-500">
                                 {menuDraftProgress.completed} of {totalMealSlots} meal slots filled
                               </div>
                             </div>
-                            <Badge variant="outline">{menuDraftProgress.remaining} left</Badge>
+                            <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{menuDraftProgress.remaining} left</Badge>
                           </div>
                         </div>
 
@@ -803,8 +808,8 @@ export default function ChefDashboard() {
                       </div>
                       
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreateMenu} disabled={isCreating} data-testid="button-submit-menu">
+                        <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                        <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleCreateMenu} disabled={isCreating} data-testid="button-submit-menu">
                           {isCreating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</> : <><Send className="w-4 h-4 mr-2" /> Submit for Approval</>}
                         </Button>
                       </DialogFooter>
@@ -817,56 +822,56 @@ export default function ChefDashboard() {
             {!isManageMenusView ? (
               /* DASHBOARD VIEW */
               <div className="space-y-6">
-                <Card className="border-amber-200/50 bg-gradient-to-br from-white via-white to-amber-50/50 shadow-sm">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-2 font-black">
+                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-4">
+                    <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <ChefHat className="h-5 w-5 text-amber-500" />
                       Daily Workspace
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-neutral-500">
                       Start with what needs action now, then clear the inbox.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-                      <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Revision</div>
-                        <div className="mt-1 text-2xl font-black text-foreground">{menusNeedingRevision.length}</div>
-                        <div className="text-xs text-muted-foreground">menus need edits</div>
+                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Revision</div>
+                        <div className="mt-1 text-2xl font-black text-white">{menusNeedingRevision.length}</div>
+                        <div className="text-xs text-neutral-500">menus need edits</div>
                       </div>
-                      <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Submitted</div>
-                        <div className="mt-1 text-2xl font-black text-foreground">{pendingMenus.length}</div>
-                        <div className="text-xs text-muted-foreground">awaiting admin</div>
+                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Submitted</div>
+                        <div className="mt-1 text-2xl font-black text-white">{pendingMenus.length}</div>
+                        <div className="text-xs text-neutral-500">awaiting admin</div>
                       </div>
-                      <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Tasks</div>
-                        <div className="mt-1 text-2xl font-black text-foreground">{incompleteTasks.length}</div>
-                        <div className="text-xs text-muted-foreground">open reminders</div>
+                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Tasks</div>
+                        <div className="mt-1 text-2xl font-black text-white">{incompleteTasks.length}</div>
+                        <div className="text-xs text-neutral-500">open reminders</div>
                       </div>
-                      <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Late Plates</div>
-                        <div className="mt-1 text-2xl font-black text-foreground">{Object.keys(todaysLatePlates).length}</div>
-                        <div className="text-xs text-muted-foreground">today's services</div>
+                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Late Plates</div>
+                        <div className="mt-1 text-2xl font-black text-white">{Object.keys(todaysLatePlates).length}</div>
+                        <div className="text-xs text-neutral-500">today's services</div>
                       </div>
-                      <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Inbox</div>
-                        <div className="mt-1 text-2xl font-black text-foreground">{totalUnreadInbox}</div>
-                        <div className="text-xs text-muted-foreground">unread items</div>
+                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Inbox</div>
+                        <div className="mt-1 text-2xl font-black text-white">{totalUnreadInbox}</div>
+                        <div className="text-xs text-neutral-500">unread items</div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-3 rounded-sm border border-white/[0.06] bg-[#161616] p-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <div className="text-sm font-medium">{nextActionSummary.title}</div>
-                        <div className="text-sm text-muted-foreground">{nextActionSummary.description}</div>
+                        <div className="text-sm font-medium text-white">{nextActionSummary.title}</div>
+                        <div className="text-sm text-neutral-500">{nextActionSummary.description}</div>
                         {nextActionMenu && (
-                          <div className="mt-2 text-xs text-muted-foreground">
+                          <div className="mt-2 text-xs text-neutral-500">
                             Focus menu: week of {format(parseISO(nextActionMenu.weekOf), "MMMM d, yyyy")}
                           </div>
                         )}
                       </div>
-                      <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm" onClick={() => setLocation("/chef/menus")} data-testid="button-next-action">
+                      <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={() => setLocation("/chef/menus")} data-testid="button-next-action">
                         {nextActionSummary.cta}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -875,13 +880,13 @@ export default function ChefDashboard() {
                 </Card>
 
                 {/* Current Week's Menu */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+                    <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <CalendarIcon className="w-5 h-5" />
                       This Week's Menu
                     </CardTitle>
-                    <CardDescription>Week of {format(currentWeekStart, "MMMM d, yyyy")}</CardDescription>
+                    <CardDescription className="text-neutral-500">Week of {format(currentWeekStart, "MMMM d, yyyy")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {currentWeekMenu ? (
@@ -890,13 +895,13 @@ export default function ChefDashboard() {
                           <Badge className={getStatusMeta(currentWeekMenu.status).badgeClass}>
                             {getStatusMeta(currentWeekMenu.status).label}
                           </Badge>
-                          <Badge variant="outline">{getMenuFilledCount(currentWeekMenu.items || [])}/{totalMealSlots} meals planned</Badge>
-                          <span className="text-sm text-muted-foreground">{getStatusMeta(currentWeekMenu.status).action}</span>
+                          <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{getMenuFilledCount(currentWeekMenu.items || [])}/{totalMealSlots} meals planned</Badge>
+                          <span className="text-sm text-neutral-500">{getStatusMeta(currentWeekMenu.status).action}</span>
                         </div>
                         {currentWeekMenu.adminNotes && (
-                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-                            <div className="mb-1 font-medium text-amber-900">Admin notes</div>
-                            <p className="text-amber-900/90">{currentWeekMenu.adminNotes}</p>
+                          <div className="rounded-sm border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                            <div className="mb-1 font-medium text-amber-400">Admin notes</div>
+                            <p className="text-amber-400/90">{currentWeekMenu.adminNotes}</p>
                           </div>
                         )}
                         {currentWeekMenu.items && currentWeekMenu.items.length > 0 ? (
@@ -904,47 +909,47 @@ export default function ChefDashboard() {
                             {DAYS.map(day => {
                               const dayItems = currentWeekMenu.items.filter((item: any) => item.day === day);
                               return (
-                                <div key={day} className="border rounded-lg p-3">
-                                  <div className="font-semibold text-sm mb-2">{day}</div>
+                                <div key={day} className="border border-white/[0.06] rounded-sm bg-[#161616] p-3">
+                                  <div className="font-display font-bold text-sm mb-2 text-white uppercase tracking-wide">{day}</div>
                                   {dayItems.length > 0 ? dayItems.map((item: any) => (
-                                    <div key={`${item.day}-${item.meal}`} className="text-sm mb-2">
-                                      <span className="font-medium text-primary">{item.meal}</span>
+                                    <div key={`${item.day}-${item.meal}`} className="text-sm mb-2 text-neutral-300">
+                                      <span className="font-medium text-amber-400">{item.meal}</span>
                                       <div>{item.description}</div>
                                       {(item.side1 || item.side2 || item.side3) && (
                                         <div className="flex flex-wrap gap-1 mt-1">
-                                          {item.side1 && <Badge variant="outline" className="text-xs">{item.side1}</Badge>}
-                                          {item.side2 && <Badge variant="outline" className="text-xs">{item.side2}</Badge>}
-                                          {item.side3 && <Badge variant="outline" className="text-xs">{item.side3}</Badge>}
+                                          {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side1}</Badge>}
+                                          {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side2}</Badge>}
+                                          {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side3}</Badge>}
                                         </div>
                                       )}
                                     </div>
                                   )) : (
-                                    <div className="text-xs text-muted-foreground">No meals</div>
+                                    <div className="text-xs text-neutral-500">No meals</div>
                                   )}
                                 </div>
                               );
                             })}
                           </div>
                         ) : (
-                          <p className="text-muted-foreground">No items in this menu</p>
+                          <p className="text-neutral-500">No items in this menu</p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <Button variant="outline" onClick={() => setLocation("/chef/menus")}>
+                          <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setLocation("/chef/menus")}>
                             Manage Menus
                           </Button>
                           {currentWeekMenu.status === "needs_revision" && (
-                            <Button onClick={() => setLocation("/chef/menus")}>
+                            <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={() => setLocation("/chef/menus")}>
                               Fix and Resubmit
                             </Button>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
+                      <div className="text-center py-8 text-neutral-500">
                         <CalendarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p>No menu for this week yet.</p>
                         <p className="text-sm mt-1">Create it once, submit it, and track approval from Manage Menus.</p>
-                        <Button className="mt-4 bg-amber-500 hover:bg-amber-600 text-black font-semibold shadow-sm" onClick={() => setLocation('/chef/menus')}>
+                        <Button className="mt-4 bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={() => setLocation('/chef/menus')}>
                           Create Menu
                         </Button>
                       </div>
@@ -953,13 +958,13 @@ export default function ChefDashboard() {
                 </Card>
 
                 {/* Tasks & Reminders */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+                    <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <ListTodo className="w-5 h-5" />
                       Tasks & Reminders
                     </CardTitle>
-                    <CardDescription>Tasks assigned by the administrator</CardDescription>
+                    <CardDescription className="text-neutral-500">Tasks assigned by the administrator</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {isLoadingTasks ? (
@@ -967,7 +972,7 @@ export default function ChefDashboard() {
                         <Loader2 className="w-6 h-6 animate-spin" />
                       </div>
                     ) : incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
+                      <div className="text-center py-8 text-neutral-500">
                         <CheckSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p>No tasks assigned</p>
                       </div>
@@ -975,24 +980,24 @@ export default function ChefDashboard() {
                       <div className="space-y-4">
                         {sortedIncompleteTasks.length > 0 && (
                           <div>
-                            <h4 className="font-medium mb-2">To Do</h4>
+                            <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">To Do</h4>
                             <div className="space-y-2">
                               {sortedIncompleteTasks.map((task: any) => (
-                                <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg" data-testid={`task-${task.id}`}>
+                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.06] rounded-sm bg-[#161616]" data-testid={`task-${task.id}`}>
                                   <Checkbox
                                     checked={task.isCompleted}
                                     onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
                                     data-testid={`checkbox-task-${task.id}`}
                                   />
                                   <div className="flex-1">
-                                    <div className="font-medium">{task.title}</div>
-                                    {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+                                    <div className="font-medium text-white">{task.title}</div>
+                                    {task.description && <p className="text-sm text-neutral-500">{task.description}</p>}
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                      <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
+                                      <Badge className={`rounded-sm uppercase text-[10px] tracking-wider font-bold ${task.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : task.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-neutral-500/10 text-neutral-400 border border-neutral-500/20'}`}>
                                         {task.priority} priority
                                       </Badge>
                                       {task.dueDate && (
-                                        <Badge variant="outline" className="text-xs">
+                                        <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">
                                           Due: {format(parseISO(task.dueDate), "MMM d")}
                                         </Badge>
                                       )}
@@ -1006,19 +1011,19 @@ export default function ChefDashboard() {
                         
                         {completedTasks.length > 0 && (
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-neutral-500 hover:text-white font-display font-bold uppercase tracking-wide">
                               <ChevronRight className="w-4 h-4" />
                               {completedTasks.length} completed task{completedTasks.length !== 1 ? 's' : ''}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2 space-y-2">
                               {completedTasks.map((task: any) => (
-                                <div key={task.id} className="flex items-start gap-3 p-3 border rounded-lg opacity-60" data-testid={`task-completed-${task.id}`}>
+                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.06] rounded-sm bg-[#161616] opacity-60" data-testid={`task-completed-${task.id}`}>
                                   <Checkbox
                                     checked={task.isCompleted}
                                     onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
                                   />
                                   <div className="flex-1">
-                                    <div className="font-medium line-through">{task.title}</div>
+                                    <div className="font-medium line-through text-neutral-500">{task.title}</div>
                                   </div>
                                 </div>
                               ))}
@@ -1034,15 +1039,15 @@ export default function ChefDashboard() {
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Late Plates */}
                   <Collapsible open={latePlatesOpen} onOpenChange={setLatePlatesOpen}>
-                    <Card>
+                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50">
-                          <CardTitle className="flex items-center justify-between">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                          <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <Clock className="w-5 h-5" />
                               Late Plates
                               {latePlates && latePlates.length > 0 && (
-                                <Badge>{latePlates.length}</Badge>
+                                <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{latePlates.length}</Badge>
                               )}
                             </span>
                             {latePlatesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -1056,22 +1061,22 @@ export default function ChefDashboard() {
                               <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
                           ) : !latePlates || latePlates.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No late plate requests</p>
+                            <p className="text-neutral-500 text-sm">No late plate requests</p>
                           ) : (
                             <div className="space-y-3 max-h-64 overflow-y-auto">
                               {Object.entries(latePlatesByMealService).map(([key, plates]) => {
                                 const [dateStr, mealType] = key.split("|");
                                 const isTodays = isSameDay(parseISO(dateStr), new Date());
                                 return (
-                                  <div key={key} className={`p-3 rounded-lg ${isTodays ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50'}`}>
-                                    <div className="font-medium text-sm mb-2 flex flex-wrap items-center gap-2">
+                                  <div key={key} className={`p-3 rounded-sm ${isTodays ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-white/[0.03]'}`}>
+                                    <div className="font-medium text-sm mb-2 flex flex-wrap items-center gap-2 text-white">
                                       {format(parseISO(dateStr), "EEEE, MMM d")} - {mealType}
-                                      {isTodays && <Badge className="ml-2" variant="default">Today</Badge>}
-                                      <Badge variant="outline">{plates.length} request{plates.length === 1 ? "" : "s"}</Badge>
+                                      {isTodays && <Badge className="ml-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">Today</Badge>}
+                                      <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{plates.length} request{plates.length === 1 ? "" : "s"}</Badge>
                                     </div>
                                     <div className="space-y-1">
                                       {plates.map((plate: any) => (
-                                        <div key={plate.id} className="flex items-center gap-2 text-sm">
+                                        <div key={plate.id} className="flex items-center gap-2 text-sm text-neutral-300">
                                           <User className="w-3 h-3" />
                                           <span>{plate.userName || plate.userEmail}</span>
                                         </div>
@@ -1082,7 +1087,7 @@ export default function ChefDashboard() {
                               })}
                             </div>
                           )}
-                          <p className="mt-3 text-xs text-muted-foreground">
+                          <p className="mt-3 text-xs text-neutral-500">
                             Late plates are grouped by service so you can prep each pickup window quickly.
                           </p>
                         </CardContent>
@@ -1092,15 +1097,15 @@ export default function ChefDashboard() {
 
                   {/* Substitutions */}
                   <Collapsible open={substitutionsOpen} onOpenChange={setSubstitutionsOpen}>
-                    <Card>
+                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50">
-                          <CardTitle className="flex items-center justify-between">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                          <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <RefreshCcw className="w-5 h-5" />
                               Substitutions
-                              {unreadSubstitutions > 0 && <Badge>{unreadSubstitutions}</Badge>}
-                              {substitutions.length > 0 && unreadSubstitutions === 0 && <Badge variant="outline">{substitutions.length}</Badge>}
+                              {unreadSubstitutions > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadSubstitutions}</Badge>}
+                              {substitutions.length > 0 && unreadSubstitutions === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{substitutions.length}</Badge>}
                             </span>
                             {substitutionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1113,11 +1118,11 @@ export default function ChefDashboard() {
                               <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
                           ) : substitutions.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No substitution requests</p>
+                            <p className="text-neutral-500 text-sm">No substitution requests</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedSubstitutions.map((req: any) => (
-                                <div key={req.id} className={`p-3 rounded-lg ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`substitution-item-${req.id}`}>
+                                <div key={req.id} className={`p-3 rounded-sm ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`substitution-item-${req.id}`}>
                                   <div className="flex items-start gap-3">
                                     <Checkbox
                                       checked={req.isRead || false}
@@ -1126,25 +1131,25 @@ export default function ChefDashboard() {
                                     />
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-sm">{req.userName || req.userEmail}</span>
+                                        <span className="font-medium text-sm text-white">{req.userName || req.userEmail}</span>
                                         {req.status && req.status !== 'pending' && (
-                                          <Badge variant={req.status === 'approved' ? 'default' : 'destructive'} className="text-xs">
+                                          <Badge className={`rounded-sm uppercase text-[10px] tracking-wider font-bold ${req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                                             {req.status}
                                           </Badge>
                                         )}
                                       </div>
-                                      <p className="text-sm text-muted-foreground">{req.details}</p>
+                                      <p className="text-sm text-neutral-500">{req.details}</p>
                                       {(req.mealDay || req.mealType) && (
-                                        <p className="mt-1 text-xs text-muted-foreground">
+                                        <p className="mt-1 text-xs text-neutral-500">
                                           {req.mealDay || "Meal date not provided"} {req.mealType || ""}
                                         </p>
                                       )}
                                       {req.status === 'pending' && (
                                         <div className="flex gap-2 mt-2">
-                                          <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            className="text-green-600 border-green-300 dark:border-green-800"
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 font-display font-bold uppercase tracking-wider rounded-sm"
                                             onClick={() => {
                                               updateRequestStatus({ id: req.id, status: 'approved' });
                                               if (notificationsEnabled) {
@@ -1156,10 +1161,10 @@ export default function ChefDashboard() {
                                           >
                                             <CheckCircle className="w-4 h-4 mr-1" /> Approve
                                           </Button>
-                                          <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            className="text-red-600 border-red-300 dark:border-red-800"
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-red-400 border-red-500/30 hover:bg-red-500/10 font-display font-bold uppercase tracking-wider rounded-sm"
                                             onClick={() => {
                                               updateRequestStatus({ id: req.id, status: 'rejected' });
                                               if (notificationsEnabled) {
@@ -1186,15 +1191,15 @@ export default function ChefDashboard() {
 
                   {/* Menu Suggestions */}
                   <Collapsible open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
-                    <Card>
+                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50">
-                          <CardTitle className="flex items-center justify-between">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                          <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <Lightbulb className="w-5 h-5" />
                               Meal Suggestions
-                              {unreadSuggestions > 0 && <Badge>{unreadSuggestions}</Badge>}
-                              {menuSuggestions.length > 0 && unreadSuggestions === 0 && <Badge variant="outline">{menuSuggestions.length}</Badge>}
+                              {unreadSuggestions > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadSuggestions}</Badge>}
+                              {menuSuggestions.length > 0 && unreadSuggestions === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{menuSuggestions.length}</Badge>}
                             </span>
                             {suggestionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1207,19 +1212,19 @@ export default function ChefDashboard() {
                               <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
                           ) : menuSuggestions.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No menu suggestions</p>
+                            <p className="text-neutral-500 text-sm">No menu suggestions</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedSuggestions.map((req: any) => (
-                                <div key={req.id} className={`p-3 rounded-lg flex items-start gap-3 ${req.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`suggestion-item-${req.id}`}>
+                                <div key={req.id} className={`p-3 rounded-sm flex items-start gap-3 ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`suggestion-item-${req.id}`}>
                                   <Checkbox
                                     checked={req.isRead || false}
                                     onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
                                     data-testid={`checkbox-suggestion-${req.id}`}
                                   />
                                   <div className="flex-1">
-                                    <div className="font-medium text-sm">{req.userName || req.userEmail}</div>
-                                    <p className="text-sm text-muted-foreground">{req.details}</p>
+                                    <div className="font-medium text-sm text-white">{req.userName || req.userEmail}</div>
+                                    <p className="text-sm text-neutral-500">{req.details}</p>
                                   </div>
                                 </div>
                               ))}
@@ -1232,15 +1237,15 @@ export default function ChefDashboard() {
 
                   {/* Feedback */}
                   <Collapsible open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                    <Card>
+                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50">
-                          <CardTitle className="flex items-center justify-between">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                          <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <MessageSquare className="w-5 h-5" />
                               Feedback
-                              {unreadFeedback > 0 && <Badge>{unreadFeedback}</Badge>}
-                              {chefFeedback && chefFeedback.length > 0 && unreadFeedback === 0 && <Badge variant="outline">{chefFeedback.length}</Badge>}
+                              {unreadFeedback > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadFeedback}</Badge>}
+                              {chefFeedback && chefFeedback.length > 0 && unreadFeedback === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{chefFeedback.length}</Badge>}
                             </span>
                             {feedbackOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1253,11 +1258,11 @@ export default function ChefDashboard() {
                               <Loader2 className="w-6 h-6 animate-spin" />
                             </div>
                           ) : !chefFeedback || chefFeedback.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No feedback yet</p>
+                            <p className="text-neutral-500 text-sm">No feedback yet</p>
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedFeedback.map((fb: any) => (
-                                <div key={fb.id} className={`p-3 rounded-lg flex items-start gap-3 ${fb.isRead ? 'bg-muted/30 opacity-60' : 'bg-muted/50'}`} data-testid={`feedback-item-${fb.id}`}>
+                                <div key={fb.id} className={`p-3 rounded-sm flex items-start gap-3 ${fb.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`feedback-item-${fb.id}`}>
                                   <Checkbox
                                     checked={fb.isRead || false}
                                     onCheckedChange={(checked) => markFeedbackRead({ id: fb.id, isRead: !!checked })}
@@ -1267,13 +1272,13 @@ export default function ChefDashboard() {
                                     <div className="flex items-center gap-2 mb-1">
                                       <div className="flex">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                          <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
+                                          <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-amber-400 fill-amber-400' : 'text-neutral-700'}`} />
                                         ))}
                                       </div>
-                                      <span className="text-xs text-muted-foreground">{fb.mealDay} {fb.mealType}</span>
+                                      <span className="text-xs text-neutral-500">{fb.mealDay} {fb.mealType}</span>
                                     </div>
-                                    {fb.comment && <p className="text-sm">{fb.comment}</p>}
-                                    <div className="text-xs text-muted-foreground mt-1">
+                                    {fb.comment && <p className="text-sm text-neutral-300">{fb.comment}</p>}
+                                    <div className="text-xs text-neutral-500 mt-1">
                                       {fb.userName || "Anonymous"}
                                     </div>
                                   </div>
@@ -1281,7 +1286,7 @@ export default function ChefDashboard() {
                               ))}
                             </div>
                           )}
-                          <p className="mt-3 text-xs text-muted-foreground">
+                          <p className="mt-3 text-xs text-neutral-500">
                             Member identity is hidden from chefs. Only admins can view who submitted feedback.
                           </p>
                         </CardContent>
@@ -1296,11 +1301,11 @@ export default function ChefDashboard() {
                 {/* Menus Needing Revision */}
                 {menusNeedingRevision.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold text-amber-600 flex items-center gap-2 mb-3">
+                    <h2 className="font-display font-bold uppercase tracking-wide text-amber-400 flex items-center gap-2 mb-3 text-lg">
                       <AlertCircle className="w-5 h-5" />
                       Needs Revision ({menusNeedingRevision.length})
                     </h2>
-                    <p className="mb-3 text-sm text-muted-foreground">
+                    <p className="mb-3 text-sm text-neutral-500">
                       Fix these first. Admin notes are shown inside each menu card.
                     </p>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1311,14 +1316,14 @@ export default function ChefDashboard() {
 
                 {/* Current Week */}
                 <div>
-                  <h2 className="text-lg font-semibold mb-3">Current Week</h2>
+                  <h2 className="font-display font-bold uppercase tracking-wide text-white mb-3 text-lg">Current Week</h2>
                   {currentWeekMenu ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {renderMenuCard(currentWeekMenu, true)}
                     </div>
                   ) : (
-                    <Card>
-                      <CardContent className="py-8 text-center text-muted-foreground">
+                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                      <CardContent className="py-8 text-center text-neutral-500">
                         No menu for this week. Click "Create Menu" to get started.
                       </CardContent>
                     </Card>
@@ -1328,7 +1333,7 @@ export default function ChefDashboard() {
                 {/* Future Menus */}
                 {futureMenus.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold mb-3">Upcoming Menus</h2>
+                    <h2 className="font-display font-bold uppercase tracking-wide text-white mb-3 text-lg">Upcoming Menus</h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {futureMenus.map((menu: any) => renderMenuCard(menu, true))}
                     </div>
@@ -1338,7 +1343,7 @@ export default function ChefDashboard() {
                 {/* Past Menus */}
                 {pastMenus.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold mb-3">Past Menus</h2>
+                    <h2 className="font-display font-bold uppercase tracking-wide text-white mb-3 text-lg">Past Menus</h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {pastMenus.map((menu: any) => renderMenuCard(menu, false))}
                     </div>
@@ -1352,53 +1357,53 @@ export default function ChefDashboard() {
 
       {/* Edit Menu Dialog */}
       <Dialog open={!!editMenu} onOpenChange={(open) => { if (!open) setEditMenu(null); }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Menu</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Edit Menu</DialogTitle>
+            <DialogDescription className="text-neutral-400">
               Update menu items and resubmit for approval.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <div className="mb-6">
-              <Label>Week Of (Monday)</Label>
-              <Input 
-                type="date" 
-                value={editWeekOf} 
-                onChange={(e) => setEditWeekOf(e.target.value)} 
-                className="w-full sm:w-64"
+              <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Week Of (Monday)</Label>
+              <Input
+                type="date"
+                value={editWeekOf}
+                onChange={(e) => setEditWeekOf(e.target.value)}
+                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 w-full sm:w-64"
                 data-testid="input-edit-week-of"
               />
             </div>
 
-            <div className="mb-6 rounded-xl border bg-muted/30 p-4">
+            <div className="mb-6 rounded-sm border border-white/[0.06] bg-[#161616] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-medium">Edit progress</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm font-medium text-white">Edit progress</div>
+                  <div className="text-sm text-neutral-500">
                     {editMenuProgress.completed} of {totalMealSlots} meal slots filled
                   </div>
                 </div>
-                <Badge variant="outline">{editMenuProgress.remaining} left</Badge>
+                <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{editMenuProgress.remaining} left</Badge>
               </div>
               {editMenu?.adminNotes && (
-                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-                  <div className="mb-1 flex items-center gap-2 font-medium text-amber-900">
+                <div className="mt-3 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium text-amber-400">
                     <ClipboardCheck className="h-4 w-4" />
                     Admin notes to resolve
                   </div>
-                  <p className="text-amber-900/90">{editMenu.adminNotes}</p>
+                  <p className="text-amber-400/90">{editMenu.adminNotes}</p>
                 </div>
               )}
             </div>
 
             {renderMenuForm(editMenuItems, handleEditItemChange)}
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditMenu(null)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={isUpdatingMenu} data-testid="button-save-edit">
+            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setEditMenu(null)}>Cancel</Button>
+            <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleSaveEdit} disabled={isUpdatingMenu} data-testid="button-save-edit">
               {isUpdatingMenu ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : <><Send className="w-4 h-4 mr-2" /> Save & Resubmit</>}
             </Button>
           </DialogFooter>
@@ -1407,26 +1412,27 @@ export default function ChefDashboard() {
 
       {/* Phone Dialog */}
       <Dialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
           <DialogHeader>
-            <DialogTitle>SMS Settings</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">SMS Settings</DialogTitle>
+            <DialogDescription className="text-neutral-400">
               Enter your phone number to receive late plate SMS notifications at cutoff times (12:45 PM for lunch, 5:45 PM for dinner).
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label>Phone Number</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Phone Number</Label>
             <Input
               type="tel"
               placeholder="+1 (555) 123-4567"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
               data-testid="input-phone-number"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPhoneDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => updatePhoneMutation.mutate(phoneNumber)} disabled={updatePhoneMutation.isPending} data-testid="button-save-phone">
+            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setPhoneDialogOpen(false)}>Cancel</Button>
+            <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={() => updatePhoneMutation.mutate(phoneNumber)} disabled={updatePhoneMutation.isPending} data-testid="button-save-phone">
               {updatePhoneMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
@@ -1435,58 +1441,63 @@ export default function ChefDashboard() {
 
       {/* Profile Dialog */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
           <DialogHeader>
-            <DialogTitle>Account Settings</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Account Settings</DialogTitle>
+            <DialogDescription className="text-neutral-400">
               Update your profile information and password.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <Label>Name</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Name</Label>
               <Input
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
+                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                 data-testid="input-profile-name"
               />
             </div>
             <div>
-              <Label>Email</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Email</Label>
               <Input
                 type="email"
                 value={profileEmail}
                 onChange={(e) => setProfileEmail(e.target.value)}
+                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                 data-testid="input-profile-email"
               />
             </div>
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-2">Change Password</h4>
+            <div className="border-t border-white/[0.06] pt-4">
+              <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">Change Password</h4>
               <div className="space-y-2">
                 <div>
-                  <Label>Current Password</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Current Password</Label>
                   <Input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                     data-testid="input-current-password"
                   />
                 </div>
                 <div>
-                  <Label>New Password</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">New Password</Label>
                   <Input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                     data-testid="input-new-password"
                   />
                 </div>
                 <div>
-                  <Label>Confirm New Password</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Confirm New Password</Label>
                   <Input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
                     data-testid="input-confirm-password"
                   />
                 </div>
@@ -1494,8 +1505,8 @@ export default function ChefDashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
+            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+            <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
