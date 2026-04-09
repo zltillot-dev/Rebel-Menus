@@ -38,11 +38,13 @@ export function useAuth() {
       toast({ title: "Welcome back!", description: `Signed in as ${user.name}` });
     },
     onError: (error: Error) => {
-      toast({ 
-        title: "Login failed", 
-        description: error.message,
-        variant: "destructive" 
-      });
+      setTimeout(() => {
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid email or password",
+          variant: "destructive",
+        });
+      }, 50);
     },
   });
 

@@ -178,6 +178,10 @@ export default function AdminDashboard() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resetPasswordChefId, setResetPasswordChefId] = useState<number | null>(null);
+  const [resetPasswordChefName, setResetPasswordChefName] = useState("");
+  const [newChefPassword, setNewChefPassword] = useState("");
 
   useEffect(() => {
     if (profileDialogOpen && user) {
@@ -201,6 +205,22 @@ export default function AdminDashboard() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to update profile", description: error.message || "Please try again.", variant: "destructive" });
+    }
+  });
+
+  const resetChefPasswordMutation = useMutation({
+    mutationFn: async ({ chefId, newPassword }: { chefId: number; newPassword: string }) => {
+      const res = await apiRequest("PATCH", `/api/admin/chefs/${chefId}/password`, { newPassword });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Password reset", description: `${resetPasswordChefName}'s password has been updated.` });
+      setResetPasswordOpen(false);
+      setNewChefPassword("");
+      setResetPasswordChefId(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to reset password", description: error.message || "Please try again.", variant: "destructive" });
     }
   });
 
@@ -586,11 +606,24 @@ export default function AdminDashboard() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-white/[0.14] text-neutral-400 hover:text-amber-400 hover:border-amber-500/40 rounded-sm text-xs font-display uppercase tracking-wide"
+                            onClick={() => {
+                              setResetPasswordChefId(chef.id);
+                              setResetPasswordChefName(chef.name);
+                              setNewChefPassword("");
+                              setResetPasswordOpen(true);
+                            }}
+                          >
+                            Reset Password
+                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 data-testid={`button-delete-chef-${chef.id}`}
                               >
                                 <Trash2 className="w-4 h-4 text-destructive" />
@@ -1697,6 +1730,36 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setEditHDOpen(false)} data-testid="button-cancel-edit-hd" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
               <Button onClick={handleEditHD} disabled={updateHDMutation.isPending} data-testid="button-save-edit-hd" className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm">
                 {updateHDMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
+          <DialogContent className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+            <DialogHeader>
+              <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Reset Password</DialogTitle>
+              <DialogDescription className="text-neutral-500">
+                Set a new password for {resetPasswordChefName}. They will need to use this to log in.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">New Password</Label>
+              <Input
+                type="password"
+                placeholder="Min 6 characters"
+                value={newChefPassword}
+                onChange={(e) => setNewChefPassword(e.target.value)}
+                className="bg-[#222222] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-600"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" className="rounded-sm text-neutral-400" onClick={() => setResetPasswordOpen(false)}>Cancel</Button>
+              <Button
+                className="bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider rounded-sm font-display"
+                disabled={newChefPassword.length < 6 || resetChefPasswordMutation.isPending}
+                onClick={() => resetPasswordChefId && resetChefPasswordMutation.mutate({ chefId: resetPasswordChefId, newPassword: newChefPassword })}
+              >
+                {resetChefPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
               </Button>
             </DialogFooter>
           </DialogContent>

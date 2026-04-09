@@ -852,6 +852,23 @@ export async function registerRoutes(
     res.json({ message: "Chef deleted successfully" });
   });
 
+  // Admin: reset chef password
+  app.patch("/api/admin/chefs/:id/password", async (req, res) => {
+    if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
+    const chefId = parseInt(req.params.id);
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+    try {
+      const hashed = await hashPassword(newPassword);
+      await storage.updateUser(chefId, { password: hashed });
+      res.json({ message: "Password reset successfully" });
+    } catch (e) {
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   app.get(api.admin.listChefs.path, async (req, res) => {
     if (!req.user || (req.user as any).role !== 'admin') return res.status(403).send("Forbidden");
     const chefs = await storage.getChefs();
