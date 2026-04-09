@@ -79,24 +79,24 @@ export default function AuthPage() {
   });
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#0A0A0A]">
       {/* Left: Branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-neutral-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(247,181,77,0.08),transparent_70%)]" />
+      <div className="hidden lg:flex flex-col justify-center items-center p-16 bg-[#080808] border-r border-white/[0.04] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(245,158,11,0.06),transparent_60%)]" />
         <div className="relative z-10 text-center max-w-lg flex flex-col items-center gap-8">
-          <img src={logoImg} alt="Rebel Chefs" className="w-80 h-auto" data-testid="img-logo-desktop" />
-          <div className="h-px w-16 bg-amber-500/60" />
-          <p className="text-lg text-neutral-400 font-light leading-relaxed tracking-wide">
+          <img src={logoImg} alt="Rebel Chefs" className="w-72 h-auto" data-testid="img-logo-desktop" />
+          <div className="h-px w-12 bg-amber-500/50" />
+          <p className="text-base text-neutral-500 font-light leading-relaxed tracking-wide max-w-xs text-center">
             Premium dining management for fraternities. View weekly menus, track macros, and manage meal requests with ease.
           </p>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-500/70 font-semibold">
+          <p className="text-xs uppercase tracking-[0.4em] text-amber-500/60 font-bold font-display">
             Join the Resistance
           </p>
         </div>
       </div>
 
       {/* Right: Auth Forms */}
-      <div className="flex items-center justify-center p-6 lg:p-12">
+      <div className="flex items-center justify-center p-8 lg:p-16 bg-[#0A0A0A]">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden flex flex-col items-center mb-8">
             <img src={logoImg} alt="Rebel Chefs" className="w-48 h-auto" data-testid="img-logo-mobile" />
@@ -104,16 +104,16 @@ export default function AuthPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 h-12 bg-neutral-100 border border-border">
-              <TabsTrigger value="login" className="text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Create Account</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 h-11 bg-[#111111] border border-white/[0.06] rounded-sm">
+              <TabsTrigger value="login" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="register" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Create Account</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <Card className="border-none shadow-none">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-2xl font-black tracking-tight">Welcome back</CardTitle>
-                  <CardDescription className="text-muted-foreground">Enter your email to access your dashboard</CardDescription>
+                  <CardTitle className="text-3xl font-black tracking-wide uppercase font-display">Welcome back</CardTitle>
+                  <CardDescription className="text-muted-foreground text-sm mt-1">Enter your email to access your dashboard</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <form onSubmit={loginForm.handleSubmit((data) => {
@@ -128,12 +128,12 @@ export default function AuthPage() {
                     login(data);
                   })} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="name@school.edu" 
-                        className="h-11"
+                      <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@school.edu"
+                        className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
                         data-testid="input-login-email"
                         {...loginForm.register("username")} 
                       />
@@ -142,11 +142,11 @@ export default function AuthPage() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input 
-                        id="password" 
+                      <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Password</Label>
+                      <Input
+                        id="password"
                         type="password"
-                        className="h-11"
+                        className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
                         data-testid="input-login-password"
                         {...loginForm.register("password")} 
                       />
@@ -165,7 +165,7 @@ export default function AuthPage() {
                         Remember my email
                       </Label>
                     </div>
-                    <Button type="submit" className="w-full h-12 text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black shadow-sm" disabled={isLoggingIn} data-testid="button-login">
+                    <Button type="submit" className="w-full h-12 text-sm font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black rounded-sm transition-all duration-150 active:scale-[0.99] font-display" disabled={isLoggingIn} data-testid="button-login">
                       {isLoggingIn ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
@@ -176,8 +176,8 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card className="border-none shadow-none">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-2xl font-black tracking-tight">Get started</CardTitle>
-                  <CardDescription className="text-muted-foreground">Create an account with your supported school email to access your house menu</CardDescription>
+                  <CardTitle className="text-3xl font-black tracking-wide uppercase font-display">Get started</CardTitle>
+                  <CardDescription className="text-muted-foreground text-sm mt-1">Create an account with your supported school email to access your house menu</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <form onSubmit={registerForm.handleSubmit((data) => {
@@ -185,32 +185,32 @@ export default function AuthPage() {
                     register(rest);
                   })} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Full Name</Label>
-                      <Input placeholder="John Doe" className="h-11" {...registerForm.register("name")} />
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Full Name</Label>
+                      <Input placeholder="John Doe" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("name")} />
                       {registerForm.formState.errors.name && <p className="text-sm text-destructive">{registerForm.formState.errors.name.message}</p>}
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>School Email</Label>
-                      <Input placeholder="name@olemiss.edu" className="h-11" {...registerForm.register("email")} />
+                      <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">School Email</Label>
+                      <Input placeholder="name@olemiss.edu" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("email")} />
                       <p className="text-xs text-muted-foreground">Supported domains: @olemiss.edu and @k-state.edu</p>
                       {registerForm.formState.errors.email && <p className="text-sm text-destructive">{registerForm.formState.errors.email.message}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Password</Label>
-                        <Input type="password" className="h-11" {...registerForm.register("password")} />
+                        <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Password</Label>
+                        <Input type="password" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("password")} />
                         {registerForm.formState.errors.password && <p className="text-sm text-destructive">{registerForm.formState.errors.password.message}</p>}
                       </div>
                       <div className="space-y-2">
-                        <Label>Confirm</Label>
-                        <Input type="password" className="h-11" {...registerForm.register("confirmPassword")} />
+                        <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Confirm</Label>
+                        <Input type="password" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("confirmPassword")} />
                         {registerForm.formState.errors.confirmPassword && <p className="text-sm text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full h-12 text-base font-semibold bg-amber-500 hover:bg-amber-600 text-black shadow-sm" disabled={isRegistering}>
+                    <Button type="submit" className="w-full h-12 text-sm font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black rounded-sm transition-all duration-150 active:scale-[0.99] font-display" disabled={isRegistering}>
                       {isRegistering ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>

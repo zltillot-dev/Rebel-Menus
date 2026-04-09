@@ -34,14 +34,14 @@ export function Sidebar() {
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-3 px-4 py-3 h-auto rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.08] transition-colors",
-            isActive && "bg-amber-500/15 text-amber-400 hover:bg-amber-500/20 hover:text-amber-400 font-semibold"
+            "w-full justify-start gap-3 px-4 py-2.5 h-auto rounded-none text-neutral-500 hover:text-white hover:bg-white/[0.04] transition-colors font-medium",
+            isActive && "bg-amber-500/10 text-amber-400 hover:bg-amber-500/15 hover:text-amber-400 font-bold border-l-2 border-amber-500 rounded-none"
           )}
           onClick={() => setMobileOpen(false)}
           data-testid={`nav-item-${label.toLowerCase().replace(/\s+/g, '-')}`}
         >
           <Icon className={cn("w-5 h-5", isActive && "text-amber-400")} />
-          <span className="font-medium text-sm">{label}</span>
+          <span className="font-display font-bold uppercase tracking-wide text-sm">{label}</span>
         </Button>
       </Link>
     );
@@ -52,12 +52,12 @@ export function Sidebar() {
       <div className="p-6">
         <div className="mb-10 flex items-center justify-between">
           <div>
-            <h1 className="font-display font-black text-2xl tracking-tight text-white">REBEL CHEFS</h1>
-            <div className="mt-1 h-0.5 w-12 bg-amber-500 rounded-full" />
-            <p className="text-[11px] text-neutral-500 mt-2">
+            <h1 className="font-display font-black text-2xl tracking-[0.15em] text-white uppercase">REBEL CHEFS</h1>
+            <div className="mt-1 h-px w-10 bg-amber-500" />
+            <p className="text-[10px] text-neutral-600 mt-2 uppercase tracking-[0.2em] font-medium">
               {user.fraternity || "Admin Portal"}
             </p>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-600 mt-1 font-semibold">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 mt-0.5 font-semibold font-display">
               {roleLabel}
             </p>
           </div>
@@ -107,12 +107,12 @@ export function Sidebar() {
 
       <div className="mt-auto p-6 border-t border-white/[0.06]">
         <div className="flex items-center gap-3 mb-4 px-2">
-          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-black font-bold text-sm">
+          <div className="w-8 h-8 rounded-sm bg-amber-500 flex items-center justify-center text-black font-black text-sm">
             {user.name.charAt(0)}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium truncate text-white">{user.name}</p>
-            <p className="text-[11px] text-neutral-500 capitalize">{roleLabel}</p>
+            <p className="text-sm font-semibold text-white/90 font-sans truncate">{user.name}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-600 font-display">{roleLabel}</p>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export function Sidebar() {
 
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-400/80 hover:text-red-400 hover:bg-red-500/10"
+          className="w-full justify-start text-neutral-600 hover:text-red-400 hover:bg-red-500/[0.08] rounded-none transition-colors"
           onClick={() => logout()}
           data-testid="button-logout"
         >
@@ -174,13 +174,13 @@ export function Sidebar() {
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/80 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <div className={cn(
-        "h-screen w-64 bg-neutral-900 border-r border-white/[0.06] fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
+        "h-screen w-64 bg-[#080808] border-r border-white/[0.06] fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
         "md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>

@@ -35,14 +35,14 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
   const MealSection = ({ title, meals }: { title: "Lunch" | "Dinner", meals: MenuItem[] }) => (
     <div className="mb-6 last:mb-0">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">{title}</h4>
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">{title}</h4>
         {onFeedbackClick && meals.length > 0 ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
             onClick={() => onFeedbackClick(menuId, day, title)}
-            className="h-7 rounded-full px-3 text-xs border-amber-300/50 text-amber-700 hover:bg-amber-50 hover:border-amber-400 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+            className="h-7 rounded-sm px-3 text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/50 uppercase tracking-wide font-bold transition-all"
           >
             <Star className="mr-1 h-3 w-3" />
             Rate {title.toLowerCase()}
@@ -50,15 +50,15 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
         ) : null}
       </div>
       {meals.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No meal scheduled</p>
+        <p className="text-sm text-neutral-600 italic">No meal scheduled</p>
       ) : (
         <div className="space-y-4">
           {meals.map((item) => (
-            <div key={item.id} className="group rounded-lg p-2 -mx-2 transition-colors duration-200 hover:bg-neutral-50">
+            <div key={item.id} className="group rounded-sm p-2 -mx-2 transition-colors duration-150 hover:bg-white/[0.03]">
               <div className="flex justify-between items-start mb-1">
-                <p className="font-semibold text-foreground text-base leading-tight">{item.description}</p>
+                <p className="font-semibold text-white/90 text-base leading-tight">{item.description}</p>
                 {item.calories && item.calories > 0 ? (
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full shrink-0 ml-3">
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm shrink-0 ml-3">
                     <Flame className="w-3 h-3" />
                     {item.calories} kcal
                   </div>
@@ -68,13 +68,13 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
               {((item as any).side1 || (item as any).side2 || (item as any).side3) && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {(item as any).side1 && (
-                    <span className="text-xs text-muted-foreground bg-neutral-100 border border-border px-2 py-0.5 rounded-md">{(item as any).side1}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side1}</span>
                   )}
                   {(item as any).side2 && (
-                    <span className="text-xs text-muted-foreground bg-neutral-100 border border-border px-2 py-0.5 rounded-md">{(item as any).side2}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side2}</span>
                   )}
                   {(item as any).side3 && (
-                    <span className="text-xs text-muted-foreground bg-neutral-100 border border-border px-2 py-0.5 rounded-md">{(item as any).side3}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side3}</span>
                   )}
                 </div>
               )}
@@ -90,7 +90,7 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
                   <MacroBadge icon={Candy} value={item.sugar} label="Sugar" color="text-pink-500" />
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground mt-2 italic">Nutritional info not yet estimated</p>
+                <p className="text-xs text-neutral-700 mt-2 italic">Nutritional info not yet estimated</p>
               )}
             </div>
           ))}
@@ -105,21 +105,21 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className={`h-full border-border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${isToday ? "border-amber-400/50 ring-1 ring-amber-400/20 bg-amber-50/20" : "bg-white"}`}>
-        <CardHeader className="bg-neutral-50 border-b border-border pb-4">
+      <Card className={`h-full border border-white/[0.06] rounded-sm transition-all duration-200 hover:border-amber-500/20 bg-[#111111] ${isToday ? "border-amber-500/30 bg-[#111111]" : ""}`}>
+        <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-4 rounded-t-sm">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-lg font-display font-black">{day}</CardTitle>
-              {isToday ? <Badge className="bg-amber-500 text-black font-semibold border-none text-[10px] px-2">Today</Badge> : null}
+              <CardTitle className="text-xl font-black tracking-wide uppercase font-display">{day}</CardTitle>
+              {isToday ? <Badge className="bg-amber-500 text-black font-black border-none text-[10px] px-2.5 uppercase tracking-wider rounded-sm">Today</Badge> : null}
             </div>
-            <Badge variant="outline" className="text-[11px] font-medium">{items.length} meal{items.length === 1 ? "" : "s"}</Badge>
+            <Badge variant="outline" className="border-white/[0.1] text-neutral-500 text-[11px] font-medium rounded-sm bg-transparent">{items.length} meal{items.length === 1 ? "" : "s"}</Badge>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
           <MealSection title="Lunch" meals={lunch} />
           {day !== "Friday" && (
             <>
-              <div className="h-px bg-border my-6" />
+              <div className="h-px bg-white/[0.06] my-5" />
               <MealSection title="Dinner" meals={dinner} />
             </>
           )}

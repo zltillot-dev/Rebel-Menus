@@ -1,116 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&family=Fira+Code:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-sans: 'DM Sans', sans-serif;
-  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Barlow Condensed', sans-serif;
   --font-mono: 'Fira Code', monospace;
 
-  /* Base — crisp off-white, not tinted */
-  --background: 0 0% 97%;
-  --foreground: 0 0% 9%;
+  /* Base — deep black */
+  --background: 0 0% 4%;
+  --foreground: 0 0% 98%;
 
-  /* Primary — warm amber/gold, the Rebel Chefs signature */
-  --primary: 38 92% 50%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary — amber gold */
+  --primary: 38 93% 51%;
+  --primary-foreground: 0 0% 4%;
 
-  /* Secondary — charcoal for contrast elements */
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
+  /* Secondary — near-black surface */
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 95%;
 
-  /* UI Elements */
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 38 92% 50%;
-  --accent-foreground: 0 0% 100%;
-
-  /* Functional Colors */
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 89%;
-  --input: 0 0% 89%;
-  --ring: 38 92% 50%;
-  --radius: 0.625rem;
-
-  /* Card Colors */
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 9%;
-
-  /* Sidebar — dark charcoal to create premium contrast */
-  --sidebar-bg: 0 0% 8%;
-  --sidebar-fg: 0 0% 92%;
-  --sidebar-muted: 0 0% 22%;
-  --sidebar-accent: 38 92% 50%;
-}
-
-.dark {
-  --background: 0 0% 7%;
-  --foreground: 0 0% 95%;
-  --primary: 38 90% 55%;
-  --primary-foreground: 0 0% 7%;
-  --secondary: 0 0% 85%;
-  --secondary-foreground: 0 0% 7%;
-  --muted: 0 0% 14%;
+  /* UI elements */
+  --muted: 0 0% 11%;
   --muted-foreground: 0 0% 55%;
-  --accent: 38 90% 55%;
-  --accent-foreground: 0 0% 7%;
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 0 0% 95%;
-  --border: 0 0% 18%;
-  --input: 0 0% 18%;
-  --ring: 38 90% 55%;
-  --card: 0 0% 10%;
+  --accent: 38 93% 51%;
+  --accent-foreground: 0 0% 4%;
+
+  /* Functional */
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 15%;
+  --input: 0 0% 11%;
+  --ring: 38 93% 51%;
+  --radius: 0.25rem;
+
+  /* Cards */
+  --card: 0 0% 7%;
   --card-foreground: 0 0% 95%;
 
-  --sidebar-bg: 0 0% 5%;
-  --sidebar-fg: 0 0% 92%;
-  --sidebar-muted: 0 0% 18%;
-  --sidebar-accent: 38 90% 55%;
+  /* Sidebar */
+  --sidebar-bg: 0 0% 3%;
+  --sidebar-fg: 0 0% 90%;
+  --sidebar-muted: 0 0% 20%;
+  --sidebar-accent: 38 93% 51%;
 }
+
+/* No light mode — app is dark-first */
 
 @layer base {
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
     font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    @apply font-bold tracking-tight text-foreground;
+    @apply font-bold tracking-wide text-foreground;
+    font-feature-settings: "cv11";
+  }
+
+  * {
+    border-color: hsl(var(--border));
   }
 }
 
 @layer components {
-  .glass-panel {
-    @apply bg-white/90 backdrop-blur-xl border border-black/[0.06] shadow-lg shadow-black/[0.03];
+  /* Razor-sharp card with subtle amber accent top border */
+  .rebel-card {
+    @apply bg-card border border-border rounded-sm relative;
+  }
+  .rebel-card::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-px bg-amber-500/40;
   }
 
-  .card-hover {
-    @apply transition-all duration-200 ease-out hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5;
-  }
-
+  /* Amber gradient text */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-amber-600;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #F59E0B, #FBBF24);
+  }
+
+  /* Sharp amber divider */
+  .amber-line {
+    @apply h-px w-10 bg-amber-500;
+  }
+
+  /* Stat value — huge condensed number */
+  .stat-value {
+    font-family: var(--font-display);
+    @apply text-5xl font-black tracking-wide text-foreground tabular-nums;
+  }
+
+  /* Uppercase condensed label */
+  .stat-label {
+    font-family: var(--font-display);
+    @apply text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground;
+  }
+
+  /* Primary button — amber, sharp */
+  .btn-rebel {
+    @apply bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm uppercase tracking-wider px-5 py-2.5 rounded-sm transition-all duration-150 active:scale-[0.98];
+    font-family: var(--font-display);
+  }
+
+  /* Ghost button — dark with amber border */
+  .btn-rebel-ghost {
+    @apply border border-amber-500/40 hover:border-amber-500 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 font-bold text-sm uppercase tracking-wider px-5 py-2.5 rounded-sm transition-all duration-150;
+    font-family: var(--font-display);
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-black/10 rounded-full hover:bg-black/20 transition-colors;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-none hover:bg-amber-500/40 transition-colors; }
 
-/* Focus ring with amber accent */
+/* Focus ring */
 *:focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 1px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* Table styles */
+table { @apply w-full border-collapse; }
+th { @apply text-left text-xs font-bold uppercase tracking-wider text-muted-foreground py-3 px-4 border-b border-border; font-family: var(--font-display); }
+td { @apply py-3 px-4 border-b border-border/50 text-sm; }
+tr:last-child td { @apply border-b-0; }
+tr:hover td { @apply bg-white/[0.02]; }

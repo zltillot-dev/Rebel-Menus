@@ -6,9 +6,9 @@ export default {
   theme: {
     extend: {
       borderRadius: {
-        lg: ".5625rem", /* 9px */
-        md: ".375rem", /* 6px */
-        sm: ".1875rem", /* 3px */
+        lg: "0.25rem",
+        md: "0.125rem",
+        sm: "0.0625rem",
       },
       colors: {
         // Flat / base colors (regular buttons)
@@ -83,8 +83,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["'DM Sans'", "sans-serif"],
-        display: ["'Outfit'", "sans-serif"],
+        sans: ["'Inter'", "sans-serif"],
+        display: ["'Barlow Condensed'", "sans-serif"],
         mono: ["'Fira Code'", "monospace"],
       },
       keyframes: {
