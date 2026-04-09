@@ -35,7 +35,7 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
   const MealSection = ({ title, meals }: { title: "Lunch" | "Dinner", meals: MenuItem[] }) => (
     <div className="mb-6 last:mb-0">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">{title}</h4>
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">{title}</h4>
         {onFeedbackClick && meals.length > 0 ? (
           <Button
             type="button"
@@ -50,7 +50,7 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
         ) : null}
       </div>
       {meals.length === 0 ? (
-        <p className="text-sm text-neutral-600 italic">No meal scheduled</p>
+        <p className="text-sm text-neutral-500 italic">No meal scheduled</p>
       ) : (
         <div className="space-y-4">
           {meals.map((item) => (
@@ -68,13 +68,13 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
               {((item as any).side1 || (item as any).side2 || (item as any).side3) && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {(item as any).side1 && (
-                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side1}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.10] px-2 py-0.5 rounded-sm">{(item as any).side1}</span>
                   )}
                   {(item as any).side2 && (
-                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side2}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.10] px-2 py-0.5 rounded-sm">{(item as any).side2}</span>
                   )}
                   {(item as any).side3 && (
-                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-sm">{(item as any).side3}</span>
+                    <span className="text-xs text-neutral-500 bg-white/[0.04] border border-white/[0.10] px-2 py-0.5 rounded-sm">{(item as any).side3}</span>
                   )}
                 </div>
               )}
@@ -90,7 +90,7 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
                   <MacroBadge icon={Candy} value={item.sugar} label="Sugar" color="text-pink-500" />
                 </div>
               ) : (
-                <p className="text-xs text-neutral-700 mt-2 italic">Nutritional info not yet estimated</p>
+                <p className="text-xs text-neutral-600 mt-2 italic">Nutritional info not yet estimated</p>
               )}
             </div>
           ))}
@@ -105,8 +105,8 @@ export function MenuCard({ day, items, onFeedbackClick, menuId, isToday = false 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className={`h-full border border-white/[0.06] rounded-sm transition-all duration-200 hover:border-amber-500/20 bg-[#111111] ${isToday ? "border-amber-500/30 bg-[#111111]" : ""}`}>
-        <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-4 rounded-t-sm">
+      <Card className={`h-full border border-white/[0.10] rounded-sm transition-all duration-200 hover:border-amber-500/20 bg-[#1A1A1A] ${isToday ? "border-amber-500/30 bg-[#1A1A1A]" : ""}`}>
+        <CardHeader className="bg-[#161616] border-b border-white/[0.10] pb-4 rounded-t-sm">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <CardTitle className="text-xl font-black tracking-wide uppercase font-display">{day}</CardTitle>

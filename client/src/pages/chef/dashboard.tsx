@@ -547,18 +547,18 @@ export default function ChefDashboard() {
     const latestHistory = menu.workflowHistory?.[0];
 
     return (
-      <Card key={menu.id} className={`bg-[#111111] border rounded-sm ${menu.status === 'needs_revision' ? "border-amber-500/30" : "border-white/[0.06]"}`}>
-        <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-3">
+      <Card key={menu.id} className={`bg-[#1A1A1A] border rounded-sm ${menu.status === 'needs_revision' ? "border-amber-500/30" : "border-white/[0.10]"}`}>
+        <CardHeader className="bg-[#161616] border-b border-white/[0.10] pb-3">
           <div className="flex items-start justify-between gap-2">
             <div>
               <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-lg">Week of {format(parseISO(menu.weekOf), "MMM d, yyyy")}</CardTitle>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge className={statusMeta.badgeClass}>{statusMeta.label}</Badge>
-                <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{filledCount}/{totalMealSlots} meals planned</Badge>
+                <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{filledCount}/{totalMealSlots} meals planned</Badge>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm"
+                  className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm"
                   onClick={() => exportMenuToPDF({
                     id: menu.id,
                     weekOf: menu.weekOf,
@@ -589,7 +589,7 @@ export default function ChefDashboard() {
             </div>
             {showActions && (menu.status === 'pending' || menu.status === 'needs_revision') && (
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => handleStartEdit(menu)} data-testid={`button-edit-menu-${menu.id}`}>
+                <Button size="sm" variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => handleStartEdit(menu)} data-testid={`button-edit-menu-${menu.id}`}>
                   <Pencil className="w-4 h-4 mr-1" /> Edit
                 </Button>
                 {menu.status === "draft" && (
@@ -599,7 +599,7 @@ export default function ChefDashboard() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                    <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Draft Menu?</AlertDialogTitle>
                         <AlertDialogDescription className="text-neutral-400">
@@ -607,7 +607,7 @@ export default function ChefDashboard() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={() => handleDelete(menu.id)}>Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -639,16 +639,16 @@ export default function ChefDashboard() {
                 const dayItems = menu.items.filter((item: any) => item.day === day);
                 if (dayItems.length === 0) return null;
                 return (
-                  <div key={day} className="border-b border-white/[0.06] pb-2 last:border-b-0">
+                  <div key={day} className="border-b border-white/[0.10] pb-2 last:border-b-0">
                     <div className="font-display font-bold text-sm text-neutral-500 uppercase tracking-wide">{day}</div>
                     {dayItems.map((item: any) => (
                       <div key={`${item.day}-${item.meal}`} className="ml-2 text-sm text-neutral-300">
                         <span className="font-medium text-white">{item.meal}:</span> {item.description}
                         {(item.side1 || item.side2 || item.side3) && (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side1}</Badge>}
-                            {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side2}</Badge>}
-                            {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side3}</Badge>}
+                            {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side1}</Badge>}
+                            {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side2}</Badge>}
+                            {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side3}</Badge>}
                           </div>
                         )}
                       </div>
@@ -667,9 +667,9 @@ export default function ChefDashboard() {
 
   const renderMenuForm = (items: any[], onChange: (idx: number, field: string, value: any) => void) => (
     <Tabs defaultValue="Monday" className="w-full">
-      <TabsList className="h-10 bg-[#111111] border border-white/[0.06] rounded-sm p-0.5 grid grid-cols-5 mb-6">
+      <TabsList className="h-10 bg-[#1A1A1A] border border-white/[0.10] rounded-sm p-0.5 grid grid-cols-5 mb-6">
         {DAYS.map(day => (
-          <TabsTrigger key={day} value={day} className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid={`tab-day-${day}`}>{day}</TabsTrigger>
+          <TabsTrigger key={day} value={day} className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid={`tab-day-${day}`}>{day}</TabsTrigger>
         ))}
       </TabsList>
       
@@ -679,7 +679,7 @@ export default function ChefDashboard() {
             .map((item, idx) => ({ item, idx }))
             .filter(({ item }) => item.day === day)
             .map(({ item, idx }) => (
-              <Card key={idx} className="bg-[#111111] border border-white/[0.06] rounded-sm p-4">
+              <Card key={idx} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-display font-bold uppercase tracking-wide text-white text-lg">{item.meal}</h4>
                   <div className="flex items-center gap-1 text-xs text-neutral-500">
@@ -696,7 +696,7 @@ export default function ChefDashboard() {
                         placeholder="e.g., Grilled Chicken"
                         value={item.description}
                         onChange={(e) => onChange(idx, "description", e.target.value)}
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         data-testid={`input-description-${idx}`}
                       />
                     </div>
@@ -706,7 +706,7 @@ export default function ChefDashboard() {
                         placeholder="e.g., Rice"
                         value={item.side1}
                         onChange={(e) => onChange(idx, "side1", e.target.value)}
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         data-testid={`input-side1-${idx}`}
                       />
                     </div>
@@ -718,7 +718,7 @@ export default function ChefDashboard() {
                         placeholder="e.g., Vegetables"
                         value={item.side2}
                         onChange={(e) => onChange(idx, "side2", e.target.value)}
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         data-testid={`input-side2-${idx}`}
                       />
                     </div>
@@ -728,7 +728,7 @@ export default function ChefDashboard() {
                         placeholder="e.g., Gravy"
                         value={item.side3}
                         onChange={(e) => onChange(idx, "side3", e.target.value)}
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         data-testid={`input-side3-${idx}`}
                       />
                     </div>
@@ -742,12 +742,12 @@ export default function ChefDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0A]" data-testid="chef-dashboard">
+    <div className="flex min-h-screen bg-background" data-testid="chef-dashboard">
       <Sidebar />
-      <div className="flex-1 pl-64 min-h-screen bg-[#0A0A0A]">
+      <div className="flex-1 md:pl-64 min-h-screen bg-background">
         <ScrollArea className="h-screen">
           <div className="p-4 pt-16 md:pt-6 md:p-6">
-            <header className="pt-8 pb-6 px-8 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <header className="pt-8 pb-6 px-8 border-b border-white/[0.10] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white" data-testid="text-dashboard-title">
                   {isManageMenusView ? "Manage Menus" : "Chef Dashboard"}
@@ -755,10 +755,10 @@ export default function ChefDashboard() {
                 <p className="text-neutral-500 text-sm">{user?.fraternity}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setPhoneDialogOpen(true)} data-testid="button-sms-settings">
+                <Button variant="outline" size="sm" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setPhoneDialogOpen(true)} data-testid="button-sms-settings">
                   <Phone className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">SMS</span>
                 </Button>
-                <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+                <Button variant="outline" size="sm" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
                   <UserCog className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden xs:inline">Account</span>
                 </Button>
                 {isManageMenusView && (
@@ -771,7 +771,7 @@ export default function ChefDashboard() {
                         <Plus className="w-4 h-4 mr-2" /> Create Menu
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Create Weekly Menu</DialogTitle>
                         <DialogDescription className="text-neutral-400">
@@ -786,13 +786,13 @@ export default function ChefDashboard() {
                             type="date"
                             value={weekOf}
                             onChange={(e) => setWeekOf(e.target.value)}
-                            className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 w-full sm:w-64"
+                            className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 w-full sm:w-64"
                             data-testid="input-week-of"
                           />
                           <p className="text-xs text-neutral-500 mt-2">Choose the Monday for the service week you are planning.</p>
                         </div>
 
-                        <div className="mb-6 rounded-sm border border-white/[0.06] bg-[#161616] p-4">
+                        <div className="mb-6 rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
                               <div className="text-sm font-medium text-white">Menu progress</div>
@@ -800,7 +800,7 @@ export default function ChefDashboard() {
                                 {menuDraftProgress.completed} of {totalMealSlots} meal slots filled
                               </div>
                             </div>
-                            <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{menuDraftProgress.remaining} left</Badge>
+                            <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{menuDraftProgress.remaining} left</Badge>
                           </div>
                         </div>
 
@@ -808,7 +808,7 @@ export default function ChefDashboard() {
                       </div>
                       
                       <DialogFooter>
-                        <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                        <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setCreateOpen(false)}>Cancel</Button>
                         <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleCreateMenu} disabled={isCreating} data-testid="button-submit-menu">
                           {isCreating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</> : <><Send className="w-4 h-4 mr-2" /> Submit for Approval</>}
                         </Button>
@@ -822,8 +822,8 @@ export default function ChefDashboard() {
             {!isManageMenusView ? (
               /* DASHBOARD VIEW */
               <div className="space-y-6">
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06] pb-4">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                  <CardHeader className="bg-[#161616] border-b border-white/[0.10] pb-4">
                     <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <ChefHat className="h-5 w-5 text-amber-500" />
                       Daily Workspace
@@ -834,34 +834,34 @@ export default function ChefDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                      <div className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3">
                         <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Revision</div>
                         <div className="mt-1 text-2xl font-black text-white">{menusNeedingRevision.length}</div>
                         <div className="text-xs text-neutral-500">menus need edits</div>
                       </div>
-                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                      <div className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3">
                         <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Submitted</div>
                         <div className="mt-1 text-2xl font-black text-white">{pendingMenus.length}</div>
                         <div className="text-xs text-neutral-500">awaiting admin</div>
                       </div>
-                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                      <div className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3">
                         <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Tasks</div>
                         <div className="mt-1 text-2xl font-black text-white">{incompleteTasks.length}</div>
                         <div className="text-xs text-neutral-500">open reminders</div>
                       </div>
-                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                      <div className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3">
                         <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Late Plates</div>
                         <div className="mt-1 text-2xl font-black text-white">{Object.keys(todaysLatePlates).length}</div>
                         <div className="text-xs text-neutral-500">today's services</div>
                       </div>
-                      <div className="rounded-sm border border-white/[0.06] bg-[#161616] p-3">
+                      <div className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3">
                         <div className="text-[10px] uppercase tracking-widest text-neutral-500 font-display font-semibold">Inbox</div>
                         <div className="mt-1 text-2xl font-black text-white">{totalUnreadInbox}</div>
                         <div className="text-xs text-neutral-500">unread items</div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 rounded-sm border border-white/[0.06] bg-[#161616] p-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-3 rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <div className="text-sm font-medium text-white">{nextActionSummary.title}</div>
                         <div className="text-sm text-neutral-500">{nextActionSummary.description}</div>
@@ -880,8 +880,8 @@ export default function ChefDashboard() {
                 </Card>
 
                 {/* Current Week's Menu */}
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                  <CardHeader className="bg-[#161616] border-b border-white/[0.10]">
                     <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <CalendarIcon className="w-5 h-5" />
                       This Week's Menu
@@ -895,7 +895,7 @@ export default function ChefDashboard() {
                           <Badge className={getStatusMeta(currentWeekMenu.status).badgeClass}>
                             {getStatusMeta(currentWeekMenu.status).label}
                           </Badge>
-                          <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{getMenuFilledCount(currentWeekMenu.items || [])}/{totalMealSlots} meals planned</Badge>
+                          <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{getMenuFilledCount(currentWeekMenu.items || [])}/{totalMealSlots} meals planned</Badge>
                           <span className="text-sm text-neutral-500">{getStatusMeta(currentWeekMenu.status).action}</span>
                         </div>
                         {currentWeekMenu.adminNotes && (
@@ -909,7 +909,7 @@ export default function ChefDashboard() {
                             {DAYS.map(day => {
                               const dayItems = currentWeekMenu.items.filter((item: any) => item.day === day);
                               return (
-                                <div key={day} className="border border-white/[0.06] rounded-sm bg-[#161616] p-3">
+                                <div key={day} className="border border-white/[0.10] rounded-sm bg-[#1E1E1E] p-3">
                                   <div className="font-display font-bold text-sm mb-2 text-white uppercase tracking-wide">{day}</div>
                                   {dayItems.length > 0 ? dayItems.map((item: any) => (
                                     <div key={`${item.day}-${item.meal}`} className="text-sm mb-2 text-neutral-300">
@@ -917,9 +917,9 @@ export default function ChefDashboard() {
                                       <div>{item.description}</div>
                                       {(item.side1 || item.side2 || item.side3) && (
                                         <div className="flex flex-wrap gap-1 mt-1">
-                                          {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side1}</Badge>}
-                                          {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side2}</Badge>}
-                                          {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">{item.side3}</Badge>}
+                                          {item.side1 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side1}</Badge>}
+                                          {item.side2 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side2}</Badge>}
+                                          {item.side3 && <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">{item.side3}</Badge>}
                                         </div>
                                       )}
                                     </div>
@@ -934,7 +934,7 @@ export default function ChefDashboard() {
                           <p className="text-neutral-500">No items in this menu</p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setLocation("/chef/menus")}>
+                          <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setLocation("/chef/menus")}>
                             Manage Menus
                           </Button>
                           {currentWeekMenu.status === "needs_revision" && (
@@ -958,8 +958,8 @@ export default function ChefDashboard() {
                 </Card>
 
                 {/* Tasks & Reminders */}
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                  <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                  <CardHeader className="bg-[#161616] border-b border-white/[0.10]">
                     <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center gap-2">
                       <ListTodo className="w-5 h-5" />
                       Tasks & Reminders
@@ -983,7 +983,7 @@ export default function ChefDashboard() {
                             <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">To Do</h4>
                             <div className="space-y-2">
                               {sortedIncompleteTasks.map((task: any) => (
-                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.06] rounded-sm bg-[#161616]" data-testid={`task-${task.id}`}>
+                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.10] rounded-sm bg-[#1E1E1E]" data-testid={`task-${task.id}`}>
                                   <Checkbox
                                     checked={task.isCompleted}
                                     onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
@@ -997,7 +997,7 @@ export default function ChefDashboard() {
                                         {task.priority} priority
                                       </Badge>
                                       {task.dueDate && (
-                                        <Badge variant="outline" className="text-xs border-white/[0.08] text-neutral-400 rounded-sm">
+                                        <Badge variant="outline" className="text-xs border-white/[0.14] text-neutral-400 rounded-sm">
                                           Due: {format(parseISO(task.dueDate), "MMM d")}
                                         </Badge>
                                       )}
@@ -1017,7 +1017,7 @@ export default function ChefDashboard() {
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-2 space-y-2">
                               {completedTasks.map((task: any) => (
-                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.06] rounded-sm bg-[#161616] opacity-60" data-testid={`task-completed-${task.id}`}>
+                                <div key={task.id} className="flex items-start gap-3 p-3 border border-white/[0.10] rounded-sm bg-[#1E1E1E] opacity-60" data-testid={`task-completed-${task.id}`}>
                                   <Checkbox
                                     checked={task.isCompleted}
                                     onCheckedChange={(checked) => handleTaskComplete(task.id, checked as boolean)}
@@ -1039,9 +1039,9 @@ export default function ChefDashboard() {
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Late Plates */}
                   <Collapsible open={latePlatesOpen} onOpenChange={setLatePlatesOpen}>
-                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#161616] border-b border-white/[0.10]">
                           <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <Clock className="w-5 h-5" />
@@ -1072,7 +1072,7 @@ export default function ChefDashboard() {
                                     <div className="font-medium text-sm mb-2 flex flex-wrap items-center gap-2 text-white">
                                       {format(parseISO(dateStr), "EEEE, MMM d")} - {mealType}
                                       {isTodays && <Badge className="ml-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">Today</Badge>}
-                                      <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{plates.length} request{plates.length === 1 ? "" : "s"}</Badge>
+                                      <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{plates.length} request{plates.length === 1 ? "" : "s"}</Badge>
                                     </div>
                                     <div className="space-y-1">
                                       {plates.map((plate: any) => (
@@ -1097,15 +1097,15 @@ export default function ChefDashboard() {
 
                   {/* Substitutions */}
                   <Collapsible open={substitutionsOpen} onOpenChange={setSubstitutionsOpen}>
-                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#161616] border-b border-white/[0.10]">
                           <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <RefreshCcw className="w-5 h-5" />
                               Substitutions
                               {unreadSubstitutions > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadSubstitutions}</Badge>}
-                              {substitutions.length > 0 && unreadSubstitutions === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{substitutions.length}</Badge>}
+                              {substitutions.length > 0 && unreadSubstitutions === 0 && <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{substitutions.length}</Badge>}
                             </span>
                             {substitutionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1122,7 +1122,7 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedSubstitutions.map((req: any) => (
-                                <div key={req.id} className={`p-3 rounded-sm ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`substitution-item-${req.id}`}>
+                                <div key={req.id} className={`p-3 rounded-sm ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#1E1E1E]'}`} data-testid={`substitution-item-${req.id}`}>
                                   <div className="flex items-start gap-3">
                                     <Checkbox
                                       checked={req.isRead || false}
@@ -1191,15 +1191,15 @@ export default function ChefDashboard() {
 
                   {/* Menu Suggestions */}
                   <Collapsible open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
-                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#161616] border-b border-white/[0.10]">
                           <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <Lightbulb className="w-5 h-5" />
                               Meal Suggestions
                               {unreadSuggestions > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadSuggestions}</Badge>}
-                              {menuSuggestions.length > 0 && unreadSuggestions === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{menuSuggestions.length}</Badge>}
+                              {menuSuggestions.length > 0 && unreadSuggestions === 0 && <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{menuSuggestions.length}</Badge>}
                             </span>
                             {suggestionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1216,7 +1216,7 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedSuggestions.map((req: any) => (
-                                <div key={req.id} className={`p-3 rounded-sm flex items-start gap-3 ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`suggestion-item-${req.id}`}>
+                                <div key={req.id} className={`p-3 rounded-sm flex items-start gap-3 ${req.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#1E1E1E]'}`} data-testid={`suggestion-item-${req.id}`}>
                                   <Checkbox
                                     checked={req.isRead || false}
                                     onCheckedChange={(checked) => markRequestRead({ id: req.id, isRead: !!checked })}
@@ -1237,15 +1237,15 @@ export default function ChefDashboard() {
 
                   {/* Feedback */}
                   <Collapsible open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <CardHeader className="cursor-pointer hover:bg-white/[0.03] bg-[#161616] border-b border-white/[0.10]">
                           <CardTitle className="font-display font-bold uppercase tracking-wide text-white flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <MessageSquare className="w-5 h-5" />
                               Feedback
                               {unreadFeedback > 0 && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm font-bold">{unreadFeedback}</Badge>}
-                              {chefFeedback && chefFeedback.length > 0 && unreadFeedback === 0 && <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{chefFeedback.length}</Badge>}
+                              {chefFeedback && chefFeedback.length > 0 && unreadFeedback === 0 && <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{chefFeedback.length}</Badge>}
                             </span>
                             {feedbackOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </CardTitle>
@@ -1262,7 +1262,7 @@ export default function ChefDashboard() {
                           ) : (
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                               {sortedFeedback.map((fb: any) => (
-                                <div key={fb.id} className={`p-3 rounded-sm flex items-start gap-3 ${fb.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#161616]'}`} data-testid={`feedback-item-${fb.id}`}>
+                                <div key={fb.id} className={`p-3 rounded-sm flex items-start gap-3 ${fb.isRead ? 'bg-white/[0.03] opacity-60' : 'bg-[#1E1E1E]'}`} data-testid={`feedback-item-${fb.id}`}>
                                   <Checkbox
                                     checked={fb.isRead || false}
                                     onCheckedChange={(checked) => markFeedbackRead({ id: fb.id, isRead: !!checked })}
@@ -1272,7 +1272,7 @@ export default function ChefDashboard() {
                                     <div className="flex items-center gap-2 mb-1">
                                       <div className="flex">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                          <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-amber-400 fill-amber-400' : 'text-neutral-700'}`} />
+                                          <Star key={star} className={`w-3 h-3 ${star <= fb.rating ? 'text-amber-400 fill-amber-400' : 'text-neutral-600'}`} />
                                         ))}
                                       </div>
                                       <span className="text-xs text-neutral-500">{fb.mealDay} {fb.mealType}</span>
@@ -1322,7 +1322,7 @@ export default function ChefDashboard() {
                       {renderMenuCard(currentWeekMenu, true)}
                     </div>
                   ) : (
-                    <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CardContent className="py-8 text-center text-neutral-500">
                         No menu for this week. Click "Create Menu" to get started.
                       </CardContent>
@@ -1357,7 +1357,7 @@ export default function ChefDashboard() {
 
       {/* Edit Menu Dialog */}
       <Dialog open={!!editMenu} onOpenChange={(open) => { if (!open) setEditMenu(null); }}>
-        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Edit Menu</DialogTitle>
             <DialogDescription className="text-neutral-400">
@@ -1372,12 +1372,12 @@ export default function ChefDashboard() {
                 type="date"
                 value={editWeekOf}
                 onChange={(e) => setEditWeekOf(e.target.value)}
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 w-full sm:w-64"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 w-full sm:w-64"
                 data-testid="input-edit-week-of"
               />
             </div>
 
-            <div className="mb-6 rounded-sm border border-white/[0.06] bg-[#161616] p-4">
+            <div className="mb-6 rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-medium text-white">Edit progress</div>
@@ -1385,7 +1385,7 @@ export default function ChefDashboard() {
                     {editMenuProgress.completed} of {totalMealSlots} meal slots filled
                   </div>
                 </div>
-                <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm">{editMenuProgress.remaining} left</Badge>
+                <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm">{editMenuProgress.remaining} left</Badge>
               </div>
               {editMenu?.adminNotes && (
                 <div className="mt-3 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
@@ -1402,7 +1402,7 @@ export default function ChefDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setEditMenu(null)}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setEditMenu(null)}>Cancel</Button>
             <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleSaveEdit} disabled={isUpdatingMenu} data-testid="button-save-edit">
               {isUpdatingMenu ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : <><Send className="w-4 h-4 mr-2" /> Save & Resubmit</>}
             </Button>
@@ -1412,7 +1412,7 @@ export default function ChefDashboard() {
 
       {/* Phone Dialog */}
       <Dialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen}>
-        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">SMS Settings</DialogTitle>
             <DialogDescription className="text-neutral-400">
@@ -1426,12 +1426,12 @@ export default function ChefDashboard() {
               placeholder="+1 (555) 123-4567"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+              className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
               data-testid="input-phone-number"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setPhoneDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setPhoneDialogOpen(false)}>Cancel</Button>
             <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={() => updatePhoneMutation.mutate(phoneNumber)} disabled={updatePhoneMutation.isPending} data-testid="button-save-phone">
               {updatePhoneMutation.isPending ? "Saving..." : "Save"}
             </Button>
@@ -1441,7 +1441,7 @@ export default function ChefDashboard() {
 
       {/* Profile Dialog */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Account Settings</DialogTitle>
             <DialogDescription className="text-neutral-400">
@@ -1454,7 +1454,7 @@ export default function ChefDashboard() {
               <Input
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 data-testid="input-profile-name"
               />
             </div>
@@ -1464,11 +1464,11 @@ export default function ChefDashboard() {
                 type="email"
                 value={profileEmail}
                 onChange={(e) => setProfileEmail(e.target.value)}
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 data-testid="input-profile-email"
               />
             </div>
-            <div className="border-t border-white/[0.06] pt-4">
+            <div className="border-t border-white/[0.10] pt-4">
               <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">Change Password</h4>
               <div className="space-y-2">
                 <div>
@@ -1477,7 +1477,7 @@ export default function ChefDashboard() {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     data-testid="input-current-password"
                   />
                 </div>
@@ -1487,7 +1487,7 @@ export default function ChefDashboard() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     data-testid="input-new-password"
                   />
                 </div>
@@ -1497,7 +1497,7 @@ export default function ChefDashboard() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     data-testid="input-confirm-password"
                   />
                 </div>
@@ -1505,7 +1505,7 @@ export default function ChefDashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
             <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

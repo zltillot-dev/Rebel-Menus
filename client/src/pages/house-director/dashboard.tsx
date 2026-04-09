@@ -416,7 +416,7 @@ export default function HouseDirectorDashboard() {
     if (critique.acknowledgedByAdmin) {
       return <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-sm uppercase tracking-wider font-bold text-[10px]">Reviewed by Admin</Badge>;
     }
-    return <Badge variant="outline" className="border-white/[0.08] text-neutral-400 rounded-sm uppercase tracking-wider font-bold text-[10px]">Awaiting Admin Review</Badge>;
+    return <Badge variant="outline" className="border-white/[0.14] text-neutral-400 rounded-sm uppercase tracking-wider font-bold text-[10px]">Awaiting Admin Review</Badge>;
   };
 
   // Star rating component
@@ -430,7 +430,7 @@ export default function HouseDirectorDashboard() {
           className="focus:outline-none"
         >
           <Star
-            className={`w-6 h-6 transition-colors ${star <= value ? "fill-amber-500 text-amber-500" : "text-neutral-600"}`}
+            className={`w-6 h-6 transition-colors ${star <= value ? "fill-amber-500 text-amber-500" : "text-neutral-500"}`}
           />
         </button>
       ))}
@@ -445,11 +445,11 @@ export default function HouseDirectorDashboard() {
       <div className="flex items-center gap-2">
         <Icon className="w-5 h-5 text-neutral-500" />
         <h2 className="font-display font-bold uppercase tracking-wide text-white text-lg">{title}</h2>
-        <Badge variant="outline" className="rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.08] text-neutral-400">{menuList.length}</Badge>
+        <Badge variant="outline" className="rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.14] text-neutral-400">{menuList.length}</Badge>
       </div>
 
       {menuList.length === 0 ? (
-        <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+        <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
           <CardContent className="py-8 text-center text-neutral-500 font-sans">
             No menus available for this period
           </CardContent>
@@ -457,8 +457,8 @@ export default function HouseDirectorDashboard() {
       ) : (
         <div className="grid gap-4">
           {menuList.map((menu: any) => (
-            <Card key={menu.id} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-              <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+            <Card key={menu.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+              <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="text-lg font-display font-bold uppercase tracking-wide text-white">
@@ -480,7 +480,7 @@ export default function HouseDirectorDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                      className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                       onClick={() => openCritiqueModal(menu.id)}
                       data-testid={`button-critique-menu-${menu.id}`}
                     >
@@ -491,7 +491,7 @@ export default function HouseDirectorDashboard() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm"
+                      className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm"
                       onClick={() => exportMenuToPDF({
                         id: menu.id,
                         weekOf: menu.weekOf,
@@ -574,11 +574,11 @@ export default function HouseDirectorDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0A]">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
 
-      <main className="flex-1 pl-64 min-h-screen bg-[#0A0A0A]">
-        <div className="pt-8 pb-6 px-8 border-b border-white/[0.06]">
+      <main className="flex-1 md:pl-64 min-h-screen bg-background">
+        <div className="pt-8 pb-6 px-8 border-b border-white/[0.10]">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">House Director Dashboard</h1>
@@ -593,7 +593,7 @@ export default function HouseDirectorDashboard() {
                 <CalendarPlus className="w-4 h-4 mr-2" />
                 Event Request
               </Button>
-              <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+              <Button variant="outline" size="sm" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
                 <Settings className="w-4 h-4 mr-2" />
                 Account Settings
               </Button>
@@ -601,20 +601,20 @@ export default function HouseDirectorDashboard() {
           </div>
 
           <Tabs defaultValue="menus" className="space-y-6 px-8">
-            <TabsList className="h-10 bg-[#111111] border border-white/[0.06] rounded-sm p-0.5 grid w-full max-w-2xl grid-cols-4">
-              <TabsTrigger value="menus" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-menus">
+            <TabsList className="h-10 bg-[#1A1A1A] border border-white/[0.10] rounded-sm p-0.5 grid w-full max-w-2xl grid-cols-4">
+              <TabsTrigger value="menus" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-menus">
                 <Calendar className="w-4 h-4 mr-2" />
                 Menus
               </TabsTrigger>
-              <TabsTrigger value="headcount" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-headcount">
+              <TabsTrigger value="headcount" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-headcount">
                 <Users className="w-4 h-4 mr-2" />
                 Headcount
               </TabsTrigger>
-              <TabsTrigger value="feedback" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-feedback">
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-feedback">
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Feedback
               </TabsTrigger>
-              <TabsTrigger value="my-critiques" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-critiques">
+              <TabsTrigger value="my-critiques" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-critiques">
                 <ClipboardList className="w-4 h-4 mr-2" />
                 My Notes
               </TabsTrigger>
@@ -630,8 +630,8 @@ export default function HouseDirectorDashboard() {
                 <>
                   {/* Late Plate Visibility */}
                   {activeLatePlates.length > 0 && (
-                    <Card className="bg-[#111111] border border-amber-500/20 rounded-sm">
-                      <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+                    <Card className="bg-[#1A1A1A] border border-amber-500/20 rounded-sm">
+                      <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                         <div className="flex items-center gap-2">
                           <UtensilsCrossed className="w-5 h-5 text-amber-500" />
                           <CardTitle className="text-base font-display font-bold uppercase tracking-wide text-white">Late Plate Requests</CardTitle>
@@ -641,7 +641,7 @@ export default function HouseDirectorDashboard() {
                       <CardContent>
                         <div className="grid gap-2">
                           {activeLatePlates.map((lp) => (
-                            <div key={lp.id} className="flex items-center justify-between bg-white/[0.03] rounded-sm px-3 py-2 border border-white/[0.06] text-sm font-sans">
+                            <div key={lp.id} className="flex items-center justify-between bg-white/[0.03] rounded-sm px-3 py-2 border border-white/[0.10] text-sm font-sans">
                               <div>
                                 <span className="font-medium text-white">{lp.userName}</span>
                                 <span className="text-neutral-500 ml-2">
@@ -666,8 +666,8 @@ export default function HouseDirectorDashboard() {
 
             {/* ===== HEADCOUNT TAB ===== */}
             <TabsContent value="headcount" className="space-y-6">
-              <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+              <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                <CardHeader className="bg-[#161616] border-b border-white/[0.10]">
                   <CardTitle className="text-lg font-display font-bold uppercase tracking-wide text-white">Report Headcount</CardTitle>
                   <CardDescription className="text-neutral-500 font-sans">Report expected meal attendance for your house</CardDescription>
                 </CardHeader>
@@ -677,7 +677,7 @@ export default function HouseDirectorDashboard() {
                       <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Meal Date</Label>
                       <Input
                         type="date"
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         value={hcMealDate}
                         onChange={(e) => setHcMealDate(e.target.value)}
                         data-testid="input-hc-date"
@@ -686,10 +686,10 @@ export default function HouseDirectorDashboard() {
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Meal Type</Label>
                       <Select value={hcMealType} onValueChange={setHcMealType}>
-                        <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-hc-meal-type">
+                        <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-hc-meal-type">
                           <SelectValue placeholder="Select meal" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                        <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                           {HEADCOUNT_MEAL_TYPES.map((type) => (
                             <SelectItem key={type} value={type} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{type}</SelectItem>
                           ))}
@@ -702,7 +702,7 @@ export default function HouseDirectorDashboard() {
                         type="number"
                         min="0"
                         placeholder="0"
-                        className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                        className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         value={hcCount}
                         onChange={(e) => setHcCount(e.target.value)}
                         data-testid="input-hc-count"
@@ -730,11 +730,11 @@ export default function HouseDirectorDashboard() {
                 {headcounts && headcounts.length > 0 ? (
                   <div className="grid gap-3">
                     {headcounts.slice(0, 20).map((hc) => (
-                      <Card key={hc.id} className="bg-[#111111] border border-white/[0.06] rounded-sm border-t-2 border-t-amber-500">
+                      <Card key={hc.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm border-t-2 border-t-amber-500">
                         <CardContent className="py-3 flex items-center justify-between">
                           <div>
                             <span className="font-medium text-white font-sans">{format(parseISO(hc.mealDate), "MMM d, yyyy")}</span>
-                            <Badge variant="outline" className="ml-2 rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.08] text-neutral-400">{hc.mealType}</Badge>
+                            <Badge variant="outline" className="ml-2 rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.14] text-neutral-400">{hc.mealType}</Badge>
                           </div>
                           <div className="text-right">
                             <span className="text-2xl font-display font-black text-amber-500">{hc.headcount}</span>
@@ -745,7 +745,7 @@ export default function HouseDirectorDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                  <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                     <CardContent className="py-8 text-center text-neutral-500 font-sans">
                       <Users className="w-12 h-12 mx-auto mb-4 text-neutral-500" />
                       No headcount reports yet
@@ -767,7 +767,7 @@ export default function HouseDirectorDashboard() {
                   {memberFeedback.map((fb) => {
                     const menu = menus?.find((m: any) => m.id === fb.menuId);
                     return (
-                      <Card key={fb.id} className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                      <Card key={fb.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                         <CardContent className="py-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
@@ -775,7 +775,7 @@ export default function HouseDirectorDashboard() {
                                 <span className="font-medium text-sm text-white font-sans">
                                   {menu ? format(parseISO(menu.weekOf), "MMM d") : `Menu #${fb.menuId}`}
                                 </span>
-                                <Badge variant="outline" className="text-xs rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.08] text-neutral-400">{fb.mealDay} {fb.mealType}</Badge>
+                                <Badge variant="outline" className="text-xs rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.14] text-neutral-400">{fb.mealDay} {fb.mealType}</Badge>
                               </div>
                               {fb.comment && (
                                 <p className="text-sm text-neutral-500 mt-1 font-sans">{fb.comment}</p>
@@ -783,7 +783,7 @@ export default function HouseDirectorDashboard() {
                             </div>
                             <div className="flex items-center gap-0.5 shrink-0">
                               {[1, 2, 3, 4, 5].map((s) => (
-                                <Star key={s} className={`w-4 h-4 ${s <= fb.rating ? "fill-yellow-400 text-yellow-400" : "text-neutral-600"}`} />
+                                <Star key={s} className={`w-4 h-4 ${s <= fb.rating ? "fill-yellow-400 text-yellow-400" : "text-neutral-500"}`} />
                               ))}
                             </div>
                           </div>
@@ -793,7 +793,7 @@ export default function HouseDirectorDashboard() {
                   })}
                 </div>
               ) : (
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                   <CardContent className="py-12 text-center">
                     <MessageSquare className="w-12 h-12 mx-auto text-neutral-500 mb-4" />
                     <p className="text-neutral-500 font-sans">No member feedback yet</p>
@@ -812,7 +812,7 @@ export default function HouseDirectorDashboard() {
                     {mealReviews.map((review) => {
                       const menu = menus?.find((m: any) => m.id === review.menuId);
                       return (
-                        <Card key={review.id} className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                        <Card key={review.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                           <CardContent className="py-4">
                             <div className="flex items-start justify-between gap-4">
                               <div>
@@ -820,7 +820,7 @@ export default function HouseDirectorDashboard() {
                                   <span className="font-medium text-sm text-white font-sans">
                                     {menu ? format(parseISO(menu.weekOf), "MMM d") : `Menu #${review.menuId}`}
                                   </span>
-                                  <Badge variant="outline" className="text-xs rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.08] text-neutral-400">{review.mealDay} {review.mealType}</Badge>
+                                  <Badge variant="outline" className="text-xs rounded-sm uppercase tracking-wider font-bold text-[10px] border-white/[0.14] text-neutral-400">{review.mealDay} {review.mealType}</Badge>
                                 </div>
                                 <div className="flex gap-3 text-xs text-neutral-500 mt-1 font-sans">
                                   <span>Quantity: {review.quantityRating}</span>
@@ -830,7 +830,7 @@ export default function HouseDirectorDashboard() {
                               </div>
                               <div className="flex items-center gap-0.5 shrink-0">
                                 {[1, 2, 3, 4, 5].map((s) => (
-                                  <Star key={s} className={`w-4 h-4 ${s <= review.qualityRating ? "fill-yellow-400 text-yellow-400" : "text-neutral-600"}`} />
+                                  <Star key={s} className={`w-4 h-4 ${s <= review.qualityRating ? "fill-yellow-400 text-yellow-400" : "text-neutral-500"}`} />
                                 ))}
                               </div>
                             </div>
@@ -854,8 +854,8 @@ export default function HouseDirectorDashboard() {
                   {critiques.map((critique) => {
                     const menu = menus?.find((m: any) => m.id === critique.menuId);
                     return (
-                      <Card key={critique.id} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                        <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+                      <Card key={critique.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                        <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <div>
                               <CardTitle className="text-base font-display font-bold uppercase tracking-wide text-white">
@@ -881,7 +881,7 @@ export default function HouseDirectorDashboard() {
                               <p className="text-sm mt-1 text-white font-sans">{critique.suggestedEdits}</p>
                             </div>
                           )}
-                          <div className="pt-2 text-xs text-neutral-500 border-t border-white/[0.06] font-sans">
+                          <div className="pt-2 text-xs text-neutral-500 border-t border-white/[0.10] font-sans">
                             Admin review: {critique.acknowledgedByAdmin ? "Reviewed" : "Pending"}
                           </div>
                         </CardContent>
@@ -890,7 +890,7 @@ export default function HouseDirectorDashboard() {
                   })}
                 </div>
               ) : (
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                   <CardContent className="py-12 text-center">
                     <ClipboardList className="w-12 h-12 mx-auto text-neutral-500 mb-4" />
                     <p className="text-neutral-500 font-sans">No notes submitted yet</p>
@@ -907,7 +907,7 @@ export default function HouseDirectorDashboard() {
                   <h2 className="font-display font-bold uppercase tracking-wide text-white text-lg">Your Event Requests</h2>
                   <div className="grid gap-3">
                     {eventRequests.map((er) => (
-                      <Card key={er.id} className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                      <Card key={er.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                         <CardContent className="py-4">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <div>
@@ -935,7 +935,7 @@ export default function HouseDirectorDashboard() {
 
       {/* ===== CRITIQUE MODAL ===== */}
       <Dialog open={critiqueModalOpen} onOpenChange={setCritiqueModalOpen}>
-        <DialogContent className="max-w-lg bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="max-w-lg bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Send Note to Admin</DialogTitle>
             <DialogDescription className="text-neutral-400 font-sans">
@@ -948,7 +948,7 @@ export default function HouseDirectorDashboard() {
               <Label htmlFor="critique" className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Note / Feedback</Label>
               <Textarea
                 id="critique"
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                 placeholder="Share your notes for the admin..."
                 value={critiqueText}
                 onChange={(e) => setCritiqueText(e.target.value)}
@@ -961,7 +961,7 @@ export default function HouseDirectorDashboard() {
               <Label htmlFor="suggested-edits" className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Suggested Edits</Label>
               <Textarea
                 id="suggested-edits"
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                 placeholder="Suggest specific changes for admin review..."
                 value={suggestedEdits}
                 onChange={(e) => setSuggestedEdits(e.target.value)}
@@ -972,7 +972,7 @@ export default function HouseDirectorDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setCritiqueModalOpen(false)}>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setCritiqueModalOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -993,7 +993,7 @@ export default function HouseDirectorDashboard() {
 
       {/* ===== MEAL REVIEW MODAL ===== */}
       <Dialog open={reviewModalOpen} onOpenChange={(open) => { if (!open) { setReviewModalOpen(false); resetReviewForm(); } }}>
-        <DialogContent className="max-w-md bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="max-w-md bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Rate Meal</DialogTitle>
             <DialogDescription className="text-neutral-400 font-sans">
@@ -1010,10 +1010,10 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Quantity</Label>
               <Select value={reviewQuantity} onValueChange={setReviewQuantity}>
-                <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-review-quantity">
+                <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-review-quantity">
                   <SelectValue placeholder="Select quantity" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   {QUANTITY_OPTIONS.map((opt) => (
                     <SelectItem key={opt} value={opt} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{opt}</SelectItem>
                   ))}
@@ -1024,10 +1024,10 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Timeliness</Label>
               <Select value={reviewTimeliness} onValueChange={setReviewTimeliness}>
-                <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-review-timeliness">
+                <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-review-timeliness">
                   <SelectValue placeholder="Select timeliness" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   {TIMELINESS_OPTIONS.map((opt) => (
                     <SelectItem key={opt} value={opt} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{opt}</SelectItem>
                   ))}
@@ -1038,7 +1038,7 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Comment (optional, max 100 chars)</Label>
               <Input
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 placeholder="Brief comment..."
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value.slice(0, 100))}
@@ -1050,7 +1050,7 @@ export default function HouseDirectorDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => { setReviewModalOpen(false); resetReviewForm(); }}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => { setReviewModalOpen(false); resetReviewForm(); }}>Cancel</Button>
             <Button
               className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm"
               onClick={handleSubmitReview}
@@ -1069,7 +1069,7 @@ export default function HouseDirectorDashboard() {
 
       {/* ===== EVENT REQUEST MODAL ===== */}
       <Dialog open={eventModalOpen} onOpenChange={setEventModalOpen}>
-        <DialogContent className="max-w-md bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="max-w-md bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Event / Special Meal Request</DialogTitle>
             <DialogDescription className="text-neutral-400 font-sans">
@@ -1081,10 +1081,10 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Event Type</Label>
               <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-event-type">
+                <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-event-type">
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   {EVENT_TYPES.map((type) => (
                     <SelectItem key={type} value={type} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{type}</SelectItem>
                   ))}
@@ -1096,7 +1096,7 @@ export default function HouseDirectorDashboard() {
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Event Date</Label>
               <Input
                 type="date"
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
                 data-testid="input-event-date"
@@ -1106,10 +1106,10 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Expected Headcount</Label>
               <Select value={eventHeadcount} onValueChange={setEventHeadcount}>
-                <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-event-headcount">
+                <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-event-headcount">
                   <SelectValue placeholder="Select headcount range" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   {EVENT_HEADCOUNT_OPTIONS.map((opt) => (
                     <SelectItem key={opt} value={opt} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{opt}</SelectItem>
                   ))}
@@ -1120,10 +1120,10 @@ export default function HouseDirectorDashboard() {
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Adjusted Meal Time (optional)</Label>
               <Select value={eventMealTime} onValueChange={setEventMealTime}>
-                <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10" data-testid="select-event-meal-time">
+                <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10" data-testid="select-event-meal-time">
                   <SelectValue placeholder="No Change" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   {ADJUSTED_MEAL_TIME_OPTIONS.map((opt) => (
                     <SelectItem key={opt} value={opt} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{opt}</SelectItem>
                   ))}
@@ -1133,7 +1133,7 @@ export default function HouseDirectorDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setEventModalOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setEventModalOpen(false)}>Cancel</Button>
             <Button
               className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm"
               onClick={handleSubmitEventRequest}
@@ -1152,7 +1152,7 @@ export default function HouseDirectorDashboard() {
 
       {/* ===== PROFILE DIALOG ===== */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+        <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
           <DialogHeader>
             <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Account Settings</DialogTitle>
             <DialogDescription className="text-neutral-400 font-sans">
@@ -1163,7 +1163,7 @@ export default function HouseDirectorDashboard() {
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Name</Label>
               <Input
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 data-testid="input-profile-name"
@@ -1173,20 +1173,20 @@ export default function HouseDirectorDashboard() {
               <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Email</Label>
               <Input
                 type="email"
-                className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 value={profileEmail}
                 onChange={(e) => setProfileEmail(e.target.value)}
                 data-testid="input-profile-email"
               />
             </div>
-            <div className="border-t border-white/[0.06] pt-4">
+            <div className="border-t border-white/[0.10] pt-4">
               <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">Change Password</h4>
               <div className="space-y-2">
                 <div>
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Current Password</Label>
                   <Input
                     type="password"
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     data-testid="input-current-password"
@@ -1196,7 +1196,7 @@ export default function HouseDirectorDashboard() {
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">New Password</Label>
                   <Input
                     type="password"
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     data-testid="input-new-password"
@@ -1206,7 +1206,7 @@ export default function HouseDirectorDashboard() {
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Confirm New Password</Label>
                   <Input
                     type="password"
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     data-testid="input-confirm-password"
@@ -1216,7 +1216,7 @@ export default function HouseDirectorDashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(false)}>Cancel</Button>
             <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm" onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

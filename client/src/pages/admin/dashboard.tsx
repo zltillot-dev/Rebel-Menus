@@ -311,15 +311,15 @@ export default function AdminDashboard() {
   }, {});
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0A]">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 pl-64 min-h-screen bg-[#0A0A0A]">
-        <header className="pt-8 pb-6 px-8 border-b border-white/[0.06] flex flex-wrap items-start justify-between gap-4">
+      <main className="flex-1 md:pl-64 min-h-screen bg-background">
+        <header className="pt-8 pb-6 px-8 border-b border-white/[0.10] flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Admin Dashboard</h1>
             <p className="text-sm text-neutral-500 mt-1 font-sans">Manage chefs and approve weekly menus</p>
           </div>
-          <Button variant="outline" size="sm" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
+          <Button variant="outline" size="sm" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider" onClick={() => setProfileDialogOpen(true)} data-testid="button-account-settings">
             <Settings className="w-4 h-4 mr-2" />
             Account Settings
           </Button>
@@ -337,11 +337,11 @@ export default function AdminDashboard() {
               </h2>
               
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-                <TabsList className="h-10 bg-[#111111] border border-white/[0.06] rounded-sm p-0.5 grid grid-cols-2 w-full mb-4">
-                  <TabsTrigger value="pending" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-pending">
+                <TabsList className="h-10 bg-[#1A1A1A] border border-white/[0.10] rounded-sm p-0.5 grid grid-cols-2 w-full mb-4">
+                  <TabsTrigger value="pending" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-pending">
                     Pending ({pendingMenus.length})
                   </TabsTrigger>
-                  <TabsTrigger value="all" className="data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-all">
+                  <TabsTrigger value="all" className="data-[state=active]:bg-[#222222] data-[state=active]:text-white rounded-sm font-display font-bold uppercase tracking-wide text-xs" data-testid="tab-all">
                     All Menus ({menus?.length || 0})
                   </TabsTrigger>
                 </TabsList>
@@ -349,7 +349,7 @@ export default function AdminDashboard() {
                 {/* Pending Approvals Tab */}
                 <TabsContent value="pending">
                   {pendingMenus.length === 0 ? (
-                    <Card className="bg-[#111111] border border-white/[0.06] border-dashed rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] border-dashed rounded-sm">
                       <CardContent className="py-8 text-center text-neutral-500">
                         <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-50" />
                         <p className="font-medium text-white">No menus pending approval</p>
@@ -359,8 +359,8 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-4">
                       {pendingMenus.map((menu) => (
-                        <Card key={menu.id} className="bg-[#111111] border border-white/[0.06] rounded-sm hover:border-white/[0.1] transition-colors">
-                          <CardHeader className="pb-3 bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <Card key={menu.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm hover:border-white/[0.1] transition-colors">
+                          <CardHeader className="pb-3 bg-[#161616] border-b border-white/[0.10]">
                             <div className="flex justify-between items-start gap-2">
                               <div>
                                 <CardTitle className="font-display font-bold uppercase tracking-wide text-white">Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
                           <CardContent className="space-y-3">
                             <Button
                               variant="outline"
-                              className="w-full border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                              className="w-full border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                               onClick={() => setViewMenu(menu)}
                               data-testid={`button-view-menu-${menu.id}`}
                             >
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
                               </Button>
                               <Button
                                 variant="outline"
-                                className="flex-1 border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                                className="flex-1 border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                                 onClick={() => { setReviewMenu(menu); setAdminNotes(""); }}
                                 data-testid={`button-request-changes-${menu.id}`}
                               >
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                                     <Trash2 className="w-4 h-4 mr-2" /> Delete Draft
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                                <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Draft Menu</AlertDialogTitle>
                                     <AlertDialogDescription className="text-neutral-400">
@@ -420,7 +420,7 @@ export default function AdminDashboard() {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
                                       Delete
                                     </AlertDialogAction>
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                 {/* All Menus Tab */}
                 <TabsContent value="all">
                   {!menus || menus.length === 0 ? (
-                    <Card className="bg-[#111111] border border-white/[0.06] border-dashed rounded-sm">
+                    <Card className="bg-[#1A1A1A] border border-white/[0.10] border-dashed rounded-sm">
                       <CardContent className="py-8 text-center text-neutral-500">
                         <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
                         <p className="font-medium text-white">No menus created yet</p>
@@ -448,8 +448,8 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-4">
                       {menus.map((menu) => (
-                        <Card key={menu.id} className="bg-[#111111] border border-white/[0.06] rounded-sm hover:border-white/[0.1] transition-colors">
-                          <CardHeader className="pb-3 bg-[#0D0D0D] border-b border-white/[0.06]">
+                        <Card key={menu.id} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm hover:border-white/[0.1] transition-colors">
+                          <CardHeader className="pb-3 bg-[#161616] border-b border-white/[0.10]">
                             <div className="flex justify-between items-start gap-2">
                               <div>
                                 <CardTitle className="font-display font-bold uppercase tracking-wide text-white">Week of {format(new Date(menu.weekOf), "MMMM d, yyyy")}</CardTitle>
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
                           <CardContent className="space-y-3">
                             <Button
                               variant="outline"
-                              className="w-full border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                              className="w-full border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                               onClick={() => setViewMenu(menu)}
                               data-testid={`button-view-all-menu-${menu.id}`}
                             >
@@ -483,7 +483,7 @@ export default function AdminDashboard() {
                                     <Trash2 className="w-4 h-4 mr-2" /> Delete Draft
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                                <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Draft Menu</AlertDialogTitle>
                                     <AlertDialogDescription className="text-neutral-400">
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => deleteMenu(menu.id)} disabled={isDeleting}>
                                       Delete
                                     </AlertDialogAction>
@@ -519,7 +519,7 @@ export default function AdminDashboard() {
                   <DialogTrigger asChild>
                     <Button className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm shadow-sm">Add New Chef</Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                  <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                     <DialogHeader>
                       <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Add New Chef</DialogTitle>
                       <DialogDescription className="text-neutral-400">Create a chef profile and assign them to a fraternity.</DialogDescription>
@@ -527,26 +527,26 @@ export default function AdminDashboard() {
                     <form onSubmit={form.handleSubmit(handleCreateChef)} className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Full Name</Label>
-                        <Input {...form.register("name")} className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600" />
+                        <Input {...form.register("name")} className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500" />
                         {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Email</Label>
-                        <Input type="email" {...form.register("email")} className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600" />
+                        <Input type="email" {...form.register("email")} className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500" />
                         {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Password</Label>
-                        <Input type="password" {...form.register("password")} className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600" />
+                        <Input type="password" {...form.register("password")} className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500" />
                         {form.formState.errors.password && <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Fraternity Assignment</Label>
                         <Select onValueChange={(val) => form.setValue("fraternity", val as any)} defaultValue={form.getValues("fraternity")}>
-                          <SelectTrigger className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                          <SelectTrigger className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                             <SelectValue placeholder="Select fraternity" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                          <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                             {FRATERNITIES.map((frat) => (
                               <SelectItem key={frat} value={frat} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{frat}</SelectItem>
                             ))}
@@ -565,8 +565,8 @@ export default function AdminDashboard() {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {activeChefs.map((chef) => (
-                  <Card key={chef.id} data-testid={`card-chef-${chef.id}`} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                    <CardHeader className="p-4 bg-[#0D0D0D] border-b border-white/[0.06]">
+                  <Card key={chef.id} data-testid={`card-chef-${chef.id}`} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                    <CardHeader className="p-4 bg-[#161616] border-b border-white/[0.10]">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-600 font-bold">
@@ -596,7 +596,7 @@ export default function AdminDashboard() {
                                 <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                            <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Chef</AlertDialogTitle>
                                 <AlertDialogDescription className="text-neutral-400">
@@ -604,7 +604,7 @@ export default function AdminDashboard() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
                                   onClick={() => deleteChef(chef.id)} 
                                   disabled={isDeletingChef}
@@ -636,7 +636,7 @@ export default function AdminDashboard() {
                       <Plus className="w-4 h-4 mr-2" /> Add Task
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                  <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                     <DialogHeader>
                       <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Create Task for Chef</DialogTitle>
                       <DialogDescription className="text-neutral-400">Assign a task or reminder to a specific chef.</DialogDescription>
@@ -645,10 +645,10 @@ export default function AdminDashboard() {
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Chef</Label>
                         <Select value={newTaskChefId} onValueChange={setNewTaskChefId}>
-                          <SelectTrigger data-testid="select-task-chef" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                          <SelectTrigger data-testid="select-task-chef" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                             <SelectValue placeholder="Select a chef" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                          <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                             {activeChefs.map((chef) => (
                               <SelectItem key={chef.id} value={String(chef.id)} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">
                                 {chef.name} ({chef.fraternity})
@@ -664,7 +664,7 @@ export default function AdminDashboard() {
                           onChange={(e) => setNewTaskTitle(e.target.value)}
                           placeholder="e.g., Update weekly menu"
                           data-testid="input-task-title"
-                          className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                          className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         />
                       </div>
                       <div className="space-y-2">
@@ -674,17 +674,17 @@ export default function AdminDashboard() {
                           onChange={(e) => setNewTaskDescription(e.target.value)}
                           placeholder="Additional details..."
                           data-testid="input-task-description"
-                          className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                          className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Priority</Label>
                           <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
-                            <SelectTrigger data-testid="select-task-priority" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                            <SelectTrigger data-testid="select-task-priority" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                            <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                               <SelectItem value="low" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">Low</SelectItem>
                               <SelectItem value="medium" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">Medium</SelectItem>
                               <SelectItem value="high" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">High</SelectItem>
@@ -698,13 +698,13 @@ export default function AdminDashboard() {
                             value={newTaskDueDate}
                             onChange={(e) => setNewTaskDueDate(e.target.value)}
                             data-testid="input-task-due-date"
-                            className="bg-[#111111] border-white/[0.08] text-white rounded-sm"
+                            className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm"
                           />
                         </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setCreateTaskOpen(false)} className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
+                      <Button variant="outline" onClick={() => setCreateTaskOpen(false)} className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
                       <Button
                         onClick={handleCreateTask}
                         disabled={isCreatingTask || !newTaskChefId || !newTaskTitle.trim()}
@@ -719,13 +719,13 @@ export default function AdminDashboard() {
               </div>
 
               {isLoadingChefs || isLoadingTasks ? (
-                <Card className="bg-[#111111] border border-white/[0.06] border-dashed rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] border-dashed rounded-sm">
                   <CardContent className="py-8 text-center text-neutral-500">
                     Loading...
                   </CardContent>
                 </Card>
               ) : activeChefs.length === 0 ? (
-                <Card className="bg-[#111111] border border-white/[0.06] border-dashed rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] border-dashed rounded-sm">
                   <CardContent className="py-8 text-center text-neutral-500">
                     No chefs available. Add a chef first to assign tasks.
                   </CardContent>
@@ -738,8 +738,8 @@ export default function AdminDashboard() {
                     const completedTasks = chefTasks.filter((t: any) => t.isCompleted);
                     
                     return (
-                      <Card key={chef.id} data-testid={`card-chef-tasks-${chef.id}`} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                        <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+                      <Card key={chef.id} data-testid={`card-chef-tasks-${chef.id}`} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                        <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-600 font-bold text-sm">
@@ -786,7 +786,7 @@ export default function AdminDashboard() {
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                                    <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                                       <AlertDialogHeader>
                                         <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Task?</AlertDialogTitle>
                                         <AlertDialogDescription className="text-neutral-400">
@@ -794,7 +794,7 @@ export default function AdminDashboard() {
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                                         <AlertDialogAction onClick={() => deleteTask(task.id)}>Delete</AlertDialogAction>
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
@@ -802,7 +802,7 @@ export default function AdminDashboard() {
                                 </div>
                               ))}
                               {completedTasks.length > 0 && (
-                                <div className="pt-2 border-t border-white/[0.06]">
+                                <div className="pt-2 border-t border-white/[0.10]">
                                   <p className="text-xs text-neutral-500 mb-2">{completedTasks.length} completed</p>
                                   {completedTasks.slice(0, 2).map((task: any) => (
                                     <div key={task.id} className="flex items-center justify-between p-2 opacity-60">
@@ -837,7 +837,7 @@ export default function AdminDashboard() {
                       <Plus className="w-4 h-4 mr-2" /> Add House Director
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                  <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                     <DialogHeader>
                       <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Add House Director</DialogTitle>
                       <DialogDescription className="text-neutral-400">Create a house director profile. A temporary password will be generated automatically and sent via email.</DialogDescription>
@@ -851,7 +851,7 @@ export default function AdminDashboard() {
                           onChange={(e) => setHDName(e.target.value)}
                           placeholder="John Smith"
                           data-testid="input-hd-name"
-                          className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                          className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         />
                       </div>
                       <div className="space-y-2">
@@ -863,16 +863,16 @@ export default function AdminDashboard() {
                           onChange={(e) => setHDEmail(e.target.value)}
                           placeholder="john@university.edu"
                           data-testid="input-hd-email"
-                          className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                          className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Fraternity</Label>
                         <Select value={hdFraternity} onValueChange={setHDFraternity}>
-                          <SelectTrigger data-testid="select-hd-fraternity" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                          <SelectTrigger data-testid="select-hd-fraternity" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                             <SelectValue placeholder="Select fraternity" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                          <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                             {FRATERNITIES.map(f => (
                               <SelectItem key={f} value={f} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{f}</SelectItem>
                             ))}
@@ -888,7 +888,7 @@ export default function AdminDashboard() {
                           onChange={(e) => setHDPhone(e.target.value)}
                           placeholder="+1 555 123 4567"
                           data-testid="input-hd-phone"
-                          className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                          className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                         />
                       </div>
                     </div>
@@ -933,7 +933,7 @@ export default function AdminDashboard() {
                   <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                 </div>
               ) : !houseDirectors || houseDirectors.length === 0 ? (
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                   <CardContent className="py-8 text-center text-neutral-500">
                     No house directors yet. Click "Add House Director" to create one.
                   </CardContent>
@@ -941,8 +941,8 @@ export default function AdminDashboard() {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {houseDirectors.map((hd: any) => (
-                    <Card key={hd.id} data-testid={`hd-card-${hd.id}`} className="bg-[#111111] border border-white/[0.06] rounded-sm relative overflow-visible">
-                      <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+                    <Card key={hd.id} data-testid={`hd-card-${hd.id}`} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm relative overflow-visible">
+                      <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-lg truncate">{hd.name}</CardTitle>
@@ -988,7 +988,7 @@ export default function AdminDashboard() {
                   <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                 </div>
               ) : !critiques || critiques.length === 0 ? (
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                   <CardContent className="py-8 text-center text-neutral-500">
                     No house director notes yet.
                   </CardContent>
@@ -998,8 +998,8 @@ export default function AdminDashboard() {
                   {critiques.map((critique: any) => {
                     const menu = menus?.find((m: any) => m.id === critique.menuId);
                     return (
-                      <Card key={critique.id} className={`bg-[#111111] border border-white/[0.06] rounded-sm ${!critique.acknowledgedByAdmin ? "border-l-4 border-l-amber-500" : ""}`} data-testid={`critique-card-${critique.id}`}>
-                        <CardHeader className="pb-2 bg-[#0D0D0D] border-b border-white/[0.06]">
+                      <Card key={critique.id} className={`bg-[#1A1A1A] border border-white/[0.10] rounded-sm ${!critique.acknowledgedByAdmin ? "border-l-4 border-l-amber-500" : ""}`} data-testid={`critique-card-${critique.id}`}>
+                        <CardHeader className="pb-2 bg-[#161616] border-b border-white/[0.10]">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <div>
                               <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-base">
@@ -1061,9 +1061,9 @@ export default function AdminDashboard() {
 
           {/* Sidebar Stats */}
           <div className="space-y-6">
-            <Card className="bg-[#111111] border border-white/[0.06] rounded-sm relative overflow-hidden">
+            <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-px bg-amber-500/40" />
-              <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+              <CardHeader className="bg-[#161616] border-b border-white/[0.10]">
                 <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-lg">System Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1079,14 +1079,14 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
-              <CardHeader className="bg-[#0D0D0D] border-b border-white/[0.06]">
+            <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+              <CardHeader className="bg-[#161616] border-b border-white/[0.10]">
                 <CardTitle className="font-display font-bold uppercase tracking-wide text-white text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-2">
                 <Button
                   variant="outline"
-                  className="justify-start border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                  className="justify-start border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                   onClick={() => setFeedbackDialogOpen(true)}
                   data-testid="button-view-all-feedback"
                 >
@@ -1094,7 +1094,7 @@ export default function AdminDashboard() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                  className="justify-start border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                   onClick={() => setRequestsDialogOpen(true)}
                   data-testid="button-request-history"
                 >
@@ -1102,7 +1102,7 @@ export default function AdminDashboard() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
+                  className="justify-start border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider"
                   onClick={() => setLatePlatesDialogOpen(true)}
                   data-testid="button-view-late-plates"
                 >
@@ -1115,7 +1115,7 @@ export default function AdminDashboard() {
 
         {/* View Menu Dialog */}
         <Dialog open={!!viewMenu} onOpenChange={(open) => !open && setViewMenu(null)}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <Eye className="w-5 h-5" />
@@ -1130,7 +1130,7 @@ export default function AdminDashboard() {
                 const dayItems = viewMenu?.items?.filter((item: any) => item.day === day) || [];
                 if (dayItems.length === 0) return null;
                 return (
-                  <div key={day} className="border border-white/[0.06] rounded-sm p-4">
+                  <div key={day} className="border border-white/[0.10] rounded-sm p-4">
                     <h3 className="font-display font-bold text-lg text-white uppercase tracking-wide mb-3">{day}</h3>
                     <div className="space-y-3">
                       {dayItems.map((item: any) => (
@@ -1163,7 +1163,7 @@ export default function AdminDashboard() {
               })}
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setViewMenu(null)} data-testid="button-close-view-menu" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
+              <Button variant="outline" onClick={() => setViewMenu(null)} data-testid="button-close-view-menu" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold uppercase tracking-wider rounded-sm shadow-sm"
                 onClick={() => {
@@ -1193,7 +1193,7 @@ export default function AdminDashboard() {
 
         {/* Request Changes Dialog */}
         <Dialog open={!!reviewMenu} onOpenChange={(open) => !open && setReviewMenu(null)}>
-          <DialogContent className="max-w-lg bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-lg bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
@@ -1212,7 +1212,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={6}
                   data-testid="input-admin-notes"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                 />
                 <p className="text-xs text-neutral-500">
                   The chef will see these notes and can make corrections before resubmitting.
@@ -1220,7 +1220,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setReviewMenu(null)} data-testid="button-cancel-revision" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
+              <Button variant="outline" onClick={() => setReviewMenu(null)} data-testid="button-cancel-revision" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
               <Button
                 className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm"
                 onClick={() => {
@@ -1241,7 +1241,7 @@ export default function AdminDashboard() {
 
         {/* View Chef Details Dialog */}
         <Dialog open={!!viewChef} onOpenChange={(open) => !open && setViewChef(null)}>
-          <DialogContent className="max-w-md bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-md bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <Eye className="w-5 h-5" />
@@ -1262,7 +1262,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-neutral-500">{viewChef.fraternity}</p>
                   </div>
                 </div>
-                <div className="grid gap-3 pt-4 border-t border-white/[0.06]">
+                <div className="grid gap-3 pt-4 border-t border-white/[0.10]">
                   <div className="flex justify-between">
                     <span className="text-neutral-500">Email</span>
                     <span className="font-medium text-white" data-testid="text-chef-email">{viewChef.email}</span>
@@ -1283,14 +1283,14 @@ export default function AdminDashboard() {
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setViewChef(null)} data-testid="button-close-chef-dialog" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
+              <Button variant="outline" onClick={() => setViewChef(null)} data-testid="button-close-chef-dialog" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" data-testid="button-delete-chef-from-dialog">
                     <Trash2 className="w-4 h-4 mr-2" /> Delete Chef
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Chef</AlertDialogTitle>
                     <AlertDialogDescription className="text-neutral-400">
@@ -1298,7 +1298,7 @@ export default function AdminDashboard() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={() => {
                         deleteChef(viewChef.id);
@@ -1317,7 +1317,7 @@ export default function AdminDashboard() {
 
         {/* View All Feedback Dialog */}
         <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <Star className="w-5 h-5" />
@@ -1329,10 +1329,10 @@ export default function AdminDashboard() {
             </DialogHeader>
             <div className="mb-4">
               <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
-                <SelectTrigger data-testid="select-feedback-fraternity" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                <SelectTrigger data-testid="select-feedback-fraternity" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                   <SelectValue placeholder="Filter by fraternity" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   <SelectItem value="all" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">All Fraternities</SelectItem>
                   {FRATERNITIES.map((frat) => (
                     <SelectItem key={frat} value={frat} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{frat}</SelectItem>
@@ -1360,7 +1360,7 @@ export default function AdminDashboard() {
                     .map((fb: any) => {
                       const menu = menus?.find(m => m.id === fb.menuId);
                       return (
-                        <div key={fb.id} className="p-3 border border-white/[0.06] rounded-sm" data-testid={`feedback-item-${fb.id}`}>
+                        <div key={fb.id} className="p-3 border border-white/[0.10] rounded-sm" data-testid={`feedback-item-${fb.id}`}>
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <span className="font-medium text-white">{fb.userName || 'Anonymous'}</span>
@@ -1386,14 +1386,14 @@ export default function AdminDashboard() {
               )}
             </ScrollArea>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)} data-testid="button-close-feedback-dialog" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
+              <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)} data-testid="button-close-feedback-dialog" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Request History Dialog */}
         <Dialog open={requestsDialogOpen} onOpenChange={setRequestsDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <FileText className="w-5 h-5" />
@@ -1405,10 +1405,10 @@ export default function AdminDashboard() {
             </DialogHeader>
             <div className="mb-4">
               <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
-                <SelectTrigger data-testid="select-requests-fraternity" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                <SelectTrigger data-testid="select-requests-fraternity" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                   <SelectValue placeholder="Filter by fraternity" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   <SelectItem value="all" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">All Fraternities</SelectItem>
                   {FRATERNITIES.map((frat) => (
                     <SelectItem key={frat} value={frat} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{frat}</SelectItem>
@@ -1431,7 +1431,7 @@ export default function AdminDashboard() {
                     .filter((req: any) => req.type === 'substitution' || req.type === 'menu_suggestion')
                     .filter((req: any) => selectedFraternity === "all" || req.fraternity === selectedFraternity)
                     .map((req: any) => (
-                      <div key={req.id} className="p-3 border border-white/[0.06] rounded-sm" data-testid={`request-item-${req.id}`}>
+                      <div key={req.id} className="p-3 border border-white/[0.10] rounded-sm" data-testid={`request-item-${req.id}`}>
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-white">{req.user?.name || 'Unknown'}</span>
@@ -1456,14 +1456,14 @@ export default function AdminDashboard() {
               )}
             </ScrollArea>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setRequestsDialogOpen(false)} data-testid="button-close-requests-dialog" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
+              <Button variant="outline" onClick={() => setRequestsDialogOpen(false)} data-testid="button-close-requests-dialog" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Late Plates Dialog */}
         <Dialog open={latePlatesDialogOpen} onOpenChange={setLatePlatesDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="max-w-2xl max-h-[80vh] bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -1475,10 +1475,10 @@ export default function AdminDashboard() {
             </DialogHeader>
             <div className="mb-4">
               <Select value={selectedFraternity} onValueChange={setSelectedFraternity}>
-                <SelectTrigger data-testid="select-lateplates-fraternity" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                <SelectTrigger data-testid="select-lateplates-fraternity" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                   <SelectValue placeholder="Filter by fraternity" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                   <SelectItem value="all" className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">All Fraternities</SelectItem>
                   {FRATERNITIES.map((frat) => (
                     <SelectItem key={frat} value={frat} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{frat}</SelectItem>
@@ -1536,7 +1536,7 @@ export default function AdminDashboard() {
                       const isPreviousWeek = plateDate >= previousWeek && plateDate < currentWeek;
                       
                       return (
-                        <div key={key} className="p-3 border border-white/[0.06] rounded-sm" data-testid={`late-plate-group-${key}`}>
+                        <div key={key} className="p-3 border border-white/[0.10] rounded-sm" data-testid={`late-plate-group-${key}`}>
                           <div className="flex justify-between items-center mb-2">
                             <div className="font-medium text-white">
                               {format(parseISO(dateStr), "EEEE, MMM d")} - {mealType}
@@ -1562,13 +1562,13 @@ export default function AdminDashboard() {
               )}
             </ScrollArea>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setLatePlatesDialogOpen(false)} data-testid="button-close-lateplates-dialog" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
+              <Button variant="outline" onClick={() => setLatePlatesDialogOpen(false)} data-testid="button-close-lateplates-dialog" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-          <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Account Settings</DialogTitle>
               <DialogDescription className="text-neutral-400">
@@ -1582,7 +1582,7 @@ export default function AdminDashboard() {
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   data-testid="input-profile-name"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 />
               </div>
               <div>
@@ -1592,10 +1592,10 @@ export default function AdminDashboard() {
                   value={profileEmail}
                   onChange={(e) => setProfileEmail(e.target.value)}
                   data-testid="input-profile-email"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 />
               </div>
-              <div className="border-t border-white/[0.06] pt-4">
+              <div className="border-t border-white/[0.10] pt-4">
                 <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">Change Password</h4>
                 <div className="space-y-2">
                   <div>
@@ -1605,7 +1605,7 @@ export default function AdminDashboard() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       data-testid="input-current-password"
-                      className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                      className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     />
                   </div>
                   <div>
@@ -1615,7 +1615,7 @@ export default function AdminDashboard() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       data-testid="input-new-password"
-                      className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                      className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     />
                   </div>
                   <div>
@@ -1625,14 +1625,14 @@ export default function AdminDashboard() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       data-testid="input-confirm-password"
-                      className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                      className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                     />
                   </div>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setProfileDialogOpen(false)} className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
+              <Button variant="outline" onClick={() => setProfileDialogOpen(false)} className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
               <Button onClick={handleProfileUpdate} disabled={updateProfileMutation.isPending} data-testid="button-save-profile" className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm">
                 {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
@@ -1641,7 +1641,7 @@ export default function AdminDashboard() {
         </Dialog>
 
         <Dialog open={editHDOpen} onOpenChange={setEditHDOpen}>
-          <DialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Edit House Director</DialogTitle>
               <DialogDescription className="text-neutral-400">
@@ -1655,7 +1655,7 @@ export default function AdminDashboard() {
                   value={editHDName}
                   onChange={(e) => setEditHDName(e.target.value)}
                   data-testid="input-edit-hd-name"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 />
               </div>
               <div>
@@ -1665,7 +1665,7 @@ export default function AdminDashboard() {
                   value={editHDEmail}
                   onChange={(e) => setEditHDEmail(e.target.value)}
                   data-testid="input-edit-hd-email"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 />
               </div>
               <div>
@@ -1675,10 +1675,10 @@ export default function AdminDashboard() {
                   value={editHDPhone}
                   onChange={(e) => setEditHDPhone(e.target.value)}
                   data-testid="input-edit-hd-phone"
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                 />
               </div>
-              <div className="border-t border-white/[0.06] pt-4">
+              <div className="border-t border-white/[0.10] pt-4">
                 <h4 className="font-display font-bold uppercase tracking-wide text-white mb-2">Reset Password</h4>
                 <div>
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">New Password (leave blank to keep current)</Label>
@@ -1688,13 +1688,13 @@ export default function AdminDashboard() {
                     onChange={(e) => setEditHDPassword(e.target.value)}
                     placeholder="Enter new password"
                     data-testid="input-edit-hd-password"
-                    className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600"
+                    className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500"
                   />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditHDOpen(false)} data-testid="button-cancel-edit-hd" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
+              <Button variant="outline" onClick={() => setEditHDOpen(false)} data-testid="button-cancel-edit-hd" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</Button>
               <Button onClick={handleEditHD} disabled={updateHDMutation.isPending} data-testid="button-save-edit-hd" className="bg-amber-500 hover:bg-amber-400 text-black font-display font-bold uppercase tracking-wider rounded-sm">
                 {updateHDMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>

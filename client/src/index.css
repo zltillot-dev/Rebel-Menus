@@ -9,41 +9,45 @@
   --font-display: 'Barlow Condensed', sans-serif;
   --font-mono: 'Fira Code', monospace;
 
-  /* Base — deep black */
-  --background: 0 0% 4%;
-  --foreground: 0 0% 98%;
+  /* Base — dark charcoal, NOT pure black */
+  --background: 0 0% 9%;
+  --foreground: 0 0% 97%;
 
   /* Primary — amber gold */
   --primary: 38 93% 51%;
-  --primary-foreground: 0 0% 4%;
+  --primary-foreground: 0 0% 5%;
 
-  /* Secondary — near-black surface */
-  --secondary: 0 0% 10%;
+  /* Secondary — elevated surface */
+  --secondary: 0 0% 14%;
   --secondary-foreground: 0 0% 95%;
 
   /* UI elements */
-  --muted: 0 0% 11%;
-  --muted-foreground: 0 0% 55%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 60%;
   --accent: 38 93% 51%;
-  --accent-foreground: 0 0% 4%;
+  --accent-foreground: 0 0% 5%;
 
   /* Functional */
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 15%;
-  --input: 0 0% 11%;
+  --border: 0 0% 22%;
+  --input: 0 0% 14%;
   --ring: 38 93% 51%;
   --radius: 0.25rem;
 
-  /* Cards */
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 95%;
+  /* Cards — noticeably lighter than background */
+  --card: 0 0% 13%;
+  --card-foreground: 0 0% 96%;
 
-  /* Sidebar */
-  --sidebar-bg: 0 0% 3%;
+  /* Sidebar — darkest element for contrast */
+  --sidebar-bg: 0 0% 6%;
   --sidebar-fg: 0 0% 90%;
-  --sidebar-muted: 0 0% 20%;
+  --sidebar-muted: 0 0% 25%;
   --sidebar-accent: 38 93% 51%;
+
+  /* Popover */
+  --popover: 0 0% 13%;
+  --popover-foreground: 0 0% 96%;
 }
 
 /* No light mode — app is dark-first */

@@ -79,9 +79,9 @@ export default function AuthPage() {
   });
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#0A0A0A]">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Left: Branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center p-16 bg-[#080808] border-r border-white/[0.04] relative overflow-hidden">
+      <div className="hidden lg:flex flex-col justify-center items-center p-16 bg-[#111111] border-r border-white/[0.08] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(245,158,11,0.06),transparent_60%)]" />
         <div className="relative z-10 text-center max-w-lg flex flex-col items-center gap-8">
           <img src={logoImg} alt="Rebel Chefs" className="w-72 h-auto" data-testid="img-logo-desktop" />
@@ -96,7 +96,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right: Auth Forms */}
-      <div className="flex items-center justify-center p-8 lg:p-16 bg-[#0A0A0A]">
+      <div className="flex items-center justify-center p-8 lg:p-16 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden flex flex-col items-center mb-8">
             <img src={logoImg} alt="Rebel Chefs" className="w-48 h-auto" data-testid="img-logo-mobile" />
@@ -104,9 +104,9 @@ export default function AuthPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 h-11 bg-[#111111] border border-white/[0.06] rounded-sm">
-              <TabsTrigger value="login" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#1A1A1A] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Create Account</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 h-11 bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+              <TabsTrigger value="login" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#222222] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="register" className="text-sm font-bold uppercase tracking-wider font-display data-[state=active]:bg-[#222222] data-[state=active]:text-white data-[state=active]:shadow-none rounded-sm">Create Account</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -133,7 +133,7 @@ export default function AuthPage() {
                         id="email"
                         type="email"
                         placeholder="name@school.edu"
-                        className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
+                        className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
                         data-testid="input-login-email"
                         {...loginForm.register("username")} 
                       />
@@ -146,7 +146,7 @@ export default function AuthPage() {
                       <Input
                         id="password"
                         type="password"
-                        className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
+                        className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0"
                         data-testid="input-login-password"
                         {...loginForm.register("password")} 
                       />
@@ -186,13 +186,13 @@ export default function AuthPage() {
                   })} className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Full Name</Label>
-                      <Input placeholder="John Doe" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("name")} />
+                      <Input placeholder="John Doe" className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("name")} />
                       {registerForm.formState.errors.name && <p className="text-sm text-destructive">{registerForm.formState.errors.name.message}</p>}
                     </div>
                     
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">School Email</Label>
-                      <Input placeholder="name@olemiss.edu" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("email")} />
+                      <Input placeholder="name@olemiss.edu" className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("email")} />
                       <p className="text-xs text-muted-foreground">Supported domains: @olemiss.edu and @k-state.edu</p>
                       {registerForm.formState.errors.email && <p className="text-sm text-destructive">{registerForm.formState.errors.email.message}</p>}
                     </div>
@@ -200,12 +200,12 @@ export default function AuthPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Password</Label>
-                        <Input type="password" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("password")} />
+                        <Input type="password" className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("password")} />
                         {registerForm.formState.errors.password && <p className="text-sm text-destructive">{registerForm.formState.errors.password.message}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-display">Confirm</Label>
-                        <Input type="password" className="h-11 bg-[#111111] border-white/[0.08] text-white placeholder:text-neutral-600 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("confirmPassword")} />
+                        <Input type="password" className="h-11 bg-[#1A1A1A] border-white/[0.14] text-white placeholder:text-neutral-500 rounded-sm focus:border-amber-500/60 focus:ring-0 focus:ring-offset-0" {...registerForm.register("confirmPassword")} />
                         {registerForm.formState.errors.confirmPassword && <p className="text-sm text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>}
                       </div>
                     </div>

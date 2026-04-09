@@ -54,7 +54,7 @@ export function Sidebar() {
           <div>
             <h1 className="font-display font-black text-2xl tracking-[0.15em] text-white uppercase">REBEL CHEFS</h1>
             <div className="mt-1 h-px w-10 bg-amber-500" />
-            <p className="text-[10px] text-neutral-600 mt-2 uppercase tracking-[0.2em] font-medium">
+            <p className="text-[10px] text-neutral-500 mt-2 uppercase tracking-[0.2em] font-medium">
               {user.fraternity || "Admin Portal"}
             </p>
             <p className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 mt-0.5 font-semibold font-display">
@@ -105,14 +105,14 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto p-6 border-t border-white/[0.06]">
+      <div className="mt-auto p-6 border-t border-white/[0.10]">
         <div className="flex items-center gap-3 mb-4 px-2">
           <div className="w-8 h-8 rounded-sm bg-amber-500 flex items-center justify-center text-black font-black text-sm">
             {user.name.charAt(0)}
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold text-white/90 font-sans truncate">{user.name}</p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-600 font-display">{roleLabel}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500 font-display">{roleLabel}</p>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export function Sidebar() {
 
         <Button
           variant="ghost"
-          className="w-full justify-start text-neutral-600 hover:text-red-400 hover:bg-red-500/[0.08] rounded-none transition-colors"
+          className="w-full justify-start text-neutral-500 hover:text-red-400 hover:bg-red-500/[0.08] rounded-none transition-colors"
           onClick={() => logout()}
           data-testid="button-logout"
         >
@@ -180,7 +180,7 @@ export function Sidebar() {
       )}
 
       <div className={cn(
-        "h-screen w-64 bg-[#080808] border-r border-white/[0.06] fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
+        "h-screen w-64 bg-[#111111] border-r border-white/[0.10] fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300",
         "md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>

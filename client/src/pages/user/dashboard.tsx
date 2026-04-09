@@ -416,12 +416,12 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0A]">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 pl-64 min-h-screen bg-[#0A0A0A] p-4 pt-16 md:pt-8 md:p-8 max-w-7xl mx-auto">
+      <main className="flex-1 md:pl-64 min-h-screen bg-background p-4 pt-16 md:pt-8 md:p-8 max-w-7xl mx-auto">
         {inlineMessage ? (
-          <Alert className="relative mb-6 bg-[#111111] border border-white/[0.06] text-white shadow-sm transition-all rounded-sm">
+          <Alert className="relative mb-6 bg-[#1A1A1A] border border-white/[0.10] text-white shadow-sm transition-all rounded-sm">
             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <div className="pr-8">
               <AlertTitle>{inlineMessage.title}</AlertTitle>
@@ -458,7 +458,7 @@ export default function UserDashboard() {
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-3">
                   {[1, 2, 3].map((card) => (
-                    <Card key={card} className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                    <Card key={card} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                       <CardContent className="space-y-3 p-4">
                         <div className="h-3 w-24 animate-pulse rounded-sm bg-white/[0.03]" />
                         <div className="h-5 w-40 animate-pulse rounded-sm bg-white/[0.03]" />
@@ -466,14 +466,14 @@ export default function UserDashboard() {
                     </Card>
                   ))}
                 </div>
-                <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-sm border border-white/[0.06] bg-[#111111] text-neutral-500">
+                <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-sm border border-white/[0.10] bg-[#1A1A1A] text-neutral-500">
                   <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
                   <p className="text-sm font-medium font-sans">Loading the latest published menu...</p>
                   <p className="text-xs text-neutral-500 font-sans">This usually takes just a moment.</p>
                 </div>
               </div>
             ) : !currentMenu ? (
-              <div className="bg-[#111111] rounded-sm p-12 text-center border border-white/[0.06] border-dashed">
+              <div className="bg-[#1A1A1A] rounded-sm p-12 text-center border border-white/[0.10] border-dashed">
                 <Calendar className="w-10 h-10 mx-auto text-neutral-500 mb-3" />
                 <h3 className="text-xl font-display font-bold uppercase tracking-wide text-white mb-2">No menu has been published yet</h3>
                 <p className="text-neutral-500 max-w-md mx-auto font-sans">Your house menu will appear here as soon as it is approved and posted.</p>
@@ -481,7 +481,7 @@ export default function UserDashboard() {
             ) : (
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-3">
-                  <Card className="bg-[#111111] border border-white/[0.06] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
+                  <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
                     <CardContent className="p-4">
                       <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold font-display">Next action</p>
                       <p className="text-base font-bold mt-1 text-white font-sans">
@@ -489,13 +489,13 @@ export default function UserDashboard() {
                       </p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-[#111111] border border-white/[0.06] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
+                  <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
                     <CardContent className="p-4">
                       <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold font-display">Today</p>
                       <p className="text-base font-bold mt-1 text-white font-sans">{todaysMenu ? `${todaysMenu.day} has ${todaysMenu.items.length} meal${todaysMenu.items.length === 1 ? "" : "s"}` : "Check the weekly menu below"}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-[#111111] border border-white/[0.06] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
+                  <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm transition-all duration-200 hover:-translate-y-0.5">
                     <CardContent className="p-4">
                       <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold font-display">This week</p>
                       <p className="text-base font-bold mt-1 text-white font-sans">{totalMealsThisWeek} published meals</p>
@@ -503,7 +503,7 @@ export default function UserDashboard() {
                   </Card>
                 </div>
 
-                <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                   <CardContent className="p-4 md:p-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
@@ -518,18 +518,18 @@ export default function UserDashboard() {
                           Late plate
                           <ArrowRight className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" onClick={() => openRequestModal("substitution")} className="justify-between transition-all duration-200 active:scale-[0.99] border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">
+                        <Button variant="outline" onClick={() => openRequestModal("substitution")} className="justify-between transition-all duration-200 active:scale-[0.99] border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">
                           Substitution
                           <ArrowRight className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" onClick={() => openRequestModal("menu_suggestion")} className="justify-between transition-all duration-200 active:scale-[0.99] border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">
+                        <Button variant="outline" onClick={() => openRequestModal("menu_suggestion")} className="justify-between transition-all duration-200 active:scale-[0.99] border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">
                           Suggest meal
                           <ArrowRight className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                     {firstAvailableMeal ? (
-                      <div className="mt-4 rounded-sm border border-white/[0.06] bg-[#0A0A0A] p-3 text-sm">
+                      <div className="mt-4 rounded-sm border border-white/[0.10] bg-background p-3 text-sm">
                         <span className="font-medium text-white">Next late plate:</span> <span className="text-neutral-400">{firstAvailableMeal.label}</span>
                       </div>
                     ) : null}
@@ -541,7 +541,7 @@ export default function UserDashboard() {
                 </Card>
 
                 {todaysMenu ? (
-                  <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+                  <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2">
                         <UtensilsCrossed className="h-4 w-4 text-amber-500" />
@@ -549,13 +549,13 @@ export default function UserDashboard() {
                       </div>
                       <div className="mt-3 grid gap-3 md:grid-cols-2">
                         {todaysMenu.items.map((item) => (
-                          <div key={item.id} className="rounded-sm border border-white/[0.06] bg-[#161616] p-3 transition-colors duration-200 hover:bg-white/[0.06]">
+                          <div key={item.id} className="rounded-sm border border-white/[0.10] bg-[#1E1E1E] p-3 transition-colors duration-200 hover:bg-white/[0.06]">
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <p className="text-sm font-semibold text-amber-500">{item.meal}</p>
                                 <p className="text-base font-semibold leading-tight text-white">{item.description}</p>
                               </div>
-                              {item.calories ? <Badge className="rounded-sm border-white/[0.08] text-neutral-400 font-display text-[10px] uppercase tracking-wider">{item.calories} kcal</Badge> : null}
+                              {item.calories ? <Badge className="rounded-sm border-white/[0.14] text-neutral-400 font-display text-[10px] uppercase tracking-wider">{item.calories} kcal</Badge> : null}
                             </div>
                             {(item.side1 || item.side2 || item.side3) && (
                               <p className="mt-2 text-sm text-neutral-500 font-sans">
@@ -601,7 +601,7 @@ export default function UserDashboard() {
                 <Button
                   key={type}
                   variant="outline"
-                  className="h-auto items-start justify-start rounded-sm p-4 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] bg-[#111111]"
+                  className="h-auto items-start justify-start rounded-sm p-4 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] bg-[#1A1A1A]"
                   onClick={() => openRequestModal(type)}
                 >
                   <div className="flex items-start gap-3">
@@ -623,7 +623,7 @@ export default function UserDashboard() {
                 <p className="text-sm font-sans">Loading your requests...</p>
               </div>
             ) : myRequests.length === 0 ? (
-              <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+              <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                 <CardContent className="p-12 text-center">
                   <FileText className="w-12 h-12 mx-auto text-neutral-500 mb-4" />
                   <h3 className="text-lg font-display font-bold uppercase tracking-wide text-white mb-2">No Requests Yet</h3>
@@ -634,8 +634,8 @@ export default function UserDashboard() {
             ) : (
               <div className="grid gap-4">
                 {myRequests.map((request: any) => (
-                  <Card key={request.id} data-testid={`card-request-${request.id}`} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                    <CardHeader className="pb-3 bg-[#0D0D0D] border-b border-white/[0.06]">
+                  <Card key={request.id} data-testid={`card-request-${request.id}`} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                    <CardHeader className="pb-3 bg-[#161616] border-b border-white/[0.10]">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex items-center gap-3">
                           {request.type === 'late_plate' ? (
@@ -669,7 +669,7 @@ export default function UserDashboard() {
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-[#111111] border border-white/[0.1] rounded-sm">
+                            <AlertDialogContent className="bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="font-display font-bold uppercase tracking-wide text-white">Delete Request</AlertDialogTitle>
                                 <AlertDialogDescription className="text-neutral-400">
@@ -677,7 +677,7 @@ export default function UserDashboard() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel data-testid="button-cancel-delete" className="border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
+                                <AlertDialogCancel data-testid="button-cancel-delete" className="border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm">Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
                                   onClick={() => deleteRequest(request.id)}
                                   disabled={isDeleting}
@@ -718,7 +718,7 @@ export default function UserDashboard() {
                 <p className="text-sm font-sans">Loading your feedback history...</p>
               </div>
             ) : myFeedback.length === 0 ? (
-              <Card className="bg-[#111111] border border-white/[0.06] rounded-sm">
+              <Card className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
                 <CardContent className="p-12 text-center">
                   <Star className="w-12 h-12 mx-auto text-neutral-500 mb-4" />
                   <h3 className="text-lg font-display font-bold uppercase tracking-wide text-white mb-2">No Feedback Yet</h3>
@@ -729,8 +729,8 @@ export default function UserDashboard() {
             ) : (
               <div className="grid gap-4">
                 {myFeedback.map((fb: any) => (
-                  <Card key={fb.id} data-testid={`card-feedback-${fb.id}`} className="bg-[#111111] border border-white/[0.06] rounded-sm">
-                    <CardHeader className="pb-3 bg-[#0D0D0D] border-b border-white/[0.06]">
+                  <Card key={fb.id} data-testid={`card-feedback-${fb.id}`} className="bg-[#1A1A1A] border border-white/[0.10] rounded-sm">
+                    <CardHeader className="pb-3 bg-[#161616] border-b border-white/[0.10]">
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-base font-display font-bold uppercase tracking-wide text-white">{fb.mealDay} {fb.mealType}</CardTitle>
@@ -763,7 +763,7 @@ export default function UserDashboard() {
 
         {/* Request Dialog */}
         <Dialog open={requestModalOpen} onOpenChange={setRequestModalOpen}>
-          <DialogContent className="sm:max-w-md bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="sm:max-w-md bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">
                 {requestType === "late_plate"
@@ -786,7 +786,7 @@ export default function UserDashboard() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Select Meal</Label>
                   {availableMealOptions.length === 0 ? (
-                    <div className="p-4 bg-[#111111] rounded-sm text-center border border-white/[0.06]">
+                    <div className="p-4 bg-[#1A1A1A] rounded-sm text-center border border-white/[0.10]">
                       <AlertCircle className="w-8 h-8 mx-auto text-neutral-500 mb-2" />
                       <p className="text-sm text-neutral-500 font-sans">
                         No meals available for late plate requests at this time.
@@ -812,7 +812,7 @@ export default function UserDashboard() {
                             className={`rounded-sm border px-4 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
                               isSelected
                                 ? "border-amber-500 bg-amber-500/10 text-white ring-2 ring-amber-500/20"
-                                : "border-white/[0.08] bg-[#161616] hover:border-amber-500/30 hover:bg-white/[0.06] text-neutral-300"
+                                : "border-white/[0.14] bg-[#1E1E1E] hover:border-amber-500/30 hover:bg-white/[0.06] text-neutral-300"
                             }`}
                             data-testid={`select-item-${format(option.date, "yyyy-MM-dd")}-${option.mealType}`}
                           >
@@ -838,7 +838,7 @@ export default function UserDashboard() {
                 </div>
               )}
               {requestType !== "late_plate" ? (
-                <div className="rounded-sm border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-neutral-500 font-sans">
+                <div className="rounded-sm border border-white/[0.10] bg-white/[0.03] p-3 text-sm text-neutral-500 font-sans">
                   {requestType === "substitution"
                     ? "Be specific so the chef can act quickly. Include allergies, dietary restrictions, or the replacement you need."
                     : "Keep it short and specific. Dish ideas and favorite meals work best."}
@@ -862,7 +862,7 @@ export default function UserDashboard() {
                   }
                   value={requestDetails}
                   onChange={(e) => setRequestDetails(e.target.value)}
-                  className="min-h-[100px] bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                  className="min-h-[100px] bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                   data-testid="input-request-details"
                 />
                 <p className="text-xs text-neutral-500 font-sans">
@@ -873,7 +873,7 @@ export default function UserDashboard() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setRequestModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99] border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">Cancel</Button>
+              <Button variant="outline" onClick={() => setRequestModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99] border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">Cancel</Button>
               <Button 
                 onClick={handleRequestSubmit} 
                 disabled={isRequesting || !canSubmitRequest}
@@ -898,7 +898,7 @@ export default function UserDashboard() {
 
         {/* Feedback Dialog */}
         <Dialog open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen}>
-          <DialogContent className="sm:max-w-md bg-[#111111] border border-white/[0.1] rounded-sm">
+          <DialogContent className="sm:max-w-md bg-[#1A1A1A] border border-white/[0.1] rounded-sm">
             <DialogHeader>
               <DialogTitle className="font-display font-bold uppercase tracking-wide text-white text-xl">Rate a Meal</DialogTitle>
               <DialogDescription className="text-neutral-400">
@@ -907,7 +907,7 @@ export default function UserDashboard() {
             </DialogHeader>
             <div className="space-y-6 py-4">
               {selectedFeedbackMenu ? (
-                <div className="rounded-sm border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-neutral-500 font-sans">
+                <div className="rounded-sm border border-white/[0.10] bg-white/[0.03] p-3 text-sm text-neutral-500 font-sans">
                   Rating menu for the week of {format(new Date(selectedFeedbackMenu.weekOf), "MMMM d, yyyy")}.
                 </div>
               ) : null}
@@ -924,10 +924,10 @@ export default function UserDashboard() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-neutral-500 font-display">Day</Label>
                   <Select value={feedbackMealDay} onValueChange={setFeedbackMealDay}>
-                    <SelectTrigger data-testid="select-feedback-day" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                    <SelectTrigger data-testid="select-feedback-day" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                       <SelectValue placeholder="Select day" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                    <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                       {DAYS.map((day) => (
                         <SelectItem key={day} value={day} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{day}</SelectItem>
                       ))}
@@ -940,10 +940,10 @@ export default function UserDashboard() {
                     value={feedbackMealType}
                     onValueChange={(value: "Lunch" | "Dinner") => setFeedbackMealType(value)}
                   >
-                    <SelectTrigger data-testid="select-feedback-meal" className="bg-[#111111] border-white/[0.08] text-white rounded-sm h-10">
+                    <SelectTrigger data-testid="select-feedback-meal" className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm h-10">
                       <SelectValue placeholder="Select meal" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#161616] border-white/[0.1] rounded-sm">
+                    <SelectContent className="bg-[#1E1E1E] border-white/[0.1] rounded-sm">
                       {MEAL_TYPES.map((meal) => (
                         <SelectItem key={meal} value={meal} className="hover:bg-white/[0.06] focus:bg-white/[0.06] text-neutral-300 rounded-sm">{meal}</SelectItem>
                       ))}
@@ -981,7 +981,7 @@ export default function UserDashboard() {
                   placeholder="The chicken was great, but the rice was a bit dry..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className="bg-[#111111] border-white/[0.08] text-white rounded-sm placeholder:text-neutral-600 resize-none"
+                  className="bg-[#1A1A1A] border-white/[0.14] text-white rounded-sm placeholder:text-neutral-500 resize-none"
                   data-testid="textarea-feedback-comment"
                 />
                 <p className="text-xs text-neutral-500 font-sans">
@@ -990,7 +990,7 @@ export default function UserDashboard() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setFeedbackModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99] border-white/[0.08] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">Cancel</Button>
+              <Button variant="outline" onClick={() => setFeedbackModalOpen(false)} className="w-full sm:w-auto transition-all duration-200 active:scale-[0.99] border-white/[0.14] text-neutral-400 hover:text-white hover:border-white/[0.2] rounded-sm font-display font-bold uppercase tracking-wider">Cancel</Button>
               <Button 
                 onClick={handleFeedbackSubmit} 
                 disabled={isFeedbacking || !feedbackMealDay || !feedbackMealType}
