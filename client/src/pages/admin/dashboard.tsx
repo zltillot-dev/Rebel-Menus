@@ -116,8 +116,14 @@ export default function AdminDashboard() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast({ title: "House director created", description: `${data.name} can now log in.` });
+      setCreateHDOpen(false);
+      setHDName(""); setHDEmail(""); setHDPhone(""); setHDFraternity("Delta Tau Delta");
       queryClient.invalidateQueries({ queryKey: ['/api/admin/house-directors'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create house director", description: error.message || "Please check all fields and try again.", variant: "destructive" });
     },
   });
   
@@ -934,14 +940,6 @@ export default function AdminDashboard() {
                             email: hdEmail,
                             fraternity: hdFraternity,
                             phoneNumber: hdPhone || undefined,
-                          }, {
-                            onSuccess: () => {
-                              toast({ title: "House director created", description: "A welcome email with login credentials has been sent." });
-                              setCreateHDOpen(false);
-                              setHDName("");
-                              setHDEmail("");
-                              setHDPhone("");
-                            }
                           });
                         }}
                         disabled={createHouseDirectorMutation.isPending || !hdName || !hdEmail}
