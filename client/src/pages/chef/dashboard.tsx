@@ -291,6 +291,11 @@ export default function ChefDashboard() {
   const totalUnreadInbox = unreadSubstitutions + unreadSuggestions + unreadFeedback;
   const totalMealSlots = useMemo(() => DAYS.length + (DAYS.length - 1), []);
 
+  const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [editWeekOf, setEditWeekOf] = useState("");
+  const [editMenuItems, setEditMenuItems] = useState<any[]>([]);
+
   const getMenuFilledCount = (items: any[]) => items.filter((item) => item.description?.trim()).length;
 
   const menuDraftProgress = useMemo(() => {
@@ -394,11 +399,6 @@ export default function ChefDashboard() {
       cta: "Manage menus",
     };
   }, [currentWeekMenu, menusNeedingRevision, pendingMenus]);
-
-  const [weekOf, setWeekOf] = useState(format(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 1), "yyyy-MM-dd"));
-  const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [editWeekOf, setEditWeekOf] = useState("");
-  const [editMenuItems, setEditMenuItems] = useState<any[]>([]);
 
   const initializeMenu = () => {
     const items = [];
